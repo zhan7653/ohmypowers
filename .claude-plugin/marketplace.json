@@ -1,0 +1,20 @@
+{
+  "name": "ohmypowers",
+  "owner": {
+    "name": "zhan7653"
+  },
+  "plugins": [
+    {
+      "name": "ohmypowers-think",
+      "source": "./ohmypowers-think",
+      "description": "Requirement thinking: brainstorm, clarify ambiguities, define acceptance criteria, deliver a spec document",
+      "version": "0.2.0"
+    },
+    {
+      "name": "ohmypowers-plan",
+      "source": "./ohmypowers-plan",
+      "description": "Implementation planning: read a spec, propose architecture, structured self-review, deliver a plan document",
+      "version": "0.1.0"
+    }
+  ]
+}

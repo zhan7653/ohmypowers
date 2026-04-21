@@ -1,0 +1,6 @@
+# Only publish the two plugins
+gstack/
+superpowers/
+*.txt
+gstack-analysis.md
+.claude/

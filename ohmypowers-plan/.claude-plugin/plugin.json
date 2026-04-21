@@ -1,0 +1,17 @@
+{
+  "name": "ohmypowers-plan",
+  "description": "Implementation planning skills for Claude Code: read a spec, propose architecture, structured self-review, and deliver a plan document",
+  "version": "0.1.0",
+  "author": {
+    "name": "zhan7653"
+  },
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "planning",
+    "implementation-plans",
+    "architecture",
+    "claude-code",
+    "workflows"
+  ]
+}
