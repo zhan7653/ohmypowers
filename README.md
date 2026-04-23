@@ -9,25 +9,25 @@ Claude Code plugins for structured thinking and implementation planning.
 /plugin marketplace add zhan7653/ohmypowers
 
 # Install plugins
-/plugin install ohmypowers-think@ohmypowers
-/plugin install ohmypowers-plan@ohmypowers
+/plugin install ohmypowers-power-think@ohmypowers
+/plugin install ohmypowers-power-plan@ohmypowers
 ```
 
 ## Plugins
 
-### ohmypowers-think
+### ohmypowers-power-think
 
 Requirement thinking: brainstorm, clarify ambiguities, challenge premises, define acceptance criteria, and deliver a spec document.
 
-**Trigger:** `/think` or explicitly ask to brainstorm / create a spec
+**Trigger:** `/power-think` or explicitly ask to brainstorm / create a spec
 
 **Deliverable:** `docs/specs/YYYY-MM-DD-<feature-name>-spec.md`
 
-### ohmypowers-plan
+### ohmypowers-power-plan
 
 Implementation planning: read a spec, propose architecture, perform structured self-reviews, and deliver a plan document.
 
-**Trigger:** `/plan` or explicitly ask to create an implementation plan
+**Trigger:** `/power-plan` or explicitly ask to create an implementation plan
 
 **Deliverable:** `docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
 
@@ -37,8 +37,8 @@ Implementation planning: read a spec, propose architecture, perform structured s
 Think → Spec → Plan → Implement
 ```
 
-1. Use `ohmypowers-think` to explore requirements and produce a spec
-2. Use `ohmypowers-plan` to turn the spec into a concrete implementation plan
+1. Use `ohmypowers-power-think` to explore requirements and produce a spec
+2. Use `ohmypowers-power-plan` to turn the spec into a concrete implementation plan
 3. Implement following the plan
 
 ## License

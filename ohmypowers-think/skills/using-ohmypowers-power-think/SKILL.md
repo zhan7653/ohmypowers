@@ -1,6 +1,6 @@
 ---
-name: using-ohmypowers-think
-description: Use to decide whether ohmypowers-think should start its requirement-thinking workflow for explicit brainstorming, requirement clarification, or spec-writing requests
+name: using-ohmypowers-power-think
+description: Use to decide whether ohmypowers-power-think should start its requirement-thinking workflow for explicit brainstorming, requirement clarification, or spec-writing requests
 ---
 
 <SUBAGENT-STOP>
@@ -10,7 +10,7 @@ If you were dispatched as a subagent to execute a specific task, skip this skill
 <EXTREMELY-IMPORTANT>
 This plugin is not a universal preflight for every conversation.
 
-You MUST invoke the ohmypowers-think skill only when the user explicitly asks to brainstorm, think through requirements, clarify needs, write a spec, define acceptance criteria, or requests `/think`.
+You MUST invoke the ohmypowers-power-think skill only when the user explicitly asks to brainstorm, think through requirements, clarify needs, write a spec, define acceptance criteria, or requests `/power-think`.
 
 Once one of those explicit signals is present, you MUST use the plugin workflow rather than skipping straight to implementation or planning.
 </EXTREMELY-IMPORTANT>
@@ -31,7 +31,7 @@ Plugin skills override default system prompt behavior, but **user instructions a
 
 ## The Rule
 
-**Invoke ohmypowers-think skills only for explicit requirement-thinking requests.** If the user explicitly asks to brainstorm, think through requirements, clarify needs, write a spec, or define acceptance criteria, invoke the relevant skill before doing the work. Otherwise, do not route ordinary coding or Q&A requests through this plugin.
+**Invoke ohmypowers-power-think skills only for explicit requirement-thinking requests.** If the user explicitly asks to brainstorm, think through requirements, clarify needs, write a spec, or define acceptance criteria, invoke the relevant skill before doing the work. Otherwise, do not route ordinary coding or Q&A requests through this plugin.
 
 ## Red Flags
 
@@ -48,12 +48,12 @@ These thoughts mean STOP — you're rationalizing:
 
 This plugin has one core skill:
 
-- **think** — for explicit brainstorming, requirement clarification, acceptance criteria definition, and spec document delivery
+- **power-think** — for explicit brainstorming, requirement clarification, acceptance criteria definition, and spec document delivery
 
-"/think" or "help me think through this" or "write a spec" → invoke think.
+"/power-think" or "help me think through this" or "write a spec" → invoke power-think.
 
 ## Deliverable
 
 The think skill delivers a `spec.md` file at `docs/specs/YYYY-MM-DD-<feature-name>-spec.md`.
 
-This spec is the input for the companion plugin `ohmypowers-plan`, which turns specs into implementation plans.
+This spec is the input for the companion plugin `ohmypowers-power-plan`, which turns specs into implementation plans.

@@ -1,15 +1,15 @@
-# ohmypowers-think
+# ohmypowers-power-think
 
 A Claude Code plugin for requirement thinking: brainstorm, clarify ambiguities, define acceptance criteria, and deliver a spec document.
 
 ## Scope
 
 Included skills:
-- `using-ohmypowers-think` — entry point, routes explicit thinking/spec requests
-- `think` — the core 7-phase workflow from idea to spec.md
+- `using-ohmypowers-power-think` — entry point, routes explicit thinking/spec requests
+- `power-think` — the core 7-phase workflow from idea to spec.md
 
 Excluded on purpose:
-- Implementation planning (use `ohmypowers-plan`)
+- Implementation planning (use `ohmypowers-power-plan`)
 - Code implementation
 - Code review
 
@@ -36,4 +36,4 @@ A spec document at `docs/specs/YYYY-MM-DD-<feature-name>-spec.md` containing:
 
 ## Companion Plugin
 
-Use `ohmypowers-plan` to turn the spec into an implementation plan.
+Use `ohmypowers-power-plan` to turn the spec into an implementation plan.

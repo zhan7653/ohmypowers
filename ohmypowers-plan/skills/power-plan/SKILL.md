@@ -1,5 +1,5 @@
 ---
-name: plan
+name: power-plan
 description: "Use when the user explicitly asks to create an implementation plan from a spec or approved requirements. Delivers a plan.md document with structured self-review."
 ---
 
@@ -9,7 +9,7 @@ Turn an approved spec document into a concrete, reviewed implementation plan. Th
 
 **HARD GATE:** Do NOT write any implementation code. Your only output is a plan document.
 
-**Announce at start:** "I'm using the plan skill to create an implementation plan from the spec."
+**Announce at start:** "I'm using the power-plan skill to create an implementation plan from the spec."
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
 (User preferences for plan location override this default)
@@ -22,7 +22,7 @@ Turn an approved spec document into a concrete, reviewed implementation plan. Th
 
 1. Check `docs/specs/` for spec files: `ls -t docs/specs/*.md 2>/dev/null`
 2. If multiple specs exist, ask the user which one to use.
-3. If no spec exists, ask the user: "No spec found in docs/specs/. Would you like to provide requirements directly, or use ohmypowers-think to create a spec first?"
+3. If no spec exists, ask the user: "No spec found in docs/specs/. Would you like to provide requirements directly, or use ohmypowers-power-think to create a spec first?"
 4. Read the spec thoroughly. Extract: requirements, acceptance criteria, chosen approach, constraints, out of scope.
 
 ### Step 2: Read project context

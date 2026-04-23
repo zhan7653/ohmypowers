@@ -5,13 +5,13 @@
   },
   "plugins": [
     {
-      "name": "ohmypowers-think",
+      "name": "ohmypowers-power-think",
       "source": "./ohmypowers-think",
       "description": "Requirement thinking: brainstorm, clarify ambiguities, define acceptance criteria, deliver a spec document",
       "version": "0.2.0"
     },
     {
-      "name": "ohmypowers-plan",
+      "name": "ohmypowers-power-plan",
       "source": "./ohmypowers-plan",
       "description": "Implementation planning: read a spec, propose architecture, structured self-review, deliver a plan document",
       "version": "0.1.0"

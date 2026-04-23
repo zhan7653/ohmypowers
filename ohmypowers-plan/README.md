@@ -1,15 +1,15 @@
-# ohmypowers-plan
+# ohmypowers-power-plan
 
 A Claude Code plugin for implementation planning: read a spec, propose architecture, structured self-review, and deliver a plan document.
 
 ## Scope
 
 Included skills:
-- `using-ohmypowers-plan` — entry point, routes explicit planning requests
-- `plan` — the core 5-phase workflow from spec to plan.md
+- `using-ohmypowers-power-plan` — entry point, routes explicit planning requests
+- `power-plan` — the core 5-phase workflow from spec to plan.md
 
 Excluded on purpose:
-- Requirement thinking / brainstorming (use `ohmypowers-think`)
+- Requirement thinking / brainstorming (use `ohmypowers-power-think`)
 - Code implementation
 - Code review
 
@@ -25,7 +25,7 @@ When a request explicitly asks for an implementation plan:
 
 ## Input
 
-Expects a spec document at `docs/specs/*.md` (produced by `ohmypowers-think`). Can also work from user-provided requirements directly.
+Expects a spec document at `docs/specs/*.md` (produced by `ohmypowers-power-think`). Can also work from user-provided requirements directly.
 
 ## Deliverable
 
@@ -38,4 +38,4 @@ A plan document at `docs/plans/YYYY-MM-DD-<feature-name>-plan.md` containing:
 
 ## Companion Plugin
 
-Use `ohmypowers-think` to create the spec that feeds into this plugin.
+Use `ohmypowers-power-think` to create the spec that feeds into this plugin.

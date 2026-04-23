@@ -1,11 +1,11 @@
 ---
-name: think
+name: power-think
 description: "Use when the user explicitly asks to brainstorm, think through requirements, clarify needs, write a spec, or define acceptance criteria. Delivers a spec.md document."
 ---
 
 # Think — From Idea to Spec
 
-Help turn a vague idea into a precise, validated spec document through rigorous collaborative dialogue. The output is a spec.md file that the companion `ohmypowers-plan` plugin can consume.
+Help turn a vague idea into a precise, validated spec document through rigorous collaborative dialogue. The output is a spec.md file that the companion `ohmypowers-power-plan` plugin can consume.
 
 **HARD GATE:** Do NOT invoke any implementation skill, write any code, scaffold any project, or produce an implementation plan. Your only output is a spec document.
 
@@ -241,4 +241,4 @@ Fix any issues found. Then deliver the spec to the user.
 
 After saving the spec and completing self-review:
 
-**"Spec complete and saved to `docs/specs/<filename>.md`. I reviewed it for ambiguity, contradictions, coverage, and scope creep. Please review the spec document. When you're ready to turn this into an implementation plan, use the ohmypowers-plan plugin."**
+**"Spec complete and saved to `docs/specs/<filename>.md`. I reviewed it for ambiguity, contradictions, coverage, and scope creep. Please review the spec document. When you're ready to turn this into an implementation plan, use the ohmypowers-power-plan plugin."**
