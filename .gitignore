@@ -4,3 +4,6 @@ superpowers/
 *.txt
 gstack-analysis.md
 .claude/
+
+resource/
+docs/
