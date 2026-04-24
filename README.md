@@ -6,11 +6,11 @@ Claude Code plugins for structured thinking and implementation planning.
 
 ```bash
 # Add the marketplace
-/plugin marketplace add zhan7653/ohmypowers
+/plugin marketplace add zhan7653/xutianding-marketplace
 
 # Install plugins
-/plugin install ohmypowers-power-think@ohmypowers
-/plugin install ohmypowers-power-plan@ohmypowers
+/plugin install ohmypowers-power-think@xutianding
+/plugin install ohmypowers-power-plan@xutianding
 ```
 
 ## Plugins
