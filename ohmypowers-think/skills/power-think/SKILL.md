@@ -36,6 +36,8 @@ This is the core of the think skill. Ask questions ONE AT A TIME via AskUserQues
 
 ### Operating Principles
 
+**AskUserQuestion is for choosing, not reading.** Keep option labels to 1-4 words and descriptions to one short sentence. Do not put full alternatives, pros/cons, acceptance criteria, or multi-line markdown inside option descriptions or previews. When detail is needed, present it in normal assistant text first, then ask the user to choose with short options.
+
 **Specificity is the only currency.** Vague answers get pushed. "Users want this" is not a requirement. You need a specific scenario, a specific user, a specific outcome.
 
 **Anti-sycophancy rules — never say these during the diagnostic:**
@@ -157,7 +159,7 @@ Rules:
 
 **RECOMMENDATION:** Choose [X] because [one-line reason].
 
-Present via AskUserQuestion. Do NOT proceed without user approval of the approach.
+Present the full alternatives in normal assistant text first. Then use AskUserQuestion only for the final choice, with short option labels and one-line descriptions. Do NOT proceed without user approval of the approach.
 
 ---
 
@@ -185,7 +187,7 @@ Rules:
 - Criteria must be specific enough that someone could write a test from them without asking questions.
 - Non-functional requirements (performance, compatibility) get criteria too: "Given [load], When [action], Then [response time < Nms]."
 
-Present the criteria to the user via AskUserQuestion for confirmation. Revise if needed.
+Present the full criteria in normal assistant text first. Then use AskUserQuestion only to confirm or request revisions, with short option labels and one-line descriptions. Revise if needed.
 
 ---
 
