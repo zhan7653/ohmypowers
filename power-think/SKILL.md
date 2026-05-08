@@ -190,4 +190,6 @@ Before delivery, self-review the spec:
 
 Fix issues found during review.
 
+If the user wants an independent critique of the requirement, conversation, plan, or final spec, briefly suggest invoking `$power-critic`. Do not embed the `power-critic` workflow here.
+
 Finish with: "Spec complete and saved to `docs/specs/<filename>.md`. I reviewed it for ambiguity, contradictions, coverage, scope, and premises."

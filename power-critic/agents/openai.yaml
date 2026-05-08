@@ -1,0 +1,7 @@
+interface:
+  display_name: "Power Critic"
+  short_description: "Critique requirements, specs, plans"
+  default_prompt: "Use $power-critic to challenge this requirement, spec, plan, or model reply."
+
+policy:
+  allow_implicit_invocation: false
