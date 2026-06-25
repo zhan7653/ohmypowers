@@ -19,7 +19,23 @@ This branch keeps the skills as plain `SKILL.md` directories that can be used by
 
 It does not write implementation code or implementation plans.
 
+`power-grill` turns a clarified or half-clear coding task into an execution contract before implementation starts:
+
+- Repository inspection before asking the user.
+- Focused grill-style questions with recommended defaults.
+- A GitHub issue body or local issue brief.
+- A ready-to-run Codex `/goal`.
+- A PR evidence template for the eventual draft PR.
+
+It does not implement code, automatically execute `/goal`, or create GitHub issues/PRs by default. After the user reviews the generated issue body, it can create a GitHub issue if the user explicitly confirms and `gh` is available.
+
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review; use `/review` or the repository's code review workflow for that.
+
+Use them by phase:
+
+- `power-think`: vague idea -> reviewed spec.
+- `power-grill`: coding task -> issue contract + ready-to-run `/goal`.
+- `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
 
@@ -30,6 +46,7 @@ Copy or symlink the skill directories into Codex skills:
 ```bash
 mkdir -p ~/.codex/skills
 cp -R power-think ~/.codex/skills/power-think
+cp -R power-grill ~/.codex/skills/power-grill
 cp -R power-critic ~/.codex/skills/power-critic
 ```
 
@@ -53,6 +70,7 @@ Claude Code skills are directories with a `SKILL.md` entrypoint. Install as pers
 ```bash
 mkdir -p ~/.claude/skills
 cp -R power-think ~/.claude/skills/power-think
+cp -R power-grill ~/.claude/skills/power-grill
 cp -R power-critic ~/.claude/skills/power-critic
 ```
 
@@ -60,6 +78,7 @@ For project-local Claude Code skills, place them at:
 
 ```text
 .claude/skills/power-think/SKILL.md
+.claude/skills/power-grill/SKILL.md
 .claude/skills/power-critic/SKILL.md
 ```
 
@@ -69,6 +88,12 @@ Ask for requirement thinking or a spec:
 
 ```text
 Use power-think to help me clarify this feature and write a spec.
+```
+
+Ask for a task contract before implementation:
+
+```text
+Use $power-grill to turn this feature into a GitHub issue body, /goal, and PR evidence template.
 ```
 
 Ask for independent critique:
@@ -81,6 +106,7 @@ Claude Code can also invoke skills directly:
 
 ```text
 /power-think
+/power-grill
 /power-critic
 ```
 
@@ -88,6 +114,10 @@ Claude Code can also invoke skills directly:
 
 ```text
 power-think/
+  SKILL.md
+  agents/
+    openai.yaml
+power-grill/
   SKILL.md
   agents/
     openai.yaml
