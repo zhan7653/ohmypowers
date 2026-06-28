@@ -1,28 +1,28 @@
 ---
 name: power-grill
-description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then turn the clarified coding task into a durable issue contract, ready-to-run Codex /goal, and PR/MR evidence template. This skill is self-contained and does not require the original grill-me skill.
+description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then produce an issue draft for user confirmation. After the issue is created or saved as a local brief, generate a ready-to-run Codex /goal. This skill is self-contained and does not require the original grill-me skill.
 ---
 
 # Power Grill
 
 ## Overview
 
-Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts. The main value is the multi-round grilling process; the issue body, `/goal`, and PR/MR template are generated only after the task has been stress-tested from multiple angles.
+Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts. The main value is the multi-round grilling process; the issue draft is generated first, then the `/goal` is generated only after the user confirms the issue and it exists as a hosted issue or local brief.
 
 This skill incorporates the core idea of grill-me-style pre-implementation questioning, but it is self-contained and does not require the original grill-me skill to be installed.
 
 The output is:
 
 1. a clarified task summary;
-2. an issue body or local issue brief;
-3. a ready-to-run Codex `/goal`;
-4. a PR/MR evidence template.
+2. an issue draft for user review;
+3. after confirmation, a hosted issue or local issue brief;
+4. after the issue exists, a ready-to-run Codex `/goal`.
 
 Do not implement code during this skill.
-Do not automatically start `/goal`.
+Do not generate or start `/goal` before the user confirms the issue draft and the contract exists as a hosted issue or local brief.
 Do not create hosted issues, pull requests, or merge requests by default.
 
-After the user reviews the generated issue body, you may create the hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. PR/MR creation normally belongs to the implementation phase after `/goal` has run.
+After the user reviews the generated issue body, you may create the hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. If hosted issue creation is not available or not desired, save a local issue brief after user confirmation. PR/MR creation and PR/MR body generation belong to the implementation phase after `/goal` has run.
 
 ## When To Use
 
@@ -153,7 +153,7 @@ Readiness check:
 
 Then ask whether to continue grilling or generate the issue contract. Recommend continuing if any high-risk area is still assumed.
 
-Do not produce the issue body, `/goal`, or PR/MR template until one of these is true:
+Do not produce the issue draft until one of these is true:
 
 - all coverage matrix items are confirmed, repository-derived, or explicitly not applicable;
 - the user explicitly says to stop grilling and proceed;
@@ -161,9 +161,9 @@ Do not produce the issue body, `/goal`, or PR/MR template until one of these is 
 
 If the user asks to skip questions, ask the single most important remaining boundary question, then proceed only after stating the assumptions you will carry into the issue contract.
 
-## Phase 3: Produce Issue Context
+## Phase 3: Produce Issue Draft
 
-When enough information is available, produce an issue body or local issue brief.
+When enough information is available, produce an issue draft for user review.
 
 When generating the issue body, read and fill `assets/issue-body.md`.
 
@@ -173,19 +173,18 @@ If the task contract changes, update the issue body and append a concise entry t
 
 After the current issue is completed, put new phases, new features, or substantial follow-up work in a new linked follow-up issue instead of reopening or extending the completed issue.
 
-Optionally save local context files when useful:
+Do not generate `/goal` in this phase. Ask the user to review and confirm the issue draft first.
 
-- `.codex/power-grill/issue-brief.md`
-- `.codex/power-grill/goal.md`
-- `.codex/power-grill/pr-body.md`
+## Phase 4: Confirm Issue Contract
 
-Prefer existing repository conventions if they conflict with these paths.
+After the user confirms the issue draft, create or save the issue contract before generating `/goal`.
 
-## Phase 4: Optional Hosted Issue Creation
+Options:
 
-Do not create a hosted issue by default.
+- If the user explicitly confirms hosted issue creation and a supported CLI is available, create the hosted issue.
+- If hosted issue creation is unavailable or the user prefers local-only flow, save the confirmed issue body to a local brief such as `.codex/power-grill/issue-brief.md`.
 
-After producing the issue body, ask the user to review it. If the user explicitly confirms issue creation and a supported CLI is available, create the issue.
+Prefer existing repository conventions if they conflict with the local brief path.
 
 Before creating any hosted issue, inspect repository guidance such as `AGENTS.md`, issue templates, and remotes to determine whether the project uses GitHub or GitLab. Follow project-specific host rules over generic defaults.
 
@@ -197,9 +196,11 @@ When the user confirms issue creation:
 - For GitLab or `glab`, read `references/gitlab-issue-creation.md`.
 - If host rules are unclear, stop and ask before running a creation command.
 
+After the hosted issue is created or local brief is saved, record the issue URL, issue number, or local brief path. This reference is required before generating `/goal`.
+
 ## Phase 5: Produce Ready-To-Run /goal
 
-After the issue body is finalized, produce a ready-to-run Codex `/goal`.
+After the hosted issue is created or the local issue brief is saved, produce a ready-to-run Codex `/goal`.
 
 Do not automatically execute `/goal`.
 Tell the user to review it and manually run it if they want Codex to start implementation.
@@ -208,9 +209,6 @@ The `/goal` must include:
 
 - issue number, issue URL, or local issue brief path;
 - instruction to treat the issue body as the sole task contract;
-- objective;
-- scope;
-- non-goals;
 - checkpoints;
 - validation commands or validation discovery instructions;
 - acceptance criteria evidence requirement;
@@ -222,9 +220,11 @@ The `/goal` must include:
 
 When generating the `/goal`, read and fill `assets/codex-goal.txt`.
 
-## Phase 6: PR/MR Evidence Contract
+## Phase 6: PR/MR Evidence Requirements
 
-When generating the PR/MR evidence template, read and fill `assets/pr-body.md`.
+Do not output a full PR/MR body during power-grill. The PR/MR body should be generated during the implementation phase after code changes and validation exist.
+
+When generating `/goal`, include the requirement that the implementation phase creates a draft PR or MR with evidence mapped to the issue acceptance criteria and stop condition. The implementation phase may read `assets/pr-body.md` when it needs a PR/MR body template.
 
 Never merge PRs or MRs.
 Never push directly to `main`, `master`, `release`, or protected branches.
@@ -235,8 +235,11 @@ Prefer draft PRs or draft MRs for agent-generated implementation work.
 At the end of the power-grill phase, output:
 
 1. Clarified summary
-2. Issue body
-3. Optional hosted issue creation note or command
-4. Ready-to-run `/goal`
-5. PR/MR evidence template
-6. Clear instruction that the user should review and manually run `/goal` if they want Codex to start implementation
+2. Issue draft
+3. Ask the user to confirm the draft and choose hosted issue creation or local brief
+
+After the user confirms and the hosted issue or local brief exists, output:
+
+1. Issue reference
+2. Ready-to-run `/goal`
+3. Clear instruction that the user should review and manually run `/goal` if they want Codex to start implementation
