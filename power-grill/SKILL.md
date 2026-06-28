@@ -96,11 +96,18 @@ Cover these areas before moving to Phase 3:
 - scope;
 - non-goals;
 - affected modules;
+- owner or decision driver;
+- dependencies and blockers;
 - API or data contract changes;
 - auth and permission boundaries;
+- security and privacy impact;
 - compatibility requirements;
 - migration or rollback needs;
+- rollout plan;
+- observability and debug signals;
+- documentation impact;
 - tests and validation commands;
+- acceptance criteria;
 - risky assumptions;
 - stop condition;
 - pause-and-ask conditions.
@@ -116,10 +123,17 @@ User-facing behavior: unknown | assumed | confirmed
 Scope: unknown | assumed | confirmed
 Non-goals: unknown | assumed | confirmed
 Affected modules: unknown | assumed | confirmed
+Owner/driver: unknown | assumed | confirmed
+Dependencies/blockers: unknown | none | assumed | confirmed
 API/data contract: unknown | none | assumed | confirmed
 Auth/permissions: unknown | none | assumed | confirmed
+Security/privacy: unknown | none | assumed | confirmed
 Compatibility/migration/rollback: unknown | none | assumed | confirmed
+Rollout/rollback: unknown | none | assumed | confirmed
+Observability: unknown | none | assumed | confirmed
+Documentation: unknown | none | assumed | confirmed
 Validation: unknown | assumed | confirmed
+Acceptance criteria: unknown | assumed | confirmed
 Risks/assumptions: unknown | assumed | confirmed
 Stop condition: unknown | assumed | confirmed
 Pause-and-ask conditions: unknown | assumed | confirmed
@@ -205,6 +219,7 @@ The `/goal` must include:
 - non-goals;
 - checkpoints;
 - validation commands or validation discovery instructions;
+- acceptance criteria evidence requirement;
 - progress log requirement;
 - pause-and-ask conditions;
 - draft PR/MR requirement;

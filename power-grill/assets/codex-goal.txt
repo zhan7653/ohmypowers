@@ -21,6 +21,9 @@ Validation:
 - Run: <command>
 If these commands do not exist, discover the closest existing validation commands in the repo and document what was run.
 
+Acceptance criteria:
+Verify each acceptance criterion from <issue-ref> and record evidence for each one in the PR/MR body.
+
 Progress:
 Keep a short progress log in the PR/MR body or a local note.
 
@@ -34,6 +37,7 @@ Pause and ask if:
 
 PR requirement:
 When complete, create a draft PR or MR linked to <issue-ref>. The PR/MR body must include summary, rationale, tests run, evidence, risks, assumptions, out-of-scope items, and reviewer checklist.
+Map the implementation evidence back to the issue acceptance criteria and stop condition.
 
 Do not merge the PR or MR.
 Do not push directly to main, master, release, or protected branches.

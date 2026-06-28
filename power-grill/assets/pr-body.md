@@ -18,9 +18,21 @@ Closes <issue-ref>
 
 - `<command>`
 
+# Acceptance criteria evidence
+
+- AC-1: <pass/fail/not applicable> - <evidence, test, log, screenshot, or explanation>
+
+# Stop condition confirmation
+
+<State whether the issue stop condition is met. If not, explain what remains.>
+
 # Evidence
 
 - <test output, screenshot, log, or behavior proof>
+
+# Contract deviations
+
+- <scope, behavior, validation, or implementation difference from the issue contract; use "None" if none>
 
 # Risks / assumptions
 
@@ -33,7 +45,12 @@ Closes <issue-ref>
 # Reviewer checklist
 
 - [ ] Check core behavior
-- [ ] Check auth and permission boundaries
-- [ ] Check error handling
 - [ ] Check test coverage
-- [ ] Check docs or usage notes
+
+# Conditional reviewer checklist
+
+- [ ] Check auth and permission boundaries, if touched
+- [ ] Check security/privacy impact, if touched
+- [ ] Check migration/rollback behavior, if touched
+- [ ] Check observability/debuggability, if operational behavior changed
+- [ ] Check docs or usage notes, if user/operator behavior changed
