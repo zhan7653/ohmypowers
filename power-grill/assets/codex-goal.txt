@@ -1,4 +1,6 @@
-/goal Implement <issue-ref>. Read the issue or local issue brief first and treat it as the task contract.
+/goal Implement <issue-ref>. Read the issue body or local issue brief first and treat that body as the sole task contract.
+
+If the body is incomplete or contradicts discovered facts, pause and ask to update the issue body before implementing.
 
 Objective:
 <one-sentence objective>
@@ -38,6 +40,8 @@ Pause and ask if:
 PR requirement:
 When complete, create a draft PR or MR linked to <issue-ref>. The PR/MR body must include summary, rationale, tests run, evidence, risks, assumptions, out-of-scope items, and reviewer checklist.
 Map the implementation evidence back to the issue acceptance criteria and stop condition.
+
+For substantial follow-up work after this issue is complete, create or propose a new linked follow-up issue rather than extending this completed issue.
 
 Do not merge the PR or MR.
 Do not push directly to main, master, release, or protected branches.

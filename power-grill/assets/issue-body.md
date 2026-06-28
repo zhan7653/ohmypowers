@@ -6,10 +6,6 @@
 
 <What this task must accomplish.>
 
-# Owner / driver
-
-<Who owns decisions, review, and follow-up for this task. Use "TBD" only if ownership is genuinely unknown.>
-
 # Scope
 
 - <in-scope item>
@@ -38,29 +34,9 @@
 
 <Endpoints, schemas, config, env vars, migrations, or "None expected".>
 
-# Auth / permissions
+# Constraints
 
-<Auth, permission, tenant, user identity, or access-control boundaries. Use "Not applicable" only after checking.>
-
-# Security / privacy
-
-<Sensitive data, secrets, PII, audit, abuse, or compliance concerns. Use "Not applicable" only after checking.>
-
-# Compatibility / migration
-
-<Backward compatibility, data migration, config migration, client compatibility, or "Not applicable".>
-
-# Rollout / rollback
-
-<How this should be released, disabled, reverted, or safely rolled back.>
-
-# Observability
-
-<Logs, metrics, traces, alerts, dashboards, or debug signals needed to operate or verify the change.>
-
-# Documentation impact
-
-<README, operator docs, API docs, runbooks, changelog, or "None expected".>
+<Auth, permissions, security, privacy, compatibility, migration, rollback, documentation, or "None known".>
 
 # Risks and assumptions
 
@@ -85,3 +61,7 @@
 # Execution checkpoints
 
 - [ ] <checkpoint>
+
+# Change history
+
+- YYYY-MM-DD: Initial task contract created.

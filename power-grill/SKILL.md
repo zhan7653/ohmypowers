@@ -96,16 +96,10 @@ Cover these areas before moving to Phase 3:
 - scope;
 - non-goals;
 - affected modules;
-- owner or decision driver;
 - dependencies and blockers;
 - API or data contract changes;
 - auth and permission boundaries;
-- security and privacy impact;
-- compatibility requirements;
-- migration or rollback needs;
-- rollout plan;
-- observability and debug signals;
-- documentation impact;
+- security, privacy, compatibility, migration, or rollback concerns when relevant;
 - tests and validation commands;
 - acceptance criteria;
 - risky assumptions;
@@ -123,15 +117,10 @@ User-facing behavior: unknown | assumed | confirmed
 Scope: unknown | assumed | confirmed
 Non-goals: unknown | assumed | confirmed
 Affected modules: unknown | assumed | confirmed
-Owner/driver: unknown | assumed | confirmed
 Dependencies/blockers: unknown | none | assumed | confirmed
 API/data contract: unknown | none | assumed | confirmed
 Auth/permissions: unknown | none | assumed | confirmed
-Security/privacy: unknown | none | assumed | confirmed
-Compatibility/migration/rollback: unknown | none | assumed | confirmed
-Rollout/rollback: unknown | none | assumed | confirmed
-Observability: unknown | none | assumed | confirmed
-Documentation: unknown | none | assumed | confirmed
+Security/privacy/compatibility/migration/rollback: unknown | none | assumed | confirmed
 Validation: unknown | assumed | confirmed
 Acceptance criteria: unknown | assumed | confirmed
 Risks/assumptions: unknown | assumed | confirmed
@@ -178,7 +167,11 @@ When enough information is available, produce an issue body or local issue brief
 
 When generating the issue body, read and fill `assets/issue-body.md`.
 
-The issue is the task contract. Keep it specific to this task. Do not turn it into project-wide documentation.
+The issue body is the sole canonical task contract. Keep it specific to this task. Do not turn it into project-wide documentation.
+
+If the task contract changes, update the issue body and append a concise entry to the `Change history` section at the bottom of the issue body. Use `Change history` only for contract-level changes, not ordinary implementation progress.
+
+After the current issue is completed, put new phases, new features, or substantial follow-up work in a new linked follow-up issue instead of reopening or extending the completed issue.
 
 Optionally save local context files when useful:
 
@@ -214,6 +207,7 @@ Tell the user to review it and manually run it if they want Codex to start imple
 The `/goal` must include:
 
 - issue number, issue URL, or local issue brief path;
+- instruction to treat the issue body as the sole task contract;
 - objective;
 - scope;
 - non-goals;
