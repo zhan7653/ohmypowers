@@ -1,13 +1,13 @@
 ---
 name: power-grill
-description: Grill the user before implementation, turn a clarified coding task into a durable issue contract, then produce a ready-to-run Codex /goal and PR evidence template. This skill is self-contained and does not require the original grill-me skill.
+description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then turn the clarified coding task into a durable issue contract, ready-to-run Codex /goal, and PR evidence template. This skill is self-contained and does not require the original grill-me skill.
 ---
 
 # Power Grill
 
 ## Overview
 
-Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts.
+Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts. The main value is the multi-round grilling process; the issue body, `/goal`, and PR template are generated only after the task has been stress-tested from multiple angles.
 
 This skill incorporates the core idea of grill-me-style pre-implementation questioning, but it is self-contained and does not require the original grill-me skill to be installed.
 
@@ -72,16 +72,25 @@ After inspection, briefly summarize:
 
 Interview the user until the task is clear enough to become a bounded implementation goal.
 
-Ask 1 to 3 questions at a time. Each question must include:
+Ask 1 to 3 questions at a time, but do not stop after one batch unless the task is genuinely trivial and all readiness criteria below are satisfied. This skill should feel like a persistent design interview, not a short intake form.
+
+Run multiple rounds. After each user answer:
+
+1. update the working understanding;
+2. identify what is still ambiguous;
+3. inspect the repository again if the answer names files, modules, commands, APIs, or constraints you can verify;
+4. ask the next 1 to 3 highest-leverage questions.
+
+Each question must include:
 
 1. why it matters;
 2. your recommended default answer;
 3. a request for the user to confirm or correct it.
 
-Focus on:
+Cover these areas before moving to Phase 3:
 
 - objective;
-- current problem;
+- current problem and current workaround;
 - user-facing behavior;
 - scope;
 - non-goals;
@@ -95,6 +104,26 @@ Focus on:
 - stop condition;
 - pause-and-ask conditions.
 
+Do not treat a topic as covered just because it was mentioned. It is covered only when it has a concrete decision, a repository-derived assumption, or an explicit "not applicable" decision.
+
+Use this coverage matrix internally during the interview:
+
+```text
+Objective: unknown | assumed | confirmed
+Current problem/workaround: unknown | assumed | confirmed
+User-facing behavior: unknown | assumed | confirmed
+Scope: unknown | assumed | confirmed
+Non-goals: unknown | assumed | confirmed
+Affected modules: unknown | assumed | confirmed
+API/data contract: unknown | none | assumed | confirmed
+Auth/permissions: unknown | none | assumed | confirmed
+Compatibility/migration/rollback: unknown | none | assumed | confirmed
+Validation: unknown | assumed | confirmed
+Risks/assumptions: unknown | assumed | confirmed
+Stop condition: unknown | assumed | confirmed
+Pause-and-ask conditions: unknown | assumed | confirmed
+```
+
 Use this question format:
 
 ```markdown
@@ -106,7 +135,27 @@ I need to confirm 3 boundaries:
    - Please confirm or correct: <specific ask>
 ```
 
-If the user asks to skip questions, ask the single most important remaining boundary question, then proceed with explicit assumptions.
+Before moving to Phase 3, show a short readiness check:
+
+```markdown
+Readiness check:
+- Confirmed:
+  - <item>
+- Still assumed:
+  - <item and default>
+- Explicitly out of scope:
+  - <item>
+```
+
+Then ask whether to continue grilling or generate the issue contract. Recommend continuing if any high-risk area is still assumed.
+
+Do not produce the issue body, `/goal`, or PR template until one of these is true:
+
+- all coverage matrix items are confirmed, repository-derived, or explicitly not applicable;
+- the user explicitly says to stop grilling and proceed;
+- after at least two rounds of questions, only low-risk assumptions remain and you have shown them in the readiness check.
+
+If the user asks to skip questions, ask the single most important remaining boundary question, then proceed only after stating the assumptions you will carry into the issue contract.
 
 ## Phase 3: Produce Issue Context
 
