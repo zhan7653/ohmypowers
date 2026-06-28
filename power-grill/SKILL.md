@@ -1,28 +1,28 @@
 ---
 name: power-grill
-description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then turn the clarified coding task into a durable issue contract, ready-to-run Codex /goal, and PR evidence template. This skill is self-contained and does not require the original grill-me skill.
+description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then turn the clarified coding task into a durable issue contract, ready-to-run Codex /goal, and PR/MR evidence template. This skill is self-contained and does not require the original grill-me skill.
 ---
 
 # Power Grill
 
 ## Overview
 
-Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts. The main value is the multi-round grilling process; the issue body, `/goal`, and PR template are generated only after the task has been stress-tested from multiple angles.
+Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts. The main value is the multi-round grilling process; the issue body, `/goal`, and PR/MR template are generated only after the task has been stress-tested from multiple angles.
 
 This skill incorporates the core idea of grill-me-style pre-implementation questioning, but it is self-contained and does not require the original grill-me skill to be installed.
 
 The output is:
 
 1. a clarified task summary;
-2. a GitHub issue body or local issue brief;
+2. an issue body or local issue brief;
 3. a ready-to-run Codex `/goal`;
-4. a PR evidence template.
+4. a PR/MR evidence template.
 
 Do not implement code during this skill.
 Do not automatically start `/goal`.
-Do not create GitHub issues or PRs by default.
+Do not create hosted issues, pull requests, or merge requests by default.
 
-After the user reviews the generated issue body, you may create the GitHub issue only if the user explicitly confirms and `gh` is available. PR creation normally belongs to the implementation phase after `/goal` has run.
+After the user reviews the generated issue body, you may create the hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. PR/MR creation normally belongs to the implementation phase after `/goal` has run.
 
 ## When To Use
 
@@ -52,6 +52,7 @@ Look for:
 - `docs/`, `docs/adr/`
 - `CONTEXT.md`, `CONTEXT-MAP.md`
 - existing issue or PR templates
+- GitHub, GitLab, `gh`, or `glab` host rules, especially repository URL rules in `AGENTS.md`
 - test, lint, typecheck, and build commands
 - modules, files, or workflows named by the user
 
@@ -149,7 +150,7 @@ Readiness check:
 
 Then ask whether to continue grilling or generate the issue contract. Recommend continuing if any high-risk area is still assumed.
 
-Do not produce the issue body, `/goal`, or PR template until one of these is true:
+Do not produce the issue body, `/goal`, or PR/MR template until one of these is true:
 
 - all coverage matrix items are confirmed, repository-derived, or explicitly not applicable;
 - the user explicitly says to stop grilling and proceed;
@@ -159,7 +160,7 @@ If the user asks to skip questions, ask the single most important remaining boun
 
 ## Phase 3: Produce Issue Context
 
-When enough information is available, produce a GitHub issue body or local issue brief.
+When enough information is available, produce an issue body or local issue brief.
 
 When generating the issue body, read and fill `assets/issue-body.md`.
 
@@ -173,13 +174,21 @@ Optionally save local context files when useful:
 
 Prefer existing repository conventions if they conflict with these paths.
 
-## Phase 4: Optional GitHub Issue Creation
+## Phase 4: Optional Hosted Issue Creation
 
-Do not create a GitHub issue by default.
+Do not create a hosted issue by default.
 
-After producing the issue body, ask the user to review it. If the user explicitly confirms issue creation and `gh` is available, create the issue.
+After producing the issue body, ask the user to review it. If the user explicitly confirms issue creation and a supported CLI is available, create the issue.
 
-When the user confirms issue creation, read `references/github-issue-creation.md` and follow it.
+Before creating any hosted issue, inspect repository guidance such as `AGENTS.md`, issue templates, and remotes to determine whether the project uses GitHub or GitLab. Follow project-specific host rules over generic defaults.
+
+If project guidance specifies a canonical GitLab remote or says to use `glab -R <full repository URL>`, preserve that exact full URL form in generated commands. Do not replace it with shorthand such as `group/project`.
+
+When the user confirms issue creation:
+
+- For GitHub or `gh`, read `references/github-issue-creation.md`.
+- For GitLab or `glab`, read `references/gitlab-issue-creation.md`.
+- If host rules are unclear, stop and ask before running a creation command.
 
 ## Phase 5: Produce Ready-To-Run /goal
 
@@ -198,19 +207,19 @@ The `/goal` must include:
 - validation commands or validation discovery instructions;
 - progress log requirement;
 - pause-and-ask conditions;
-- draft PR requirement;
+- draft PR/MR requirement;
 - no-merge rule;
 - no protected-branch push rule.
 
 When generating the `/goal`, read and fill `assets/codex-goal.txt`.
 
-## Phase 6: PR Evidence Contract
+## Phase 6: PR/MR Evidence Contract
 
-When generating the PR evidence template, read and fill `assets/pr-body.md`.
+When generating the PR/MR evidence template, read and fill `assets/pr-body.md`.
 
-Never merge PRs.
+Never merge PRs or MRs.
 Never push directly to `main`, `master`, `release`, or protected branches.
-Prefer draft PRs for agent-generated implementation work.
+Prefer draft PRs or draft MRs for agent-generated implementation work.
 
 ## Final Response Format
 
@@ -218,7 +227,7 @@ At the end of the power-grill phase, output:
 
 1. Clarified summary
 2. Issue body
-3. Optional GitHub issue creation note or command
+3. Optional hosted issue creation note or command
 4. Ready-to-run `/goal`
-5. PR evidence template
+5. PR/MR evidence template
 6. Clear instruction that the user should review and manually run `/goal` if they want Codex to start implementation

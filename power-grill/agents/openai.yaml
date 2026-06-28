@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Grill"
   short_description: "Grill coding tasks before issue and goal creation"
-  default_prompt: "Use $power-grill to grill this coding task from multiple angles before producing an issue body, /goal, and PR evidence template."
+  default_prompt: "Use $power-grill to grill this coding task from multiple angles before producing an issue body, /goal, and PR/MR evidence template."

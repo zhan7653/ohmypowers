@@ -15,14 +15,14 @@ Work in checkpoints:
 3. Add or update tests.
 4. Run validation commands.
 5. Update documentation if needed.
-6. Create a draft PR linked to <issue-ref>.
+6. Create a draft PR or MR linked to <issue-ref>.
 
 Validation:
 - Run: <command>
 If these commands do not exist, discover the closest existing validation commands in the repo and document what was run.
 
 Progress:
-Keep a short progress log in the PR body or a local note.
+Keep a short progress log in the PR/MR body or a local note.
 
 Pause and ask if:
 - required credentials or secrets are missing;
@@ -33,7 +33,7 @@ Pause and ask if:
 - database migrations or destructive data changes are needed.
 
 PR requirement:
-When complete, create a draft PR linked to <issue-ref>. The PR body must include summary, rationale, tests run, evidence, risks, assumptions, out-of-scope items, and reviewer checklist.
+When complete, create a draft PR or MR linked to <issue-ref>. The PR/MR body must include summary, rationale, tests run, evidence, risks, assumptions, out-of-scope items, and reviewer checklist.
 
-Do not merge the PR.
+Do not merge the PR or MR.
 Do not push directly to main, master, release, or protected branches.

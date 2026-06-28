@@ -23,11 +23,11 @@ It does not write implementation code or implementation plans.
 
 - Repository inspection before asking the user.
 - Focused grill-style questions with recommended defaults.
-- A GitHub issue body or local issue brief.
+- A hosted issue body or local issue brief.
 - A ready-to-run Codex `/goal`.
-- A PR evidence template for the eventual draft PR.
+- A PR/MR evidence template for the eventual draft PR or MR.
 
-It does not implement code, automatically execute `/goal`, or create GitHub issues/PRs by default. After the user reviews the generated issue body, it can create a GitHub issue if the user explicitly confirms and `gh` is available.
+It does not implement code, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review; use `/review` or the repository's code review workflow for that.
 
@@ -93,7 +93,7 @@ Use power-think to help me clarify this feature and write a spec.
 Ask for a task contract before implementation:
 
 ```text
-Use $power-grill to turn this feature into a GitHub issue body, /goal, and PR evidence template.
+Use $power-grill to turn this feature into an issue body, /goal, and PR/MR evidence template.
 ```
 
 Ask for independent critique:
@@ -127,6 +127,7 @@ power-grill/
     pr-body.md
   references/
     github-issue-creation.md
+    gitlab-issue-creation.md
 power-critic/
   SKILL.md
   agents/
