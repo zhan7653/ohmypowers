@@ -14,7 +14,7 @@ Important host rule:
 Recommended flow:
 
 1. Check `glab auth status` when useful.
-2. Identify the canonical repository argument from project guidance or remotes.
+2. Identify the canonical repository argument from project guidance or remotes. If there are multiple remotes, conflicting host rules, or unclear guidance, stop and ask before creating the issue.
 3. Write the reviewed issue body to a local file such as `.codex/power-grill/issue-brief.md`.
 4. Create the issue using the project-required repository argument.
 

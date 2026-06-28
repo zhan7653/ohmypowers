@@ -2,15 +2,6 @@
 
 If the body is incomplete or contradicts discovered facts, pause and ask to update the issue body before implementing.
 
-Objective:
-<one-sentence objective>
-
-Scope:
-- <scope item>
-
-Non-goals:
-- <non-goal>
-
 Work in checkpoints:
 1. Inspect the current implementation and relevant docs.
 2. Make the smallest safe implementation changes.

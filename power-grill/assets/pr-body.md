@@ -32,13 +32,14 @@ Closes <issue-ref>
 
 # Contract deviations
 
-- <scope, behavior, validation, or implementation difference from the issue contract; use "None" if none>
+- <implementation difference from the issue contract; use "None" if none>
+- If the contract itself changed, update the issue body `Change history` before relying on this PR/MR.
 
 # Risks / assumptions
 
 - <risk or assumption>
 
-# Out of scope
+# Non-goals
 
 - <explicit non-goal>
 
