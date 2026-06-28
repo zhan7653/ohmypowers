@@ -96,6 +96,11 @@ Cover these areas before moving to Phase 3:
 - scope;
 - non-goals;
 - affected modules;
+- implementation approach and code change shape;
+- new files, modified files, and integration points;
+- internal data flow, API flow, or control flow;
+- error handling and fallback behavior;
+- test seam and mock strategy;
 - dependencies and blockers;
 - API or data contract changes;
 - auth and permission boundaries;
@@ -117,6 +122,11 @@ User-facing behavior: unknown | assumed | confirmed
 Scope: unknown | assumed | confirmed
 Non-goals: unknown | assumed | confirmed
 Affected modules: unknown | assumed | confirmed
+Implementation approach: unknown | assumed | confirmed
+Code change shape: unknown | assumed | confirmed
+Data/API/control flow: unknown | assumed | confirmed
+Error handling/fallbacks: unknown | assumed | confirmed
+Test seam/mock strategy: unknown | assumed | confirmed
 Dependencies/blockers: unknown | none | assumed | confirmed
 API/data contract: unknown | none | assumed | confirmed
 Auth/permissions: unknown | none | assumed | confirmed
@@ -160,6 +170,8 @@ Do not produce the issue draft until one of these is true:
 - after at least two rounds of questions, only low-risk assumptions remain and you have shown them in the readiness check.
 
 If the user asks to skip questions, ask the single most important remaining boundary question, then proceed only after stating the assumptions you will carry into the issue contract.
+
+Before producing the issue draft, include at least one implementation-design round for non-trivial coding tasks. Ask about concrete code-level choices the repository inspection cannot answer, such as where the change should live, what interfaces or adapters should be introduced or reused, how data should flow through the system, how errors should be handled, and how the behavior should be tested. Keep these questions at the design-boundary level; do not write code or create a step-by-step implementation plan.
 
 ## Phase 3: Produce Issue Draft
 

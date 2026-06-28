@@ -30,6 +30,10 @@
 
 <Smallest defensible approach.>
 
+# Implementation notes
+
+<Expected code change shape, integration points, data/control flow, error handling, and test seam. Keep this at design level, not a line-by-line implementation plan.>
+
 # API / data contract changes
 
 <Endpoints, schemas, config, env vars, migrations, or "None expected".>
