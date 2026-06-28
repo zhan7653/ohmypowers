@@ -41,7 +41,7 @@ PR requirement:
 When complete, create a draft PR or MR linked to <issue-ref>. The PR/MR body must include summary, rationale, tests run, evidence, risks, assumptions, out-of-scope items, and reviewer checklist.
 Map the implementation evidence back to the issue acceptance criteria and stop condition.
 
-For substantial follow-up work after this issue is complete, create or propose a new linked follow-up issue rather than extending this completed issue.
+For substantial follow-up work after this issue is complete, propose a new linked follow-up issue rather than extending this completed issue.
 
 Do not merge the PR or MR.
 Do not push directly to main, master, release, or protected branches.

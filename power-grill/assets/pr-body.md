@@ -26,7 +26,7 @@ Closes <issue-ref>
 
 <State whether the issue stop condition is met. If not, explain what remains.>
 
-# Evidence
+# Additional evidence
 
 - <test output, screenshot, log, or behavior proof>
 

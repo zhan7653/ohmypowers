@@ -58,10 +58,6 @@
 
 - <condition that requires user input before continuing>
 
-# Execution checkpoints
-
-- [ ] <checkpoint>
-
 # Change history
 
 - YYYY-MM-DD: Initial task contract created.
