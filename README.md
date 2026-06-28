@@ -121,6 +121,12 @@ power-grill/
   SKILL.md
   agents/
     openai.yaml
+  assets/
+    issue-body.md
+    codex-goal.txt
+    pr-body.md
+  references/
+    github-issue-creation.md
 power-critic/
   SKILL.md
   agents/

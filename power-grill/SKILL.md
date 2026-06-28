@@ -161,61 +161,7 @@ If the user asks to skip questions, ask the single most important remaining boun
 
 When enough information is available, produce a GitHub issue body or local issue brief.
 
-Use this structure:
-
-```markdown
-# Problem
-
-<What problem exists today.>
-
-# Goal
-
-<What this task must accomplish.>
-
-# Scope
-
-- <in-scope item>
-
-# Non-goals
-
-- <out-of-scope item>
-
-# Current context
-
-<Relevant repository, system, or workflow context discovered during inspection.>
-
-# Relevant files and modules
-
-- `<path>`: <why it is relevant>
-
-# Proposed approach
-
-<Smallest defensible approach.>
-
-# API / data contract changes
-
-<Endpoints, schemas, config, env vars, migrations, or "None expected".>
-
-# Risks and assumptions
-
-- <risk or assumption>
-
-# Validation plan
-
-- Run: `<command>`
-
-# Stop condition
-
-<Observable condition that means the task is complete.>
-
-# Pause-and-ask conditions
-
-- <condition that requires user input before continuing>
-
-# Implementation checklist
-
-- [ ] <checkpoint>
-```
+When generating the issue body, read and fill `assets/issue-body.md`.
 
 The issue is the task contract. Keep it specific to this task. Do not turn it into project-wide documentation.
 
@@ -233,16 +179,7 @@ Do not create a GitHub issue by default.
 
 After producing the issue body, ask the user to review it. If the user explicitly confirms issue creation and `gh` is available, create the issue.
 
-Recommended flow:
-
-1. Check `gh auth status`.
-2. Write the reviewed issue body to a local file such as `.codex/power-grill/issue-brief.md`.
-3. Create the issue with `gh issue create --title "<title>" --body-file <path>`.
-4. If optional labels are missing, retry without labels or ask the user.
-5. Return the issue number and URL.
-6. Update the ready-to-run `/goal` so it references the real issue.
-
-Do not create a PR during the pre-goal grilling phase unless the user explicitly asks and there is already an implementation branch to publish.
+When the user confirms issue creation, read `references/github-issue-creation.md` and follow it.
 
 ## Phase 5: Produce Ready-To-Run /goal
 
@@ -265,95 +202,11 @@ The `/goal` must include:
 - no-merge rule;
 - no protected-branch push rule.
 
-Use this template:
-
-```text
-/goal Implement <issue-ref>. Read the issue or local issue brief first and treat it as the task contract.
-
-Objective:
-<one-sentence objective>
-
-Scope:
-- <scope item>
-
-Non-goals:
-- <non-goal>
-
-Work in checkpoints:
-1. Inspect the current implementation and relevant docs.
-2. Make the smallest safe implementation changes.
-3. Add or update tests.
-4. Run validation commands.
-5. Update documentation if needed.
-6. Create a draft PR linked to <issue-ref>.
-
-Validation:
-- Run: <command>
-If these commands do not exist, discover the closest existing validation commands in the repo and document what was run.
-
-Progress:
-Keep a short progress log in the PR body or a local note.
-
-Pause and ask if:
-- required credentials or secrets are missing;
-- the task requires changing auth or permission boundaries;
-- implementation requires expanding scope beyond the issue;
-- tests fail for reasons not clearly related to this task;
-- existing code contradicts the issue contract;
-- database migrations or destructive data changes are needed.
-
-PR requirement:
-When complete, create a draft PR linked to <issue-ref>. The PR body must include summary, rationale, tests run, evidence, risks, assumptions, out-of-scope items, and reviewer checklist.
-
-Do not merge the PR.
-Do not push directly to main, master, release, or protected branches.
-```
+When generating the `/goal`, read and fill `assets/codex-goal.txt`.
 
 ## Phase 6: PR Evidence Contract
 
-Produce this PR body template for the eventual implementation PR:
-
-```markdown
-# Summary
-
-<What changed.>
-
-# Linked issue
-
-Closes <issue-ref>
-
-# What changed
-
-- <change>
-
-# Why this approach
-
-<Rationale and important tradeoffs.>
-
-# Tests run
-
-- `<command>`
-
-# Evidence
-
-- <test output, screenshot, log, or behavior proof>
-
-# Risks / assumptions
-
-- <risk or assumption>
-
-# Out of scope
-
-- <explicit non-goal>
-
-# Reviewer checklist
-
-- [ ] Check core behavior
-- [ ] Check auth and permission boundaries
-- [ ] Check error handling
-- [ ] Check test coverage
-- [ ] Check docs or usage notes
-```
+When generating the PR evidence template, read and fill `assets/pr-body.md`.
 
 Never merge PRs.
 Never push directly to `main`, `master`, `release`, or protected branches.
