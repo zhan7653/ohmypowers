@@ -1,0 +1,86 @@
+/goal Complete <contract-source> under a bounded implementation loop. Read the contract first and treat it as the canonical source of truth.
+
+If the contract is incomplete or contradicts discovered facts, pause and ask to update the contract before implementing.
+
+Loop contract:
+- Objective: <objective>
+- Scope: <scope>
+- Non-goals: <non-goals>
+- Constraints: <constraints>
+- Validation plan: <validation-plan>
+- Acceptance criteria: <acceptance-criteria>
+- Stop condition: <stop-condition>
+- Pause-and-ask conditions: <pause-and-ask-conditions>
+
+Execution rules:
+- Do not expand scope beyond the contract.
+- Do not ignore validation failures.
+- Do not bypass the verifier gate.
+- Do not merge.
+- Do not push directly to main, master, release, or protected branches.
+- Pause if implementation requires auth, permissions, security, migration, production config, destructive data changes, or other high-risk work not already approved in the contract.
+
+Work isolation:
+- Use a dedicated branch or worktree.
+- Branch name: agent/<issue-id>-<short-name>
+- Worktree path, when needed: ../<repo>-agent-<issue-id>-<short-name>
+- Use a worktree when the current worktree has unrelated changes, multiple agents may run in parallel, or the task spans multiple medium-risk areas.
+- Pause if the required branch or worktree cannot be created safely.
+
+Checkpoints:
+1. Inspect the contract, relevant code, and relevant docs.
+2. Restate the minimal implementation approach and confirm it stays within scope.
+3. Implement the smallest required change.
+4. Run targeted validation.
+5. Fix validation failures within budget.
+6. Run full required validation.
+7. Run the read-only verifier gate.
+8. Prepare a draft PR/MR with acceptance-criteria evidence.
+9. Output the loop decision.
+
+Validation loop:
+- Run relevant tests after meaningful changes.
+- Run lint, typecheck, or docs checks when available and relevant.
+- Summarize each command and result.
+- Diagnose failures before retrying.
+- Retry only within budget.
+- Pause if validation is missing, unreliable, or cannot cover the acceptance criteria.
+
+Budget:
+- Max implementation iterations: 5.
+- Same failure retry limit: 2.
+- Stop after 2 consecutive no-progress iterations.
+- Pause if scope expansion is required.
+- Pause if forbidden paths become necessary.
+- Pause if high-risk operations become necessary.
+
+Verifier gate:
+- Before finalizing the PR/MR, run a read-only verifier pass.
+- Compare the diff against the contract.
+- Verify every acceptance criterion has evidence.
+- Check validation results, scope, non-goals, forbidden paths, and disclosed risks.
+- Record one verifier result: PASS, PASS_WITH_NOTES, BLOCKED, or NEEDS_HUMAN.
+- If the verifier returns BLOCKED or NEEDS_HUMAN, do not claim completion.
+
+PR/MR evidence requirements:
+- Create a draft PR/MR only.
+- Link the contract source.
+- Include summary, rationale, changed files, tests run, acceptance-criteria evidence, verifier result, risks, assumptions, out-of-scope items, and reviewer checklist.
+- Include an evidence table:
+
+| AC | Evidence | Validation | Files | Status |
+|---|---|---|---|---|
+| AC-1 |  |  |  |  |
+
+Loop decision:
+- pr-ready: draft PR/MR exists and verifier is PASS or PASS_WITH_NOTES.
+- blocked: technical blocker prevents progress within budget.
+- needs-human: human decision is required before continuing.
+- follow-up-needed: current contract is complete, but new work belongs in a follow-up issue.
+- done: use only after human confirmation, not immediately after agent implementation.
+
+Final response:
+- State the loop decision.
+- Summarize completed work and validation evidence.
+- List remaining risks or human decisions.
+- Do not merge.
