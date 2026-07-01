@@ -19,7 +19,7 @@ export function pathsForDate({ date, outDir }) {
     root,
     dayDir,
     draftDir: path.join(dayDir, 'draft'),
-    finalDir: path.join(dayDir, 'final'),
+    reportMdFile: path.join(dayDir, 'report.md'),
     memoryFile: path.join(root, 'memory.json'),
   }
 }

@@ -30,7 +30,7 @@ test('collect writes deterministic raw summary grouped by project', async t => {
   assert.ok(JSON.stringify(raw).includes('修复日报生成的边界'))
 })
 
-test('run writes codex draft reports and proposed memory update', async t => {
+test('run writes final markdown report and memory update', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-run-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
 
@@ -48,11 +48,11 @@ test('run writes codex draft reports and proposed memory update', async t => {
     successCodex,
   ])
 
-  const draftDir = path.join(tmp, '2026-07-01', 'draft')
+  const dayDir = path.join(tmp, '2026-07-01')
+  const draftDir = path.join(dayDir, 'draft')
   const report = await readJson(path.join(draftDir, 'report.json'))
-  const proposal = await readJson(path.join(draftDir, 'memory-update.proposed.json'))
-  const markdown = await fs.readFile(path.join(draftDir, 'report.md'), 'utf8')
-  const html = await fs.readFile(path.join(draftDir, 'report.html'), 'utf8')
+  const memory = await readJson(path.join(tmp, 'memory.json'))
+  const markdown = await fs.readFile(path.join(dayDir, 'report.md'), 'utf8')
 
   assert.equal(report.status, 'draft')
   assert.equal(report.projects.length, 2)
@@ -60,10 +60,8 @@ test('run writes codex draft reports and proposed memory update', async t => {
   assert.ok(markdown.includes('按项目分组'))
   assert.ok(markdown.includes('待办事项'))
   assert.ok(!markdown.includes('未完成 Todos'))
-  assert.ok(html.includes('<!doctype html>'))
-  assert.ok(html.includes('class="report-shell"'))
-  assert.ok(html.includes('id="tasks"'))
-  assert.ok(proposal.todos.length >= 2)
+  assert.equal(await exists(path.join(dayDir, 'report.html')), false)
+  assert.ok(memory.todos.length >= 2)
 })
 
 test('run carries open memory todos into first-class todo review', async t => {
@@ -105,7 +103,7 @@ test('run carries open memory todos into first-class todo review', async t => {
   )
 
   await run([
-    'run',
+    'draft',
     '--date',
     '2026-07-01',
     '--codex-home',
@@ -121,22 +119,19 @@ test('run carries open memory todos into first-class todo review', async t => {
   const draftDir = path.join(tmp, '2026-07-01', 'draft')
   const report = await readJson(path.join(draftDir, 'report.json'))
   const markdown = await fs.readFile(path.join(draftDir, 'report.md'), 'utf8')
-  const html = await fs.readFile(path.join(draftDir, 'report.html'), 'utf8')
 
   assert.equal(report.todoReview.carryover.length, 1)
   assert.equal(report.todoReview.carryover[0].text, '补充 finalize 测试')
   assert.equal(report.todoReview.new.some(item => item.text === '已关闭事项'), false)
   assert.ok(markdown.includes('继承待办事项'))
   assert.ok(markdown.includes('新增待办事项'))
-  assert.ok(html.includes('继承待办事项'))
-  assert.ok(html.includes('新增待办事项'))
 })
 
 test('codex failure writes fallback draft and finalize refuses without allow-fallback', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-fallback-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
 
-  await run([
+  const args = [
     'run',
     '--date',
     '2026-07-01',
@@ -146,7 +141,9 @@ test('codex failure writes fallback draft and finalize refuses without allow-fal
     tmp,
     '--codex-bin',
     failCodex,
-  ])
+  ]
+
+  await assert.rejects(() => run(args), /Refusing to finalize codex_failed draft/)
 
   const report = await readJson(path.join(tmp, '2026-07-01', 'draft', 'report.json'))
   assert.equal(report.status, 'codex_failed')
@@ -157,7 +154,28 @@ test('codex failure writes fallback draft and finalize refuses without allow-fal
   )
 })
 
-test('finalize writes final reports and deduplicates memory by normalized text and project', async t => {
+test('run refuses to overwrite final markdown without force', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-overwrite-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+
+  const args = [
+    'run',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--codex-bin',
+    successCodex,
+  ]
+
+  await run(args)
+  await assert.rejects(() => run(args), /Refusing to overwrite existing report/)
+  await run([...args, '--force'])
+})
+
+test('run writes markdown report and deduplicates memory by normalized text and project', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-finalize-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
 
@@ -172,13 +190,12 @@ test('finalize writes final reports and deduplicates memory by normalized text a
     '--codex-bin',
     successCodex,
   ])
-  await run(['finalize', '--date', '2026-07-01', '--out-dir', tmp])
 
-  const finalDir = path.join(tmp, '2026-07-01', 'final')
+  const dayDir = path.join(tmp, '2026-07-01')
   const memory = await readJson(path.join(tmp, 'memory.json'))
-  assert.ok(await exists(path.join(finalDir, 'report.md')))
-  assert.ok(await exists(path.join(finalDir, 'report.html')))
-  assert.ok(await exists(path.join(finalDir, 'report.json')))
+  assert.ok(await exists(path.join(dayDir, 'report.md')))
+  assert.equal(await exists(path.join(dayDir, 'report.html')), false)
+  assert.equal(await exists(path.join(dayDir, 'report.json')), false)
   assert.equal(
     memory.todos.filter(item => item.project === '/workspace/alpha' && item.text === '修复日报生成的边界').length,
     1,

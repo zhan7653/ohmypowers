@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs'
 import { writeRawSummary } from './collector.js'
 import { generateDraftWithCodex } from './codex-draft.js'
 import { finalizeReport } from './finalize.js'
-import { buildFallbackDraft, buildMemoryProposal, renderHtml, renderMarkdown } from './render.js'
+import { buildFallbackDraft, buildMemoryProposal, renderMarkdown } from './render.js'
 import { pathsForDate, resolveCodexHome, resolveOutDir } from './paths.js'
 
 export async function runCli(argv) {
@@ -33,14 +33,23 @@ export async function runCli(argv) {
 
   if (command === 'run') {
     await collectCommand({ date, codexHome, paths })
-    const result = await draftCommand({ date, codexHome, paths, options })
-    console.log(JSON.stringify(result.paths, null, 2))
+    await draftCommand({ date, codexHome, paths, options })
+    const result = await finalizeReport({
+      paths,
+      allowFallback: Boolean(options.allowFallback),
+      force: Boolean(options.force),
+    })
+    console.log(JSON.stringify({ reportMdFile: result.reportMdFile, memoryFile: result.memoryFile }, null, 2))
     return
   }
 
   if (command === 'finalize') {
-    const result = await finalizeReport({ paths, allowFallback: Boolean(options.allowFallback) })
-    console.log(JSON.stringify({ finalDir: result.finalDir, memoryFile: result.memoryFile }, null, 2))
+    const result = await finalizeReport({
+      paths,
+      allowFallback: Boolean(options.allowFallback),
+      force: Boolean(options.force),
+    })
+    console.log(JSON.stringify({ reportMdFile: result.reportMdFile, memoryFile: result.memoryFile }, null, 2))
     return
   }
 
@@ -79,12 +88,10 @@ async function draftCommand({ date, codexHome, paths, options }) {
   const proposal = buildMemoryProposal(report)
   const reportJsonPath = path.join(paths.draftDir, 'report.json')
   const reportMdPath = path.join(paths.draftDir, 'report.md')
-  const reportHtmlPath = path.join(paths.draftDir, 'report.html')
   const proposalPath = path.join(paths.draftDir, 'memory-update.proposed.json')
 
   await fs.writeFile(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8')
   await fs.writeFile(reportMdPath, renderMarkdown(report), 'utf8')
-  await fs.writeFile(reportHtmlPath, renderHtml(report), 'utf8')
   await fs.writeFile(proposalPath, `${JSON.stringify(proposal, null, 2)}\n`, 'utf8')
 
   return {
@@ -92,7 +99,6 @@ async function draftCommand({ date, codexHome, paths, options }) {
     paths: {
       reportJsonPath,
       reportMdPath,
-      reportHtmlPath,
       rawSummaryPath,
       proposalPath,
     },
@@ -115,7 +121,7 @@ function parseArgs(args) {
       throw new Error(`Unexpected argument "${arg}".`)
     }
     const key = toCamel(arg.slice(2))
-    if (key === 'allowFallback') {
+    if (key === 'allowFallback' || key === 'force') {
       options[key] = true
       continue
     }
@@ -148,8 +154,8 @@ function printHelp() {
 Usage:
   power-work-report collect --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR]
   power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
-  power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
-  power-work-report finalize --date YYYY-MM-DD [--out-dir DIR] [--allow-fallback]
+  power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN] [--force]
+  power-work-report finalize --date YYYY-MM-DD [--out-dir DIR] [--allow-fallback] [--force]
 
-V1 is manual: run/draft creates a draft only; finalize must be explicit.`)
+Markdown-first workflow: the skill confirms report intent with the user before run; run writes the final report.md and merges memory.`)
 }

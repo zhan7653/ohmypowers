@@ -2,7 +2,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 
-export async function finalizeReport({ paths, allowFallback = false }) {
+export async function finalizeReport({ paths, allowFallback = false, force = false }) {
   const draftReportPath = path.join(paths.draftDir, 'report.json')
   const proposalPath = path.join(paths.draftDir, 'memory-update.proposed.json')
   const report = await readRequiredJson(draftReportPath)
@@ -12,22 +12,24 @@ export async function finalizeReport({ paths, allowFallback = false }) {
     throw new Error('Refusing to finalize codex_failed draft without --allow-fallback.')
   }
 
-  await fs.mkdir(paths.finalDir, { recursive: true })
-  for (const file of ['report.md', 'report.html', 'report.json']) {
-    await fs.copyFile(path.join(paths.draftDir, file), path.join(paths.finalDir, file))
+  if (!force && (await exists(paths.reportMdFile))) {
+    throw new Error(`Refusing to overwrite existing report without --force: ${paths.reportMdFile}`)
   }
+
+  await fs.mkdir(paths.dayDir, { recursive: true })
+  await fs.copyFile(path.join(paths.draftDir, 'report.md'), paths.reportMdFile)
 
   const memory = await readJson(paths.memoryFile, { schemaVersion: 1, todos: [], ideas: [], reports: [] })
   const now = new Date().toISOString()
   memory.schemaVersion = 1
   memory.todos = mergeItems(memory.todos || [], proposal.todos || [], now)
   memory.ideas = mergeItems(memory.ideas || [], proposal.ideas || [], now)
-  memory.reports = upsertReport(memory.reports || [], proposal.report, paths.finalDir, now)
+  memory.reports = upsertReport(memory.reports || [], proposal.report, paths.reportMdFile, now)
   await fs.mkdir(path.dirname(paths.memoryFile), { recursive: true })
   await fs.writeFile(paths.memoryFile, `${JSON.stringify(memory, null, 2)}\n`, 'utf8')
 
   return {
-    finalDir: paths.finalDir,
+    reportMdFile: paths.reportMdFile,
     memoryFile: paths.memoryFile,
     report,
     memory,
@@ -68,15 +70,24 @@ function mergeItems(existing, proposed, now) {
   return merged
 }
 
-function upsertReport(existing, report, finalDir, now) {
+function upsertReport(existing, report, reportMdFile, now) {
   if (!report) return existing
   const next = existing.filter(item => item.date !== report.date)
   next.push({
     ...report,
-    finalDir,
+    reportMdFile,
     finalizedAt: now,
   })
   return next.sort((a, b) => String(a.date).localeCompare(String(b.date)))
+}
+
+async function exists(filePath) {
+  try {
+    await fs.stat(filePath)
+    return true
+  } catch {
+    return false
+  }
 }
 
 async function readRequiredJson(filePath) {

@@ -55,10 +55,11 @@ It is read-only and does not edit files, create branches, mutate issues, approve
 `power-work-report` generates a manual Codex daily work report:
 
 - Reads local Codex session JSONL for a target day.
-- Generates a draft Markdown/HTML/JSON report through `tools/power-work-report`.
+- Aligns report intent with the user before generation.
+- Generates a final Markdown report through `tools/power-work-report`.
 - Proposes 待办事项 and idea memory updates.
 - Shows `待办事项` as a first-class daily review section, including inherited, newly discovered, and possibly completed items from memory.
-- Requires explicit confirmation before finalizing reports or merging `memory.json`.
+- Merges `memory.json` only after the user has confirmed the report intent.
 - V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review; use `power-verifier`, `/review`, or the repository's code review workflow for that.
