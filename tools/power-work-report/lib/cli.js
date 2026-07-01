@@ -44,6 +44,12 @@ export async function runCli(argv) {
     return
   }
 
+  if (command === 'screenshot') {
+    const result = await screenshotCommand({ paths, options })
+    console.log(JSON.stringify(result, null, 2))
+    return
+  }
+
   throw new Error(`Unknown command "${command}".`)
 }
 
@@ -97,6 +103,14 @@ async function draftCommand({ date, codexHome, paths, options }) {
   }
 }
 
+async function screenshotCommand({ paths, options }) {
+  const htmlPath = options.html ? path.resolve(options.html) : path.join(paths.draftDir, 'report.html')
+  const screenshotDir = options.screenshotDir ? path.resolve(options.screenshotDir) : path.join(paths.draftDir, 'screenshots')
+  await fs.stat(htmlPath)
+  const { screenshotReport } = await import('./screenshot.js')
+  return screenshotReport({ htmlPath, outDir: screenshotDir })
+}
+
 function parseArgs(args) {
   const options = {}
   for (let index = 0; index < args.length; index += 1) {
@@ -140,6 +154,7 @@ Usage:
   power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
   power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
   power-work-report finalize --date YYYY-MM-DD [--out-dir DIR] [--allow-fallback]
+  power-work-report screenshot --date YYYY-MM-DD [--out-dir DIR] [--html FILE] [--screenshot-dir DIR]
 
 V1 is manual: run/draft creates a draft only; finalize must be explicit.`)
 }

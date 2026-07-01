@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { buildFallbackDraft } from './render.js'
+import { normalizeReportShape } from './render.js'
 
 export async function generateDraftWithCodex(rawSummary, options = {}) {
   const codexBin = options.codexBin || process.env.POWER_WORK_REPORT_CODEX_BIN || 'codex'
@@ -39,22 +39,7 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
 }
 
 export function normalizeDraft(value, rawSummary, lang = 'zh-CN') {
-  const fallback = buildFallbackDraft(rawSummary, { lang, status: 'draft' })
-  return {
-    ...fallback,
-    ...value,
-    schemaVersion: 1,
-    status: value.status || 'draft',
-    lang: value.lang || lang,
-    date: value.date || rawSummary.date,
-    generatedAt: value.generatedAt || new Date().toISOString(),
-    rawSummary,
-    evidence: {
-      ...fallback.evidence,
-      ...(value.evidence || {}),
-      sessionIds: value.evidence?.sessionIds || fallback.evidence.sessionIds,
-    },
-  }
+  return normalizeReportShape(value, rawSummary, lang)
 }
 
 function buildPrompt(rawSummary, lang) {
@@ -67,31 +52,68 @@ Date: ${rawSummary.date}
 
 Required JSON shape:
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "status": "draft",
   "lang": "${lang}",
   "date": "${rawSummary.date}",
-  "title": "...",
-  "overview": "...",
-  "projects": [
+  "generatedAt": "ISO-8601 timestamp",
+  "metadata": {
+    "date": "${rawSummary.date}",
+    "status": "draft",
+    "projectCount": ${rawSummary.projects.length},
+    "sessionCount": ${rawSummary.sessionCount},
+    "title": "Codex 工作日报 · ${rawSummary.date}",
+    "lead": "one concise lead paragraph",
+    "routeSteps": ["Issue Contract", "Bounded /goal", "Verifier Evidence", "Markdown-first Report"]
+  },
+  "overview": {
+    "overview": "one readable overview paragraph",
+    "readingFocus": "one sentence naming what to read first"
+  },
+  "outcomes": [
+    { "title": "short outcome title", "body": "concrete outcome detail" }
+  ],
+  "decisions": [
+    { "icon": "short symbol", "title": "short decision title", "body": "decision detail" }
+  ],
+  "tasks": {
+    "tomorrowPriority": [
+      { "text": "task", "project": "project path", "sourceSessionIds": ["..."] }
+    ],
+    "backlog": [
+      { "text": "task", "project": "project path", "sourceSessionIds": ["..."] }
+    ]
+  },
+  "projectSections": [
     {
-      "project": "...",
-      "summary": "...",
-      "completed": ["..."],
-      "todos": ["..."],
+      "project": "display name",
+      "path": "project path",
+      "badge": "short badge",
+      "results": ["..."],
+      "pending": ["..."],
       "ideas": ["..."],
       "evidence": { "sessionIds": ["..."], "filesModified": ["..."] }
     }
   ],
-  "completed": ["..."],
-  "todos": [{ "text": "...", "project": "...", "sourceSessionIds": ["..."] }],
-  "tomorrow": ["..."],
-  "ideas": [{ "text": "...", "project": "...", "sourceSessionIds": ["..."] }],
-  "risks": ["..."],
-  "evidence": { "sessionCount": 0, "sessionIds": ["..."] }
+  "riskGroups": {
+    "blocked": ["..."],
+    "watch": ["..."],
+    "limit": ["..."]
+  },
+  "ideas": {
+    "chips": [
+      { "text": "idea", "project": "project path", "sourceSessionIds": ["..."] }
+    ]
+  },
+  "appendix": {
+    "sessionIds": ["..."],
+    "filesModified": ["..."]
+  }
 }
 
-Use the raw summary as evidence. Extract practical todos, tomorrow tasks, and ideas.
+Use the raw summary as evidence. Preserve local paths when useful. Keep Markdown order compatible with:
+今日概览, 关键成果, 关键决策, 明日优先, 后续待办, 项目进展, 风险与阻塞, 想法与灵感, 附录：证据索引.
+Split tasks into tomorrowPriority and backlog. Put only concrete ideas into ideas.chips.
 
 Raw summary:
 ${JSON.stringify(rawSummary, null, 2)}`

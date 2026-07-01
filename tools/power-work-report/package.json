@@ -8,10 +8,14 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check bin/power-work-report.js && node --check lib/*.js && node --check test/*.test.js"
+    "check": "node --check bin/power-work-report.js && node --check lib/*.js && node --check test/*.test.js",
+    "screenshot:report": "node bin/power-work-report.js screenshot"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
   },
   "license": "MIT"
 }

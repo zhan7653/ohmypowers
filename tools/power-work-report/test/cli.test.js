@@ -55,10 +55,37 @@ test('run writes codex draft reports and proposed memory update', async t => {
   const html = await fs.readFile(path.join(draftDir, 'report.html'), 'utf8')
 
   assert.equal(report.status, 'draft')
-  assert.equal(report.projects.length, 2)
-  assert.ok(markdown.includes('按项目分组'))
+  assert.equal(report.schemaVersion, 2)
+  assert.equal(report.projectSections.length, 2)
+  assertMarkdownOrder(markdown, [
+    '## 今日概览',
+    '## 关键成果',
+    '## 关键决策',
+    '## 明日优先',
+    '## 后续待办',
+    '## 项目进展',
+    '## 风险与阻塞',
+    '## 想法与灵感',
+    '## 附录：证据索引',
+  ])
   assert.ok(html.includes('<!doctype html>'))
+  assert.ok(html.includes('class="hero"'))
+  assert.ok(html.includes('class="stats"'))
+  assert.ok(html.includes('class="nav"'))
+  assert.ok(html.includes('class="timeline"'))
+  assert.ok(html.includes('class="decision-list"'))
+  assert.ok(html.includes('class="task-board"'))
+  assert.ok(html.includes('details class="project"'))
+  assert.ok(html.includes('id="openAll"'))
+  assert.ok(html.includes('id="closeAll"'))
+  assert.ok(html.includes('id="themeBtn"'))
+  assert.ok(html.includes('id="progress"'))
+  assert.ok(html.includes('@media print'))
+  assert.ok(html.includes('@media (max-width: 820px)'))
+  assert.ok(!html.includes('<script>alert(1)</script>'))
+  assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'))
   assert.ok(proposal.todos.length >= 2)
+  assert.ok(proposal.ideas.length >= 2)
 })
 
 test('codex failure writes fallback draft and finalize refuses without allow-fallback', async t => {
@@ -112,6 +139,10 @@ test('finalize writes final reports and deduplicates memory by normalized text a
     memory.todos.filter(item => item.project === '/workspace/alpha' && item.text === '修复日报生成的边界').length,
     1,
   )
+  assert.equal(
+    memory.ideas.filter(item => item.project === '/workspace/alpha' && item.text === '把确认流程做成 skill').length,
+    1,
+  )
   assert.equal(memory.reports.length, 1)
 })
 
@@ -132,5 +163,14 @@ async function exists(filePath) {
     return true
   } catch {
     return false
+  }
+}
+
+function assertMarkdownOrder(markdown, headings) {
+  let cursor = -1
+  for (const heading of headings) {
+    const index = markdown.indexOf(heading)
+    assert.ok(index > cursor, `${heading} should appear after the previous report section`)
+    cursor = index
   }
 }
