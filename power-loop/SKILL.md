@@ -117,8 +117,10 @@ Default policy:
 Naming:
 
 - Branch: `agent/<issue-id>-<short-name>`
-- Worktree: `../<repo>-agent-<issue-id>-<short-name>`
+- Worktree: `.worktrees/agent-<issue-id>-<short-name>`
 - If there is no hosted issue, use a local brief slug instead of `<issue-id>`.
+
+Repository-local worktrees keep sibling directories tidy, but they require `.worktrees/` to be ignored by Git. Do not run destructive clean commands such as `git clean -fdx` from the parent worktree unless `.worktrees/` is explicitly excluded or the nested worktrees have already been removed safely.
 
 ## Phase 5: Checkpoints, Validation Loop, And Budget
 

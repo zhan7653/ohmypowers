@@ -25,9 +25,10 @@ Execution rules:
 Work isolation:
 - Use a dedicated branch or worktree.
 - Branch name: agent/<issue-id>-<short-name>
-- Worktree path, when needed: ../<repo>-agent-<issue-id>-<short-name>
+- Worktree path, when needed: .worktrees/agent-<issue-id>-<short-name>
 - Use a worktree when the current worktree has unrelated changes, multiple agents may run in parallel, or the task spans multiple medium-risk areas.
 - Pause if the required branch or worktree cannot be created safely.
+- Do not run destructive clean commands such as `git clean -fdx` from the parent worktree unless `.worktrees/` is explicitly excluded or the nested worktrees have already been removed safely.
 
 Checkpoints:
 1. Inspect the contract, relevant code, and relevant docs.
