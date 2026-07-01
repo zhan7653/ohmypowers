@@ -4,8 +4,10 @@ If the contract is incomplete or contradicts discovered facts, pause and ask to 
 
 Loop contract:
 - Objective: <objective>
+- Background/current problem: <background-or-current-problem>
 - Scope: <scope>
 - Non-goals: <non-goals>
+- Affected files/modules: <affected-files-or-modules>
 - Constraints: <constraints>
 - Validation plan: <validation-plan>
 - Acceptance criteria: <acceptance-criteria>
