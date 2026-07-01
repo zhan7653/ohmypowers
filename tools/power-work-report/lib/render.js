@@ -161,64 +161,75 @@ export function renderHtml(report) {
     <style>
       :root {
         color-scheme: light;
-        --bg: #f5f7fb;
+        --bg: #f6f8fb;
         --paper: #ffffff;
-        --ink: #172033;
-        --muted: #667085;
-        --line: #d9e0ea;
-        --accent: #1f7a8c;
-        --accent-soft: #e5f4f7;
-        --task: #8a5a00;
-        --task-soft: #fff4d8;
-        --done: #287a4b;
-        --done-soft: #e7f5ed;
-        --risk: #a43f48;
-        --risk-soft: #fdecee;
+        --ink: #182433;
+        --muted: #667382;
+        --line: #dce3ec;
+        --line-strong: #c8d3df;
+        --primary: #206bc4;
+        --primary-soft: #eaf2ff;
+        --primary-ink: #144a8b;
+        --task: #c97a0a;
+        --task-soft: #fff7e8;
+        --done: #2fb344;
+        --done-soft: #edf9f0;
+        --risk: #d63939;
+        --risk-soft: #fff0f0;
+        --shadow: 0 1px 2px rgba(24, 36, 51, 0.06);
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        font: 15px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font: 14px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         color: var(--ink);
         background: var(--bg);
       }
       a { color: inherit; }
       .report-shell {
-        max-width: 1120px;
+        max-width: 1180px;
         margin: 0 auto;
-        padding: 32px 20px 56px;
+        padding: 24px 20px 48px;
       }
       .report-header {
         display: grid;
-        gap: 20px;
-        padding: 28px;
+        gap: 18px;
+        padding: 22px 24px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+      .header-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
       }
       .eyebrow {
-        margin: 0 0 6px;
-        color: var(--accent);
-        font-size: 13px;
+        margin: 0 0 5px;
+        color: var(--primary);
+        font-size: 12px;
         font-weight: 700;
         letter-spacing: 0;
+        text-transform: uppercase;
       }
       h1, h2, h3, h4, p { overflow-wrap: anywhere; }
       h1 {
         margin: 0;
-        font-size: 32px;
-        line-height: 1.18;
+        font-size: 28px;
+        line-height: 1.2;
         letter-spacing: 0;
       }
       h2 {
-        margin: 0 0 14px;
-        font-size: 22px;
+        margin: 0 0 12px;
+        font-size: 20px;
         line-height: 1.25;
         letter-spacing: 0;
       }
       h3 {
         margin: 0;
-        font-size: 18px;
+        font-size: 16px;
         line-height: 1.3;
         letter-spacing: 0;
       }
@@ -231,65 +242,84 @@ export function renderHtml(report) {
       .meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        justify-content: flex-end;
+        gap: 7px;
         margin: 0;
         padding: 0;
         list-style: none;
       }
       .meta li, .pill {
-        min-height: 28px;
-        padding: 3px 10px;
+        min-height: 26px;
+        padding: 3px 9px;
         border: 1px solid var(--line);
         border-radius: 8px;
         color: var(--muted);
-        background: #fbfcfe;
+        background: #f8fafc;
+        font-size: 12px;
       }
       .toc {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
       }
       .toc a {
-        min-height: 32px;
-        padding: 5px 11px;
+        min-height: 30px;
+        padding: 5px 10px;
+        border: 1px solid transparent;
         border-radius: 8px;
         text-decoration: none;
-        background: var(--accent-soft);
-        color: #155766;
+        background: transparent;
+        color: var(--primary);
         font-weight: 650;
+        font-size: 13px;
+      }
+      .toc a:hover {
+        border-color: #b7cff2;
+        background: var(--primary-soft);
       }
       .section {
-        margin-top: 18px;
-        padding: 24px;
+        margin-top: 16px;
+        padding: 20px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+      .section > p {
+        max-width: 88ch;
+        margin: 0 0 14px;
+        color: #354052;
       }
       .metrics {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 18px;
+        gap: 12px;
+        margin-top: 16px;
       }
       .metric {
-        min-height: 78px;
-        padding: 14px;
+        min-height: 74px;
+        padding: 13px 14px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: #fbfcfe;
+        background: #f8fafc;
       }
       .metric strong {
         display: block;
-        font-size: 26px;
+        margin-bottom: 6px;
+        font-size: 25px;
         line-height: 1;
+        color: var(--primary);
       }
       .metric span {
         color: var(--muted);
-        font-size: 13px;
+        font-size: 12px;
+        font-weight: 650;
       }
       .task-section {
-        border-color: #eed59a;
-        background: #fffdf8;
+        border-color: #f0d7a0;
+        background: linear-gradient(180deg, #fffaf0 0%, #ffffff 88px);
       }
       .task-grid {
         display: grid;
@@ -297,26 +327,27 @@ export function renderHtml(report) {
         gap: 12px;
       }
       .task-panel {
-        min-height: 120px;
-        padding: 16px;
-        border: 1px solid #ebd9ad;
+        min-height: 116px;
+        padding: 14px;
+        border: 1px solid #edd8a8;
         border-radius: 8px;
         background: var(--paper);
       }
       .task-panel h3 {
         margin-bottom: 10px;
         color: var(--task);
+        font-size: 14px;
       }
       ul {
         margin: 0;
         padding-left: 19px;
       }
-      li + li { margin-top: 6px; }
+      li + li { margin-top: 5px; }
       .item-meta {
         display: block;
-        margin-top: 2px;
+        margin-top: 1px;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 11px;
       }
       .empty {
         margin: 0;
@@ -324,46 +355,85 @@ export function renderHtml(report) {
       }
       .project-list {
         display: grid;
-        gap: 14px;
+        gap: 12px;
       }
       .project-panel {
-        padding: 18px;
+        padding: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: #fbfcfe;
+        background: var(--paper);
+        overflow: hidden;
+      }
+      .project-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        background: #f8fafc;
+      }
+      .project-head h3 {
+        font-size: 15px;
+      }
+      .project-count {
+        flex: 0 0 auto;
+        min-height: 24px;
+        padding: 2px 8px;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        color: var(--muted);
+        background: var(--paper);
+        font-size: 12px;
+        font-weight: 650;
       }
       .project-panel > p {
-        margin: 8px 0 14px;
+        margin: 0;
+        padding: 13px 16px 0;
         color: #344054;
       }
       .project-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        gap: 0;
+        padding: 14px 16px 16px;
       }
       .detail-box {
-        padding: 14px;
-        border-radius: 8px;
+        min-height: 104px;
+        padding: 13px 14px;
         background: var(--paper);
-        border: 1px solid var(--line);
+        border: 0;
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
       }
-      .detail-box.done { border-color: #b8dfc8; background: var(--done-soft); }
-      .detail-box.tasks { border-color: #ebd9ad; background: var(--task-soft); }
-      .detail-box.risks { border-color: #f3b9bf; background: var(--risk-soft); }
+      .detail-box:nth-child(odd) {
+        border-left: 0;
+      }
+      .detail-box h4 {
+        color: #354052;
+      }
+      .detail-box.done h4 { color: var(--done); }
+      .detail-box.tasks h4 { color: var(--task); }
+      .detail-box.risks h4 { color: var(--risk); }
       .evidence {
         grid-column: 1 / -1;
+        border-left: 0;
       }
       .evidence code {
         display: inline-block;
         max-width: 100%;
         white-space: normal;
         overflow-wrap: anywhere;
+        color: #354052;
       }
       @media (max-width: 820px) {
         .report-shell { padding: 18px 12px 36px; }
-        .report-header, .section { padding: 18px; }
-        h1 { font-size: 26px; }
+        .report-header, .section { padding: 16px; }
+        .header-row { display: grid; }
+        .meta { justify-content: flex-start; }
+        h1 { font-size: 24px; }
         .metrics, .task-grid, .project-grid { grid-template-columns: 1fr; }
+        .detail-box, .detail-box:nth-child(odd), .evidence { border-left: 0; }
       }
       @media print {
         body { background: #fff; }
@@ -380,16 +450,18 @@ export function renderHtml(report) {
   <body>
     <main class="report-shell">
       <header class="report-header">
-        <div>
-          <p class="eyebrow">Codex Daily Report</p>
-          <h1>${escapeHtml(normalized.title)}</h1>
+        <div class="header-row">
+          <div>
+            <p class="eyebrow">Codex Daily Report</p>
+            <h1>${escapeHtml(normalized.title)}</h1>
+          </div>
+          <ul class="meta">
+            <li>日期: ${escapeHtml(normalized.date)}</li>
+            <li>状态: ${escapeHtml(normalized.status)}</li>
+            <li>项目: ${projects.length}</li>
+            <li>会话: ${sessionCount}</li>
+          </ul>
         </div>
-        <ul class="meta">
-          <li>日期: ${escapeHtml(normalized.date)}</li>
-          <li>状态: ${escapeHtml(normalized.status)}</li>
-          <li>项目: ${projects.length}</li>
-          <li>会话: ${sessionCount}</li>
-        </ul>
         <nav class="toc" aria-label="报告目录">
           <a href="#summary">今日概览</a>
           <a href="#tasks">待办事项</a>
@@ -498,8 +570,12 @@ function renderTaskPanel(title, items, emptyText) {
 
 function renderProject(project) {
   const projectTasks = [...project.todoReview.carryover, ...project.todoReview.new]
+  const itemCount = project.completed.length + projectTasks.length + project.ideas.length + project.todoReview.maybeCompleted.length
   return `<article class="project-panel">
-    <h3>${escapeHtml(project.project)}</h3>
+    <div class="project-head">
+      <h3>${escapeHtml(project.project)}</h3>
+      <span class="project-count">${itemCount} 项</span>
+    </div>
     <p>${escapeHtml(displayText(project.summary || '无摘要。'))}</p>
     <div class="project-grid">
       <section class="detail-box done">
