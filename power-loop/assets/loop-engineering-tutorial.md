@@ -5,7 +5,7 @@ This tutorial shows how to use the full `ohmypowers` Loop Engineering flow on a 
 The goal is not to build an advanced ML system. The goal is to exercise the loop:
 
 ```text
-power-grill -> power-loop -> Codex /goal -> power-critic -> PR evidence -> human review
+power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review
 ```
 
 By the end, there should be a small linear regression optimizer example, validation evidence, a verifier result, and a PR/MR evidence package that shows why the task is complete.
@@ -224,8 +224,8 @@ The implementation runner should work in checkpoints:
 The loop should not continue forever. Use the budget from `power-loop`, usually:
 
 - max implementation iterations: 5;
-- same failure retry limit: 2;
-- no-progress stop: 2 consecutive iterations.
+- same failure retry limit: 3;
+- no-progress stop: 3 consecutive iterations.
 
 ## Step 5: What Good Loop Evidence Looks Like
 
@@ -250,12 +250,12 @@ Loop decision: pr-ready
 
 Use `blocked` or `needs-human` instead if validation or verifier checks fail.
 
-## Step 6: Run power-critic As The Verifier
+## Step 6: Run power-verifier As The Verifier
 
-Use `power-critic` after implementation and before claiming the loop is ready:
+Use `power-verifier` after implementation and before claiming the loop is ready:
 
 ```text
-Use $power-critic to review this issue contract, implementation diff, validation output, and PR evidence as a read-only verifier. Focus on scope, acceptance criteria evidence, validation strength, and loop decision.
+Use $power-verifier to check this issue contract, implementation diff, validation output, and PR evidence.
 ```
 
 The verifier should check:
@@ -266,9 +266,12 @@ The verifier should check:
 - tests actually prove the acceptance criteria;
 - divergence handling is tested;
 - PR/MR body maps evidence to every AC;
+- verifier independence mode and code-review source or skipped reason are disclosed;
 - loop decision is justified.
 
-If the verifier returns `BLOCKED` or `NEEDS_HUMAN`, do not mark the loop complete.
+If the verifier returns a fixable `BLOCKED`, repair within the bounded loop budget, rerun validation, and rerun the verifier. If the verifier returns `NEEDS_HUMAN`, or `BLOCKED` remains after the allowed repair attempts, do not mark the loop complete.
+
+`power-critic` remains useful for requirements, spec, plan, or model-reply critique. It should not be used for code diff correctness review.
 
 ## Step 7: Final Demonstration
 
@@ -305,7 +308,6 @@ Use this sequence when testing manually:
 3. Use $power-loop on the issue URL.
 4. Review the bounded /goal.
 5. Manually run the /goal in Codex.
-6. Ask $power-critic to verify the issue, diff, tests, and PR evidence.
+6. Ask $power-verifier to verify the issue, diff, tests, and PR evidence.
 7. Review the draft PR/MR. Do not merge until a human is satisfied.
 ```
-

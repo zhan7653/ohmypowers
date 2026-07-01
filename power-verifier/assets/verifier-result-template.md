@@ -2,6 +2,13 @@
 
 Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
+# Verifier Independence
+
+- Verifier Independence Mode: `fresh-context verifier agent | external code review plus verifier | self-review degraded mode`
+- Independent Review Source: `<power-verifier custom agent, Codex /review, equivalent read-only subagent, or self-review>`
+- Code-review source or skipped reason: `<review source, not applicable for documentation-only diff, unavailable, or other reason>`
+- Degraded Mode Reason: `<none, or why fresh-context/external review was unavailable>`
+
 # Sources Reviewed
 
 - Contract source: `<issue, local brief, or pasted contract>`
@@ -24,6 +31,10 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 # Validation Assessment
 
 - `<command or evidence>`: `<sufficient, insufficient, failed, or not run>`
+
+# Review Findings Considered
+
+- `<finding, impact, disposition, or none>`
 
 # Risks And Assumptions
 

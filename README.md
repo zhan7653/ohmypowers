@@ -47,6 +47,8 @@ For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
+- Independent evidence audit with fresh-context verifier support when available.
+- Conditional code-review integration through Codex `/review` or an equivalent read-only code-review subagent when the diff includes code, behavior, tests, dependencies, or config.
 - Loop decision justification.
 - One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
 
@@ -60,7 +62,9 @@ It is read-only and does not edit files, create branches, mutate issues, approve
 - Requires explicit confirmation before finalizing reports or merging `memory.json`.
 - V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
 
-`power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review; use `power-verifier`, `/review`, or the repository's code review workflow for that.
+`power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
+
+For implementation diff correctness, use `power-verifier`, Codex `/review`, or the repository's code review workflow.
 
 Use them by phase:
 
@@ -90,14 +94,19 @@ cp -R power-critic ~/.codex/skills/power-critic
 
 If `CODEX_HOME` is set, use `$CODEX_HOME/skills` instead of `~/.codex/skills`.
 
-For Codex read-only custom-agent hardening, also install the bundled critic agent into Codex's custom-agent path:
+For Codex read-only custom-agent hardening, also install the bundled verifier and critic agents into Codex's custom-agent path:
 
 ```bash
 mkdir -p ~/.codex/agents
+cp power-verifier/agents/power-verifier.toml ~/.codex/agents/power-verifier.toml
 cp power-critic/agents/power-critic.toml ~/.codex/agents/power-critic.toml
 ```
 
-The skill installation makes `$power-critic` available. The custom-agent installation is what makes the named `power_critic` read-only agent discoverable by Codex.
+The skill installation makes `$power-verifier` and `$power-critic` available.
+
+The verifier custom-agent installation makes the named `power_verifier` read-only agent discoverable by Codex. The critic custom-agent installation does the same for `power_critic`. These agents are recommended, not required.
+
+When a fresh-context implementation verifier is unavailable, `power-verifier` output should disclose degraded self-review mode.
 
 Restart Codex after installing or updating skills or custom agents.
 
@@ -208,6 +217,7 @@ power-verifier/
   SKILL.md
   agents/
     openai.yaml
+    power-verifier.toml
   assets/
     implementation-verifier-checklist.md
     verifier-result-template.md
