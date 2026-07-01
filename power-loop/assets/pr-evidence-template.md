@@ -28,6 +28,14 @@
 
 Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
+Verifier independence mode:
+
+- <fresh-context verifier agent | external code review plus verifier | self-review degraded mode>
+
+Code-review source or skipped reason:
+
+- <source or reason>
+
 Notes:
 
 - <verifier note>

@@ -148,8 +148,8 @@ Default checkpoints:
 Default budget:
 
 - Max implementation iterations: 5.
-- Same failure retry limit: 2.
-- No-progress stop: 2 consecutive iterations.
+- same failure retry limit: 3.
+- No-progress stop: 3 consecutive iterations.
 - Pause on scope expansion.
 - Pause on missing or unreliable validation.
 - Pause if forbidden paths become necessary.
@@ -159,7 +159,7 @@ Default budget:
 
 Use [assets/verifier-gate.md](assets/verifier-gate.md).
 
-The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, and disclosed risks. `power-loop` defines the verifier gate in the bounded `/goal`; `power-verifier` is the recommended execution tool for that gate after implementation evidence exists.
+The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, disclosed risks, and code-review findings when relevant. `power-loop` defines the verifier gate in the bounded `/goal`; `power-verifier` is the recommended execution tool for that gate after implementation evidence exists.
 
 Verifier outcomes:
 
@@ -169,6 +169,8 @@ Verifier outcomes:
 - `NEEDS_HUMAN`
 
 If the verifier returns `BLOCKED` or `NEEDS_HUMAN`, the implementation runner must not claim completion.
+
+If the verifier or code-review pass returns a fixable `BLOCKED` inside the current contract, the implementation runner should repair within the bounded loop budget, rerun validation, and rerun the verifier gate. Use `NEEDS_HUMAN` only when the fix requires scope expansion, a contract change, high-risk work, or repeated failure beyond budget.
 
 ## Phase 7: Generate The Bounded /goal
 

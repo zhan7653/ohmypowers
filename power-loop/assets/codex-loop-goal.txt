@@ -50,8 +50,8 @@ Validation loop:
 
 Budget:
 - Max implementation iterations: 5.
-- Same failure retry limit: 2.
-- Stop after 2 consecutive no-progress iterations.
+- same failure retry limit: 3.
+- Stop after 3 consecutive no-progress iterations.
 - Pause if scope expansion is required.
 - Pause if forbidden paths become necessary.
 - Pause if high-risk operations become necessary.
@@ -62,13 +62,19 @@ Verifier gate:
 - Compare the diff against the contract.
 - Verify every acceptance criterion has evidence.
 - Check validation results, scope, non-goals, forbidden paths, and disclosed risks.
+- For code, behavior, test, dependency, or config diffs, use Codex `/review` or an equivalent read-only code-review subagent when available.
+- For documentation-only diffs, state the code-review skipped reason if no code review is run.
+- Record verifier independence mode, independent review source, code-review source or skipped reason, review findings considered, and degraded-mode reason when applicable.
 - Record one verifier result: PASS, PASS_WITH_NOTES, BLOCKED, or NEEDS_HUMAN.
-- If the verifier returns BLOCKED or NEEDS_HUMAN, do not claim completion.
+- If the verifier or code-review pass returns a fixable BLOCKED inside the current contract, repair within the implementation loop budget, rerun validation, and rerun the verifier.
+- Use NEEDS_HUMAN only for scope expansion, contract contradiction, high-risk work, or repeated repair failure beyond budget.
+- If the verifier returns BLOCKED or NEEDS_HUMAN after allowed repair attempts, do not claim completion.
 
 PR/MR evidence requirements:
 - Create a draft PR/MR only.
 - Link the contract source.
 - Include summary, rationale, changed files, tests run, acceptance-criteria evidence, verifier result, risks, assumptions, out-of-scope items, and reviewer checklist.
+- Include verifier independence mode and code-review source or skipped reason.
 - Include an evidence table:
 
 | AC | Evidence | Validation | Files | Status |
