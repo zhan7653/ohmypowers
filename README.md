@@ -52,6 +52,14 @@ For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.
 
 It is read-only and does not edit files, create branches, mutate issues, approve work, merge, or close PRs/MRs.
 
+`power-work-report` generates a manual Codex daily work report:
+
+- Reads local Codex session JSONL for a target day.
+- Generates a draft Markdown/HTML/JSON report through `tools/power-work-report`.
+- Proposes todo and idea memory updates.
+- Requires explicit confirmation before finalizing reports or merging `memory.json`.
+- V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
+
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review; use `power-verifier`, `/review`, or the repository's code review workflow for that.
 
 Use them by phase:
@@ -60,6 +68,7 @@ Use them by phase:
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
 - `power-loop`: agent-ready issue/local brief -> bounded implementation `/goal`.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
+- `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
 - Recommended Loop Engineering flow: `power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
@@ -75,6 +84,7 @@ cp -R power-think ~/.codex/skills/power-think
 cp -R power-grill ~/.codex/skills/power-grill
 cp -R power-loop ~/.codex/skills/power-loop
 cp -R power-verifier ~/.codex/skills/power-verifier
+cp -R power-work-report ~/.codex/skills/power-work-report
 cp -R power-critic ~/.codex/skills/power-critic
 ```
 
@@ -101,6 +111,7 @@ cp -R power-think ~/.claude/skills/power-think
 cp -R power-grill ~/.claude/skills/power-grill
 cp -R power-loop ~/.claude/skills/power-loop
 cp -R power-verifier ~/.claude/skills/power-verifier
+cp -R power-work-report ~/.claude/skills/power-work-report
 cp -R power-critic ~/.claude/skills/power-critic
 ```
 
@@ -111,6 +122,7 @@ For project-local Claude Code skills, place them at:
 .claude/skills/power-grill/SKILL.md
 .claude/skills/power-loop/SKILL.md
 .claude/skills/power-verifier/SKILL.md
+.claude/skills/power-work-report/SKILL.md
 .claude/skills/power-critic/SKILL.md
 ```
 
@@ -146,6 +158,12 @@ Ask for implementation verification:
 Use $power-verifier to check this issue contract, diff, validation output, and PR evidence.
 ```
 
+Ask for a manual Codex work report draft:
+
+```text
+Use $power-work-report to generate a daily work report draft for today.
+```
+
 Claude Code can also invoke skills directly:
 
 ```text
@@ -153,6 +171,7 @@ Claude Code can also invoke skills directly:
 /power-grill
 /power-loop
 /power-verifier
+/power-work-report
 /power-critic
 ```
 
@@ -192,6 +211,15 @@ power-verifier/
   assets/
     implementation-verifier-checklist.md
     verifier-result-template.md
+power-work-report/
+  SKILL.md
+  agents/
+    openai.yaml
+tools/power-work-report/
+  package.json
+  bin/
+  lib/
+  test/
 power-critic/
   SKILL.md
   agents/
