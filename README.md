@@ -41,6 +41,8 @@ It does not implement code, generate `/goal` before the issue contract exists, a
 
 Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not clarify vague requirements deeply or implement code directly. If a contract is incomplete, it sends the task back to `power-grill`; if risk is high, it requires human handling instead of generating an implementation `/goal`.
 
+For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.md](power-loop/assets/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate issue contracts, bounded `/goal` generation, validation loops, verifier evidence, and PR review.
+
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review; use `/review` or the repository's code review workflow for that.
 
 Use them by phase:
@@ -163,6 +165,7 @@ power-loop/
     pr-evidence-template.md
     status-transitions.md
     sample-contracts.md
+    loop-engineering-tutorial.md
 power-critic/
   SKILL.md
   agents/
