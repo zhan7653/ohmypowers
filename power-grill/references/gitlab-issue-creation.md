@@ -25,6 +25,6 @@ Recommended flow:
    ```
 
 5. Return the issue number and URL.
-6. Update the ready-to-run `/goal` so it references the real issue.
+6. Tell the user to run `power-loop` on the issue URL when they want a bounded Codex `/goal`.
 
-Do not create an MR during the pre-goal grilling phase unless the user explicitly asks and there is already an implementation branch to publish.
+Do not create an MR during the issue-contract phase unless the user explicitly asks and there is already an implementation branch to publish.
