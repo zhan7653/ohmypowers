@@ -2,8 +2,12 @@
 gstack/
 superpowers/
 *.txt
+!examples/linear-regression-optimizer/requirements.txt
 gstack-analysis.md
 .claude/
+.venv/
+__pycache__/
 
 resource/
 docs/
+examples/linear-regression-optimizer/training_result.png
