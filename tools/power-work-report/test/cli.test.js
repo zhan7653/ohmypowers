@@ -56,9 +56,80 @@ test('run writes codex draft reports and proposed memory update', async t => {
 
   assert.equal(report.status, 'draft')
   assert.equal(report.projects.length, 2)
+  assert.equal(report.todoReview.new.length, 2)
   assert.ok(markdown.includes('按项目分组'))
+  assert.ok(markdown.includes('待办事项'))
+  assert.ok(!markdown.includes('未完成 Todos'))
   assert.ok(html.includes('<!doctype html>'))
+  assert.ok(html.includes('class="report-shell"'))
+  assert.ok(html.includes('id="tasks"'))
   assert.ok(proposal.todos.length >= 2)
+})
+
+test('run carries open memory todos into first-class todo review', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-carryover-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+
+  await fs.writeFile(
+    path.join(tmp, 'memory.json'),
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        todos: [
+          {
+            id: 'existing-alpha',
+            text: '补充 finalize 测试',
+            project: '/workspace/alpha',
+            sourceDate: '2026-06-30',
+            sourceDates: ['2026-06-30'],
+            sourceSessionIds: ['old-session'],
+            status: 'open',
+          },
+          {
+            id: 'closed-beta',
+            text: '已关闭事项',
+            project: '/workspace/beta',
+            sourceDate: '2026-06-29',
+            sourceDates: ['2026-06-29'],
+            sourceSessionIds: ['closed-session'],
+            status: 'done',
+          },
+        ],
+        ideas: [],
+        reports: [],
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  )
+
+  await run([
+    'run',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--lang',
+    'zh-CN',
+    '--codex-bin',
+    failCodex,
+  ])
+
+  const draftDir = path.join(tmp, '2026-07-01', 'draft')
+  const report = await readJson(path.join(draftDir, 'report.json'))
+  const markdown = await fs.readFile(path.join(draftDir, 'report.md'), 'utf8')
+  const html = await fs.readFile(path.join(draftDir, 'report.html'), 'utf8')
+
+  assert.equal(report.todoReview.carryover.length, 1)
+  assert.equal(report.todoReview.carryover[0].text, '补充 finalize 测试')
+  assert.equal(report.todoReview.new.some(item => item.text === '已关闭事项'), false)
+  assert.ok(markdown.includes('继承待办事项'))
+  assert.ok(markdown.includes('新增待办事项'))
+  assert.ok(html.includes('继承待办事项'))
+  assert.ok(html.includes('新增待办事项'))
 })
 
 test('codex failure writes fallback draft and finalize refuses without allow-fallback', async t => {

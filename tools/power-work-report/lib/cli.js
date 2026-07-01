@@ -62,15 +62,17 @@ async function draftCommand({ date, codexHome, paths, options }) {
   }
 
   const lang = options.lang || 'zh-CN'
+  const memory = await readJson(paths.memoryFile, { schemaVersion: 1, todos: [], ideas: [], reports: [] })
   let report
   try {
     report = await generateDraftWithCodex(rawSummary, {
       lang,
       codexBin: options.codexBin,
       cwd: process.cwd(),
+      memory,
     })
   } catch (error) {
-    report = buildFallbackDraft(rawSummary, { lang, status: 'codex_failed' })
+    report = buildFallbackDraft(rawSummary, { lang, status: 'codex_failed', memory })
     report.codexError = error instanceof Error ? error.message : String(error)
   }
 
@@ -94,6 +96,14 @@ async function draftCommand({ date, codexHome, paths, options }) {
       rawSummaryPath,
       proposalPath,
     },
+  }
+}
+
+async function readJson(filePath, fallback) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, 'utf8'))
+  } catch {
+    return fallback
   }
 }
 

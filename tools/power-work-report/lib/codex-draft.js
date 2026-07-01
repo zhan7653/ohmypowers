@@ -1,14 +1,15 @@
 import { spawn } from 'node:child_process'
-import { buildFallbackDraft } from './render.js'
+import { buildFallbackDraft, normalizeReportStructure } from './render.js'
 
 export async function generateDraftWithCodex(rawSummary, options = {}) {
   const codexBin = options.codexBin || process.env.POWER_WORK_REPORT_CODEX_BIN || 'codex'
-  const prompt = buildPrompt(rawSummary, options.lang || 'zh-CN')
+  const memory = summarizeMemory(options.memory)
+  const prompt = buildPrompt(rawSummary, options.lang || 'zh-CN', memory)
   const result = await runCodex(codexBin, prompt, options)
-  return parseDraftJson(result.stdout, rawSummary, options.lang || 'zh-CN')
+  return parseDraftJson(result.stdout, rawSummary, options.lang || 'zh-CN', memory)
 }
 
-export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
+export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN', memory = {}) {
   const candidates = []
   for (const line of String(stdout || '').split('\n')) {
     const trimmed = line.trim()
@@ -29,7 +30,7 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
     if (!jsonText) continue
     try {
       const parsed = JSON.parse(jsonText)
-      return normalizeDraft(parsed, rawSummary, lang)
+      return normalizeDraft(parsed, rawSummary, lang, memory)
     } catch {
       // Try the next candidate.
     }
@@ -38,9 +39,9 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
   throw new Error('Codex returned no parseable report JSON.')
 }
 
-export function normalizeDraft(value, rawSummary, lang = 'zh-CN') {
-  const fallback = buildFallbackDraft(rawSummary, { lang, status: 'draft' })
-  return {
+export function normalizeDraft(value, rawSummary, lang = 'zh-CN', memory = {}) {
+  const fallback = buildFallbackDraft(rawSummary, { lang, status: 'draft', memory })
+  const merged = {
     ...fallback,
     ...value,
     schemaVersion: 1,
@@ -55,9 +56,11 @@ export function normalizeDraft(value, rawSummary, lang = 'zh-CN') {
       sessionIds: value.evidence?.sessionIds || fallback.evidence.sessionIds,
     },
   }
+  if (!value.todoReview) delete merged.todoReview
+  return normalizeReportStructure(merged, memory)
 }
 
-function buildPrompt(rawSummary, lang) {
+function buildPrompt(rawSummary, lang, memory) {
   return `You are generating a local Codex daily work report.
 
 Return ONLY one valid JSON object. Do not include Markdown fences.
@@ -73,6 +76,12 @@ Required JSON shape:
   "date": "${rawSummary.date}",
   "title": "...",
   "overview": "...",
+  "dailyFocus": ["..."],
+  "todoReview": {
+    "carryover": [{ "text": "...", "project": "...", "sourceSessionIds": ["..."], "sourceDates": ["..."], "status": "open" }],
+    "new": [{ "text": "...", "project": "...", "sourceSessionIds": ["..."], "status": "open" }],
+    "maybeCompleted": [{ "text": "...", "project": "...", "reason": "...", "sourceSessionIds": ["..."] }]
+  },
   "projects": [
     {
       "project": "...",
@@ -92,9 +101,31 @@ Required JSON shape:
 }
 
 Use the raw summary as evidence. Extract practical todos, tomorrow tasks, and ideas.
+For Chinese output, use the label 待办事项 in user-facing text and avoid Todo/Todos.
+Use todoReview.carryover for still-open memory todos, todoReview.new for newly discovered todos, and todoReview.maybeCompleted only when the day's work suggests an existing todo may have been completed and needs review.
+Do not duplicate the same completed item in both global completed and project details unless the global entry is a concise synthesis.
+Keep each todoReview item concise and action-oriented. Do not copy whole prompts, long chat turns, issue bodies, or validation logs into a todo item.
+
+Open memory todos:
+${JSON.stringify(memory.openTodos || [], null, 2)}
 
 Raw summary:
 ${JSON.stringify(rawSummary, null, 2)}`
+}
+
+function summarizeMemory(memory = {}) {
+  return {
+    openTodos: (memory.todos || [])
+      .filter(item => !item.status || item.status === 'open')
+      .map(item => ({
+        id: item.id,
+        text: item.text,
+        project: item.project || '',
+        status: item.status || 'open',
+        sourceDates: item.sourceDates || (item.sourceDate ? [item.sourceDate] : []),
+        sourceSessionIds: item.sourceSessionIds || [],
+      })),
+  }
 }
 
 function runCodex(codexBin, prompt, options) {

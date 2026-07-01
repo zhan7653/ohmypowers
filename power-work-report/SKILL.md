@@ -11,7 +11,9 @@ Generate a local daily work report from Codex session history.
 
 This skill is a manual workflow wrapper around the `tools/power-work-report` Node CLI. It should generate a draft first, show the user where to review it, and only finalize after explicit user confirmation.
 
-V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, generates Markdown/HTML/JSON reports, proposes todo and idea memory updates, and merges those updates only during `finalize`.
+V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, generates Markdown/HTML/JSON reports, proposes 待办事项 and idea memory updates, and merges those updates only during `finalize`.
+
+Reports treat `待办事项` as a first-class daily review section. Draft generation should include open 待办事项 from `memory.json` as carryover context and separate inherited, newly discovered, and possibly completed 待办事项 for review.
 
 ## Boundaries
 
@@ -36,7 +38,7 @@ V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, gener
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.html`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.json`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/memory-update.proposed.json`
-4. Ask the user to review the draft and confirm whether to finalize.
+4. Ask the user to review the draft, especially the 待办事项 sections, and confirm whether to finalize.
 5. Only after confirmation, run:
 
    ```bash
@@ -51,4 +53,4 @@ If Codex draft generation fails, the CLI writes a fallback draft with status `co
 
 ## Privacy
 
-Reports may contain local project paths, thread content, commands, todos, and ideas from Codex session history. Remind the user to review generated files before sharing them.
+Reports may contain local project paths, thread content, commands, 待办事项, and ideas from Codex session history. Remind the user to review generated files before sharing them.

@@ -56,7 +56,8 @@ It is read-only and does not edit files, create branches, mutate issues, approve
 
 - Reads local Codex session JSONL for a target day.
 - Generates a draft Markdown/HTML/JSON report through `tools/power-work-report`.
-- Proposes todo and idea memory updates.
+- Proposes 待办事项 and idea memory updates.
+- Shows `待办事项` as a first-class daily review section, including inherited, newly discovered, and possibly completed items from memory.
 - Requires explicit confirmation before finalizing reports or merging `memory.json`.
 - V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
 
