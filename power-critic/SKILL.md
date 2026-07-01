@@ -9,7 +9,7 @@ description: Use only when the user explicitly invokes $power-critic or explicit
 
 Produce a read-only batch critique of requirements, conversations, specs, plans, or model replies. The goal is to reduce agreement bias by using a fresh critic context when the host supports subagents.
 
-This is not code review. If the primary object is a code diff, branch, PR, commit, implementation bug, security issue in code, or merge decision, stop and redirect to `/review` or the repository's code review workflow.
+This is not code review. If the primary object is a code diff, branch, PR, commit, implementation bug, security issue in code, or merge decision, stop and redirect to `power-verifier`, `/review`, or the repository's code review workflow.
 
 This skill is explicit-only. If host invocation policy is unavailable or unverified, still treat `$power-critic` or an explicit request to use the power-critic skill as required authorization.
 

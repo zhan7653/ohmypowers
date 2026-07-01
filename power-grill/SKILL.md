@@ -1,13 +1,13 @@
 ---
 name: power-grill
-description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then produce an issue draft for user confirmation. After the issue is created or saved as a local brief, generate a ready-to-run Codex /goal. This skill is self-contained and does not require the original grill-me skill.
+description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then produce an issue contract for user confirmation. After the issue is created or saved as a local brief, point the user to power-loop for bounded /goal generation. This skill is self-contained and does not require the original grill-me skill.
 ---
 
 # Power Grill
 
 ## Overview
 
-Turn a vague or half-clear coding task into an execution-ready task contract before implementation starts. The main value is the multi-round grilling process; the issue draft is generated first, then the `/goal` is generated only after the user confirms the issue and it exists as a hosted issue or local brief.
+Turn a vague or half-clear coding task into an agent-ready issue contract before implementation starts. The main value is the multi-round grilling process; the issue draft is generated first, then saved as a hosted issue or local brief after the user confirms it.
 
 This skill incorporates the core idea of grill-me-style pre-implementation questioning, but it is self-contained and does not require the original grill-me skill to be installed.
 
@@ -16,22 +16,22 @@ The output is:
 1. a clarified task summary;
 2. an issue draft for user review;
 3. after confirmation, a hosted issue or local issue brief;
-4. after the issue exists, a ready-to-run Codex `/goal`.
+4. a clear next step to run `power-loop` on the hosted issue or local brief.
 
 Do not implement code during this skill.
-Do not generate or start `/goal` before the user confirms the issue draft and the contract exists as a hosted issue or local brief.
+Do not generate or start `/goal`; bounded `/goal` generation belongs to `power-loop`.
 Do not create hosted issues, pull requests, or merge requests by default.
 
-After the user reviews the generated issue body, you may create the hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. If hosted issue creation is not available or not desired, save a local issue brief after user confirmation. PR/MR creation and PR/MR body generation belong to the implementation phase after `/goal` has run.
+After the user reviews the generated issue body, you may create the hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. If hosted issue creation is not available or not desired, save a local issue brief after user confirmation. PR/MR creation and PR/MR body generation belong to the implementation phase after `power-loop` has produced a bounded `/goal` and Codex has run it.
 
 ## When To Use
 
-Use this skill when the user wants to turn a coding task into a bounded implementation contract, especially before handing the task to Codex through `/goal`.
+Use this skill when the user wants to turn a coding task into an issue contract, especially before handing the task to `power-loop`.
 
 Good inputs:
 
 - "Grill me on this implementation idea."
-- "Turn this feature into an issue and goal."
+- "Turn this feature into an issue contract."
 - "Help me prepare a Codex task contract."
 - "Before implementation, make sure the scope and validation are clear."
 
@@ -189,7 +189,7 @@ Do not generate `/goal` in this phase. Ask the user to review and confirm the is
 
 ## Phase 4: Confirm Issue Contract
 
-After the user confirms the issue draft, create or save the issue contract before generating `/goal`.
+After the user confirms the issue draft, create or save the issue contract.
 
 Options:
 
@@ -208,35 +208,30 @@ When the user confirms issue creation:
 - For GitLab or `glab`, read `references/gitlab-issue-creation.md`.
 - If host rules are unclear, stop and ask before running a creation command.
 
-After the hosted issue is created or local brief is saved, record the issue URL, issue number, or local brief path. This reference is required before generating `/goal`.
+After the hosted issue is created or local brief is saved, record the issue URL, issue number, or local brief path. This reference is the input for `power-loop`.
 
-## Phase 5: Produce Ready-To-Run /goal
+## Phase 5: Hand Off To power-loop
 
-After the hosted issue is created or the local issue brief is saved, produce a ready-to-run Codex `/goal`.
+After the hosted issue is created or the local issue brief is saved, stop at the issue contract and tell the user to run `power-loop`.
 
+Do not generate a bounded implementation `/goal`.
 Do not automatically execute `/goal`.
-Tell the user to review it and manually run it if they want Codex to start implementation.
+Tell the user to run `power-loop` on the hosted issue URL or local brief path when they want a bounded Codex implementation loop.
 
-The `/goal` must include:
+The handoff must include:
 
 - issue number, issue URL, or local issue brief path;
-- instruction to treat the issue body as the sole task contract;
-- checkpoints;
-- validation commands or validation discovery instructions;
-- acceptance criteria evidence requirement;
-- progress log requirement;
-- pause-and-ask conditions;
-- draft PR/MR requirement;
-- no-merge rule;
-- no protected-branch push rule.
+- readiness summary;
+- suggested status label such as `agent-ready`, when labels are used;
+- next step: run `power-loop` on the issue URL or local brief.
 
-When generating the `/goal`, read and fill `assets/codex-goal.txt`.
+Do not include worktree paths, iteration budgets, verifier prompts, full PR evidence tables, or a complete `/goal` in the issue handoff. Those are owned by `power-loop`.
 
 ## Phase 6: PR/MR Evidence Requirements
 
 Do not output a full PR/MR body during power-grill. The PR/MR body should be generated during the implementation phase after code changes and validation exist.
 
-When generating `/goal`, include the requirement that the implementation phase creates a draft PR or MR with evidence mapped to the issue acceptance criteria and stop condition. The implementation phase may read `assets/pr-body.md` when it needs a PR/MR body template.
+The issue contract should include acceptance criteria, validation, stop conditions, and pause-and-ask conditions so `power-loop` can require a draft PR or MR with evidence mapped to the contract. The implementation phase may read `assets/pr-body.md` when it needs a PR/MR body template.
 
 Never merge PRs or MRs.
 Never push directly to `main`, `master`, `release`, or protected branches.
@@ -253,5 +248,5 @@ At the end of the power-grill phase, output:
 After the user confirms and the hosted issue or local brief exists, output:
 
 1. Issue reference
-2. Ready-to-run `/goal`
-3. Clear instruction that the user should review and manually run `/goal` if they want Codex to start implementation
+2. Readiness summary and suggested `agent-ready` status
+3. Clear next step: run `power-loop` on the hosted issue URL or local brief to generate the bounded Codex `/goal`

@@ -1,6 +1,6 @@
 # Verifier Gate
 
-The verifier gate is a read-only check before final PR/MR readiness.
+The verifier gate is a read-only check before final PR/MR readiness. `power-loop` defines this gate in the bounded `/goal`; `power-verifier` is the recommended skill for executing it against implementation evidence.
 
 ## Inputs
 
@@ -21,6 +21,7 @@ The verifier gate is a read-only check before final PR/MR readiness.
 - Forbidden paths or high-risk areas were not touched without approval.
 - Risks and assumptions are disclosed.
 - The PR/MR evidence package is complete enough for review.
+- The loop decision is justified by the diff, validation, and evidence.
 
 ## Outcomes
 
@@ -43,4 +44,3 @@ A human decision is required before the loop can continue, such as approving a r
 ## Rule
 
 If the verifier result is `BLOCKED` or `NEEDS_HUMAN`, the implementation runner must not claim completion.
-

@@ -11,12 +11,12 @@ Convert an agent-ready task contract into a bounded implementation loop for Code
 
 Loop Engineering in this repository means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries.
 
-`power-loop` is an orchestrator. It does not implement code directly. Its output is a readiness decision and, only when the contract is loop-ready, a ready-to-run bounded `/goal`.
+`power-loop` is an orchestrator. It does not implement code directly. Its output is a readiness decision and, only when the contract is loop-ready, a ready-to-run bounded `/goal`. It owns bounded `/goal` generation; `power-grill` owns issue contracts.
 
 Recommended flow:
 
 ```text
-power-grill -> power-loop -> Codex /goal -> power-critic
+power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review
 ```
 
 ## When To Use
@@ -159,7 +159,7 @@ Default budget:
 
 Use [assets/verifier-gate.md](assets/verifier-gate.md).
 
-The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, and disclosed risks.
+The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, and disclosed risks. `power-loop` defines the verifier gate in the bounded `/goal`; `power-verifier` is the recommended execution tool for that gate after implementation evidence exists.
 
 Verifier outcomes:
 
@@ -203,4 +203,3 @@ Use [assets/sample-contracts.md](assets/sample-contracts.md) for manual dry-runs
 - `LOOP_READY`
 - `NEEDS_GRILL`
 - `NEEDS_HUMAN`
-

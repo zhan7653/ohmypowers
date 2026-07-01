@@ -20,6 +20,6 @@ Recommended flow:
 
 6. If optional labels are missing, retry without labels or ask the user.
 7. Return the issue number and URL.
-8. Update the ready-to-run `/goal` so it references the real issue.
+8. Tell the user to run `power-loop` on the issue URL when they want a bounded Codex `/goal`.
 
-Do not create a PR during the pre-goal grilling phase unless the user explicitly asks and there is already an implementation branch to publish.
+Do not create a PR during the issue-contract phase unless the user explicitly asks and there is already an implementation branch to publish.

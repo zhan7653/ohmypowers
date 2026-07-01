@@ -32,6 +32,10 @@ Notes:
 
 - <verifier note>
 
+Verifier source:
+
+- <power-verifier result, verifier-gate checklist, or equivalent read-only verifier pass>
+
 # Loop decision
 
 Decision: `pr-ready | blocked | needs-human | follow-up-needed | done`
@@ -55,4 +59,3 @@ Reason:
 - [ ] Check validation relevance.
 - [ ] Check scope and non-goals.
 - [ ] Check verifier result and loop decision.
-

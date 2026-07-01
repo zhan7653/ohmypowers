@@ -58,6 +58,7 @@ Budget:
 
 Verifier gate:
 - Before finalizing the PR/MR, run a read-only verifier pass.
+- Prefer `power-verifier` as the verifier execution tool when available.
 - Compare the diff against the contract.
 - Verify every acceptance criterion has evidence.
 - Check validation results, scope, non-goals, forbidden paths, and disclosed risks.
