@@ -161,7 +161,7 @@ export function renderHtml(report) {
     <style>
       :root {
         color-scheme: light;
-        --bg: #f6f8fb;
+        --bg: #eef3f8;
         --paper: #ffffff;
         --ink: #182433;
         --muted: #667382;
@@ -187,28 +187,118 @@ export function renderHtml(report) {
       }
       a { color: inherit; }
       .report-shell {
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 24px 20px 48px;
+        min-height: 100vh;
       }
-      .report-header {
+      .app-layout {
         display: grid;
-        gap: 18px;
-        padding: 22px 24px;
+        grid-template-columns: 248px minmax(0, 1fr);
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 18px 14px;
+        border-right: 1px solid var(--line);
+        background: #f8fafc;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        margin-bottom: 18px;
+        padding: 0 8px;
+        font-weight: 750;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--primary);
+        font-weight: 800;
+      }
+      .sidebar-section {
+        margin-top: 18px;
+      }
+      .sidebar-label {
+        margin: 0 0 8px;
+        padding: 0 8px;
+        color: #8a97a6;
+        font-size: 11px;
+        font-weight: 750;
+        text-transform: uppercase;
+      }
+      .sidebar nav {
+        display: grid;
+        gap: 4px;
+      }
+      .sidebar a {
+        display: flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 7px 9px;
+        border-radius: 8px;
+        color: #344054;
+        text-decoration: none;
+        font-weight: 650;
+      }
+      .sidebar a:hover {
+        color: var(--primary);
+        background: var(--primary-soft);
+      }
+      .side-stat {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 10px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--paper);
-        box-shadow: var(--shadow);
+      }
+      .side-stat div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .side-stat strong {
+        color: var(--ink);
+      }
+      .content {
+        min-width: 0;
+        padding: 22px 24px 56px;
+      }
+      .report-header {
+        display: grid;
+        gap: 20px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        box-shadow: none;
       }
       .header-row {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 18px;
+        padding: 22px 24px;
+        border: 1px solid #bad0ec;
+        border-radius: 8px;
+        color: #fff;
+        background: linear-gradient(135deg, #206bc4 0%, #1554a2 100%);
+        box-shadow: 0 8px 22px rgba(32, 107, 196, 0.18);
       }
       .eyebrow {
         margin: 0 0 5px;
-        color: var(--primary);
+        color: #d8e8ff;
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 0;
@@ -217,7 +307,7 @@ export function renderHtml(report) {
       h1, h2, h3, h4, p { overflow-wrap: anywhere; }
       h1 {
         margin: 0;
-        font-size: 28px;
+        font-size: 30px;
         line-height: 1.2;
         letter-spacing: 0;
       }
@@ -251,36 +341,26 @@ export function renderHtml(report) {
       .meta li, .pill {
         min-height: 26px;
         padding: 3px 9px;
-        border: 1px solid var(--line);
+        border: 1px solid rgba(255, 255, 255, 0.35);
         border-radius: 8px;
-        color: var(--muted);
-        background: #f8fafc;
+        color: #eef6ff;
+        background: rgba(255, 255, 255, 0.12);
         font-size: 12px;
       }
       .toc {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        padding-top: 14px;
-        border-top: 1px solid var(--line);
+        display: none;
       }
-      .toc a {
-        min-height: 30px;
-        padding: 5px 10px;
-        border: 1px solid transparent;
-        border-radius: 8px;
-        text-decoration: none;
-        background: transparent;
-        color: var(--primary);
-        font-weight: 650;
-        font-size: 13px;
+      .section-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) 380px;
+        gap: 16px;
+        margin-top: 16px;
       }
-      .toc a:hover {
-        border-color: #b7cff2;
-        background: var(--primary-soft);
+      .stack {
+        display: grid;
+        gap: 16px;
       }
       .section {
-        margin-top: 16px;
         padding: 20px;
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -296,14 +376,17 @@ export function renderHtml(report) {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
-        margin-top: 16px;
+        margin-top: 0;
       }
       .metric {
-        min-height: 74px;
-        padding: 13px 14px;
+        display: grid;
+        align-content: space-between;
+        min-height: 92px;
+        padding: 14px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: #f8fafc;
+        background: var(--paper);
+        box-shadow: var(--shadow);
       }
       .metric strong {
         display: block;
@@ -323,20 +406,30 @@ export function renderHtml(report) {
       }
       .task-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        gap: 10px;
       }
       .task-panel {
-        min-height: 116px;
-        padding: 14px;
+        min-height: 0;
+        padding: 0;
         border: 1px solid #edd8a8;
         border-radius: 8px;
         background: var(--paper);
+        overflow: hidden;
       }
       .task-panel h3 {
-        margin-bottom: 10px;
+        margin: 0;
+        padding: 10px 12px;
+        border-bottom: 1px solid #edd8a8;
+        background: #fffaf0;
         color: var(--task);
         font-size: 14px;
+      }
+      .task-panel ul, .task-panel .empty {
+        margin: 0;
+        padding: 12px 14px 12px 30px;
+      }
+      .task-panel .empty {
+        padding-left: 14px;
       }
       ul {
         margin: 0;
@@ -355,7 +448,8 @@ export function renderHtml(report) {
       }
       .project-list {
         display: grid;
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
       }
       .project-panel {
         padding: 0;
@@ -394,7 +488,7 @@ export function renderHtml(report) {
       }
       .project-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 0;
         padding: 14px 16px 16px;
       }
@@ -406,6 +500,7 @@ export function renderHtml(report) {
         border-top: 1px solid var(--line);
         border-left: 1px solid var(--line);
       }
+      .detail-box,
       .detail-box:nth-child(odd) {
         border-left: 0;
       }
@@ -427,18 +522,21 @@ export function renderHtml(report) {
         color: #354052;
       }
       @media (max-width: 820px) {
-        .report-shell { padding: 18px 12px 36px; }
+        .app-layout { display: block; }
+        .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+        .content { padding: 18px 12px 36px; }
         .report-header, .section { padding: 16px; }
         .header-row { display: grid; }
         .meta { justify-content: flex-start; }
         h1 { font-size: 24px; }
-        .metrics, .task-grid, .project-grid { grid-template-columns: 1fr; }
+        .metrics, .section-grid, .task-grid, .project-list, .project-grid { grid-template-columns: 1fr; }
         .detail-box, .detail-box:nth-child(odd), .evidence { border-left: 0; }
       }
       @media print {
         body { background: #fff; }
-        .report-shell { max-width: none; padding: 0; }
-        .toc { display: none; }
+        .app-layout { display: block; max-width: none; }
+        .sidebar { display: none; }
+        .content { padding: 0; }
         .report-header, .section, .project-panel, .detail-box {
           break-inside: avoid;
           box-shadow: none;
@@ -449,65 +547,91 @@ export function renderHtml(report) {
   </head>
   <body>
     <main class="report-shell">
-      <header class="report-header">
-        <div class="header-row">
-          <div>
-            <p class="eyebrow">Codex Daily Report</p>
-            <h1>${escapeHtml(normalized.title)}</h1>
+      <div class="app-layout">
+        <aside class="sidebar">
+          <div class="brand"><span class="brand-mark">C</span><span>Work Report</span></div>
+          <div class="sidebar-section">
+            <p class="sidebar-label">Sections</p>
+            <nav aria-label="报告目录">
+              <a href="#summary">今日概览</a>
+              <a href="#tasks">待办事项</a>
+              <a href="#tomorrow">明日建议</a>
+              <a href="#projects">按项目分组</a>
+              <a href="#risks">风险/阻塞</a>
+            </nav>
           </div>
-          <ul class="meta">
-            <li>日期: ${escapeHtml(normalized.date)}</li>
-            <li>状态: ${escapeHtml(normalized.status)}</li>
-            <li>项目: ${projects.length}</li>
-            <li>会话: ${sessionCount}</li>
-          </ul>
+          <div class="sidebar-section">
+            <p class="sidebar-label">Snapshot</p>
+            <div class="side-stat">
+              <div><span>日期</span><strong>${escapeHtml(normalized.date)}</strong></div>
+              <div><span>状态</span><strong>${escapeHtml(normalized.status)}</strong></div>
+              <div><span>项目</span><strong>${projects.length}</strong></div>
+              <div><span>会话</span><strong>${sessionCount}</strong></div>
+            </div>
+          </div>
+        </aside>
+        <div class="content">
+          <header class="report-header">
+            <div class="header-row">
+              <div>
+                <p class="eyebrow">Codex Daily Report</p>
+                <h1>${escapeHtml(normalized.title)}</h1>
+              </div>
+              <ul class="meta">
+                <li>日期: ${escapeHtml(normalized.date)}</li>
+                <li>状态: ${escapeHtml(normalized.status)}</li>
+                <li>项目: ${projects.length}</li>
+                <li>会话: ${sessionCount}</li>
+              </ul>
+            </div>
+          </header>
+
+          <div class="metrics">
+            ${renderMetric(projects.length, '项目')}
+            ${renderMetric(sessionCount, 'Codex 会话')}
+            ${renderMetric(taskCount, '待办事项')}
+            ${renderMetric(normalized.ideas.length, '想法/灵感')}
+          </div>
+
+          <div class="section-grid">
+            <div class="stack">
+              <section class="section" id="summary">
+                <h2>今日概览</h2>
+                <p>${escapeHtml(displayText(normalized.overview || '无概览。'))}</p>
+                ${renderHtmlList(normalized.dailyFocus, '今日重点')}
+              </section>
+
+              <section class="section" id="projects">
+                <h2>按项目分组</h2>
+                <div class="project-list">
+                  ${projects.map((project, index) => renderProject(project, index)).join('\n')}
+                </div>
+              </section>
+            </div>
+
+            <div class="stack">
+              <section class="section task-section" id="tasks">
+                <h2>待办事项</h2>
+                <div class="task-grid">
+                  ${renderTaskPanel('继承待办事项', normalized.todoReview.carryover, '没有继承待办事项。')}
+                  ${renderTaskPanel('新增待办事项', normalized.todoReview.new, '没有新增待办事项。')}
+                  ${renderTaskPanel('可能已完成，需确认', normalized.todoReview.maybeCompleted, '没有需要确认关闭的待办事项。')}
+                </div>
+              </section>
+
+              <section class="section" id="tomorrow">
+                <h2>明日建议任务</h2>
+                ${renderHtmlList(normalized.tomorrow, '明日建议任务', '暂无明日建议任务。')}
+              </section>
+
+              <section class="section" id="risks">
+                <h2>风险/阻塞</h2>
+                ${renderHtmlList(normalized.risks, '风险/阻塞', '暂无风险或阻塞。')}
+              </section>
+            </div>
+          </div>
         </div>
-        <nav class="toc" aria-label="报告目录">
-          <a href="#summary">今日概览</a>
-          <a href="#tasks">待办事项</a>
-          <a href="#tomorrow">明日建议</a>
-          <a href="#projects">按项目分组</a>
-          <a href="#risks">风险/阻塞</a>
-        </nav>
-      </header>
-
-      <section class="section" id="summary">
-        <h2>今日概览</h2>
-        <p>${escapeHtml(displayText(normalized.overview || '无概览。'))}</p>
-        ${renderHtmlList(normalized.dailyFocus, '今日重点')}
-        <div class="metrics">
-          ${renderMetric(projects.length, '项目')}
-          ${renderMetric(sessionCount, 'Codex 会话')}
-          ${renderMetric(taskCount, '待办事项')}
-          ${renderMetric(normalized.ideas.length, '想法/灵感')}
-        </div>
-      </section>
-
-      <section class="section task-section" id="tasks">
-        <h2>待办事项</h2>
-        <div class="task-grid">
-          ${renderTaskPanel('继承待办事项', normalized.todoReview.carryover, '没有继承待办事项。')}
-          ${renderTaskPanel('新增待办事项', normalized.todoReview.new, '没有新增待办事项。')}
-          ${renderTaskPanel('可能已完成，需确认', normalized.todoReview.maybeCompleted, '没有需要确认关闭的待办事项。')}
-        </div>
-      </section>
-
-      <section class="section" id="tomorrow">
-        <h2>明日建议任务</h2>
-        ${renderHtmlList(normalized.tomorrow, '明日建议任务', '暂无明日建议任务。')}
-      </section>
-
-      <section class="section" id="projects">
-        <h2>按项目分组</h2>
-        <div class="project-list">
-          ${projects.map((project, index) => renderProject(project, index)).join('\n')}
-        </div>
-      </section>
-
-      <section class="section" id="risks">
-        <h2>风险/阻塞</h2>
-        ${renderHtmlList(normalized.risks, '风险/阻塞', '暂无风险或阻塞。')}
-      </section>
+      </div>
     </main>
   </body>
 </html>
