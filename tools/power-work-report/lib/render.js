@@ -520,8 +520,7 @@ export function renderHtml(report) {
     .timeline-body { color: var(--ink-soft); }
     .decision-list {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
     .decision {
       display: grid;
@@ -544,7 +543,6 @@ export function renderHtml(report) {
     .decision span { display: block; color: var(--ink-soft); }
     .task-board {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 16px;
     }
     .task-panel {
@@ -714,7 +712,7 @@ export function renderHtml(report) {
       .wrap { width: min(100% - 20px, var(--max)); padding-top: 16px; }
       .hero { padding: 28px 22px; border-radius: 24px; }
       h1 { font-size: 42px; }
-      .stats, .decision-list, .task-board, .risk-list { grid-template-columns: 1fr; }
+      .stats, .risk-list { grid-template-columns: 1fr; }
       .section-title { display: block; }
       .section-note { margin-top: 4px; text-align: left; }
       details.project summary { grid-template-columns: 1fr; }
@@ -783,7 +781,7 @@ export function renderHtml(report) {
     </section>
 
     <section id="tasks" class="section card">
-      ${sectionTitle('Tasks', '任务清单', '按优先级展开')}
+      ${sectionTitle('Tasks', '任务清单', '不做窄双栏，按优先级展开')}
       <div class="task-board">
         ${taskPanelHtml('明日优先', report.tasks?.tomorrowPriority || [], false)}
         ${taskPanelHtml('后续待办', report.tasks?.backlog || [], true)}
