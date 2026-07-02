@@ -653,8 +653,7 @@ export function renderHtml(report) {
     .plain-list li, .file-list li { margin: 5px 0; }
     .risk-list {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
     .risk {
       padding: 16px;
@@ -712,7 +711,7 @@ export function renderHtml(report) {
       .wrap { width: min(100% - 20px, var(--max)); padding-top: 16px; }
       .hero { padding: 28px 22px; border-radius: 24px; }
       h1 { font-size: 42px; }
-      .stats, .risk-list { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
       .section-title { display: block; }
       .section-note { margin-top: 4px; text-align: left; }
       details.project summary { grid-template-columns: 1fr; }

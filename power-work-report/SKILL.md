@@ -13,7 +13,7 @@ This skill is a manual workflow wrapper around the `tools/power-work-report` Nod
 
 V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, generates JSON/Markdown/HTML reports, proposes todo and idea memory updates, and merges those updates only during `finalize`.
 
-The draft report uses the component-style Codex daily report structure: metadata, overview, outcomes, decisions, tomorrow priorities, backlog, project sections, risk groups, idea chips, and appendix evidence. Markdown is the readable source of review; HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and screenshot validation support.
+The draft report uses the component-style Codex daily report structure: metadata, overview, outcomes, decisions, tomorrow priorities, backlog, project sections, risk groups, idea chips, and appendix evidence. Markdown is the readable source of review; HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and responsive print support.
 
 ## Boundaries
 
@@ -48,21 +48,14 @@ The draft report uses the component-style Codex daily report structure: metadata
    - 风险与阻塞
    - 想法与灵感
    - 附录：证据索引
-5. When visual evidence is needed and Playwright/Chromium is installed, run screenshot validation:
-
-   ```bash
-   npm --prefix tools/power-work-report run screenshot:report -- --date YYYY-MM-DD
-   ```
-
-   This writes desktop and mobile PNG screenshots under the draft `screenshots/` directory.
-6. Ask the user to review the draft and confirm whether to finalize.
-7. Only after confirmation, run:
+5. Ask the user to review the draft and confirm whether to finalize.
+6. Only after confirmation, run:
 
    ```bash
    node tools/power-work-report/bin/power-work-report.js finalize --date YYYY-MM-DD
    ```
 
-8. Report the final paths and memory file path.
+7. Report the final paths and memory file path.
 
 ## Failure Handling
 
