@@ -1,14 +1,19 @@
-# Only publish the two plugins
+# Local agent/runtime artifacts
+.codex/
+.agents/
+.claude/
+.worktrees/
+skills-lock.json
+node_modules/
+.venv/
+__pycache__/
+
+# Legacy/local generated artifacts
 gstack/
 superpowers/
 *.txt
 !examples/linear-regression-optimizer/requirements.txt
 gstack-analysis.md
-.claude/
-.venv/
-__pycache__/
-.worktrees/
-
 resource/
 docs/
 examples/linear-regression-optimizer/training_result.png

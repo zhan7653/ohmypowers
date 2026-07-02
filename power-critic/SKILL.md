@@ -80,7 +80,7 @@ In Codex, explicit invocation of `$power-critic` counts as an explicit request t
 
 When Codex custom agents are available, use the installed `power_critic` custom agent or an equivalent read-only subagent configuration. For Codex, the bundled [agents/power-critic.toml](agents/power-critic.toml) is a source template; it must be installed into Codex's custom-agent search path, such as `~/.codex/agents/power-critic.toml` for a personal agent or `.codex/agents/power-critic.toml` for a project agent.
 
-For Claude Code or other hosts, use the equivalent fresh-context subagent mechanism when available.
+For other hosts, use the equivalent fresh-context subagent mechanism when available.
 
 Wait for the critic result, then return only the consolidated batch report to the user. If a fresh subagent is available but read-only sandboxing is not verified, still use the fresh subagent and disclose that runtime read-only hardening is unverified.
 

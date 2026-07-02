@@ -19,7 +19,7 @@ The draft report uses the component-style Codex daily report structure: metadata
 
 - Read only Codex session JSONL under `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`.
 - Do not read `state_*.sqlite`.
-- Do not support Claude, Cursor, Copilot, generic agent logs, web UI, databases, vector stores, or remote APIs.
+- Do not support non-Codex agent logs, web UI, databases, vector stores, or remote APIs.
 - Do not install or modify schedulers.
 - Do not use root privileges.
 - Do not finalize reports or update memory without explicit user confirmation.

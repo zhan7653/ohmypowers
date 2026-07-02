@@ -1,8 +1,10 @@
-# ohmypowers skills
+# ohmypowers
 
-Standalone Agent Skills for thinking through work before implementation.
+Codex ecosystem skills for Loop Engineering.
 
-This branch keeps the skills as plain `SKILL.md` directories that can be used by Codex and Claude Code.
+`ohmypowers` is a collection of Codex skills and supporting tools that turn agentic coding work into explicit loops: clarify the task, contract the work, execute within boundaries, verify the evidence, and keep reviewable artifacts.
+
+The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex, with optional Codex custom-agent templates for read-only verifier and critic passes.
 
 ## What It Does
 
@@ -78,8 +80,6 @@ Use them by phase:
 
 ## Install
 
-### Codex
-
 Copy or symlink the skill directories into Codex skills:
 
 ```bash
@@ -109,31 +109,6 @@ The verifier custom-agent installation makes the named `power_verifier` read-onl
 When a fresh-context implementation verifier is unavailable, `power-verifier` output should disclose degraded self-review mode.
 
 Restart Codex after installing or updating skills or custom agents.
-
-### Claude Code
-
-Claude Code skills are directories with a `SKILL.md` entrypoint. Install as personal skills:
-
-```bash
-mkdir -p ~/.claude/skills
-cp -R power-think ~/.claude/skills/power-think
-cp -R power-grill ~/.claude/skills/power-grill
-cp -R power-loop ~/.claude/skills/power-loop
-cp -R power-verifier ~/.claude/skills/power-verifier
-cp -R power-work-report ~/.claude/skills/power-work-report
-cp -R power-critic ~/.claude/skills/power-critic
-```
-
-For project-local Claude Code skills, place them at:
-
-```text
-.claude/skills/power-think/SKILL.md
-.claude/skills/power-grill/SKILL.md
-.claude/skills/power-loop/SKILL.md
-.claude/skills/power-verifier/SKILL.md
-.claude/skills/power-work-report/SKILL.md
-.claude/skills/power-critic/SKILL.md
-```
 
 ## Usage
 
@@ -171,17 +146,6 @@ Ask for a manual Codex work report draft:
 
 ```text
 Use $power-work-report to generate a daily work report draft for today.
-```
-
-Claude Code can also invoke skills directly:
-
-```text
-/power-think
-/power-grill
-/power-loop
-/power-verifier
-/power-work-report
-/power-critic
 ```
 
 ## Repository Layout
