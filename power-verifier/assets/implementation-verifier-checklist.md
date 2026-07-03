@@ -9,7 +9,7 @@ Use this checklist for a read-only verifier pass over implementation evidence.
 - Validation commands and outputs.
 - Acceptance-criteria evidence.
 - PR/MR body or draft evidence package.
-- Code-review output from Codex `/review` or an equivalent read-only code-review pass, or a skipped reason.
+- Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review pass, or a skipped reason.
 - Risks, assumptions, out-of-scope notes, and loop decision.
 
 ## Evidence Audit
@@ -23,13 +23,13 @@ Use this checklist for a read-only verifier pass over implementation evidence.
 - Acceptance criteria: map every AC to concrete evidence, files, and validation.
 - Validation: confirm commands are relevant, outputs are concrete, failures are disclosed, and passing commands actually cover the ACs.
 - Test relevance: confirm tests or manual checks prove the behavior claimed by the acceptance criteria.
-- Code-review findings: inspect `/review` or equivalent output when relevant; if skipped, confirm the skipped reason is appropriate.
+- Code-review findings: inspect `/review`, `codex review`, or equivalent output when relevant; if skipped, confirm the skipped reason is appropriate.
 - Forbidden paths: confirm protected or out-of-scope paths were not touched without approval.
 - Generated artifacts: confirm generated or local-only artifacts are handled according to the contract.
 - Risks and assumptions: confirm residual risk is disclosed and not hidden as completion.
 - PR/MR evidence: confirm summary, rationale, changed files, validation, AC evidence, verifier result, risks, out-of-scope items, reviewer checklist, and loop decision are present.
 - Loop decision: confirm `pr-ready`, `blocked`, `needs-human`, `follow-up-needed`, or `done` is justified by the evidence.
-- Verifier independence: record the independence mode and disclose degraded self-review when fresh-context or external review is unavailable.
+- Verifier independence: record the independence mode. Disclose degraded self-review only when no fresh-context verifier, `power_verifier` custom agent, Codex `/review`, `codex review`, or equivalent read-only reviewer is available.
 
 ## Code-Review Finding Handling
 

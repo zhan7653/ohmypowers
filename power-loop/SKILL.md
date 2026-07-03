@@ -161,7 +161,7 @@ Default budget:
 
 Use [assets/verifier-gate.md](assets/verifier-gate.md).
 
-The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, disclosed risks, and code-review findings when relevant. `power-loop` defines the verifier gate in the bounded `/goal`; `power-verifier` is the recommended execution tool for that gate after implementation evidence exists.
+The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, disclosed risks, and code-review findings when relevant. `power-loop` defines the verifier gate in the bounded `/goal`; the gate must use `power_verifier`, `power-verifier`, Codex `/review`, `codex review`, or an equivalent read-only reviewer whenever one is available.
 
 Verifier outcomes:
 

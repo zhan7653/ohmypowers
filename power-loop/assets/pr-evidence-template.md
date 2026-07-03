@@ -34,7 +34,7 @@ Verifier independence mode:
 
 Code-review source or skipped reason:
 
-- <source or reason>
+- <Codex /review, codex review, equivalent read-only reviewer, not applicable for documentation-only diff, or unavailable after checking all review paths>
 
 Notes:
 

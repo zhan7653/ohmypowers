@@ -59,12 +59,13 @@ Budget:
 
 Verifier gate:
 - Before finalizing the PR/MR, run a read-only verifier pass.
-- Prefer `power-verifier` as the verifier execution tool when available.
+- Use the strongest available independent verifier or reviewer. If the `power_verifier` custom agent, `power-verifier` in a fresh context, Codex `/review`, `codex review`, or an equivalent read-only reviewer is available, use it instead of self-review.
 - Compare the diff against the contract.
 - Verify every acceptance criterion has evidence.
 - Check validation results, scope, non-goals, forbidden paths, and disclosed risks.
-- For code, behavior, test, dependency, or config diffs, use Codex `/review` or an equivalent read-only code-review subagent when available.
+- For code, behavior, test, dependency, or config diffs, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent whenever any of those paths is available.
 - For documentation-only diffs, state the code-review skipped reason if no code review is run.
+- Do not report self-review degraded mode merely because one review surface is unavailable; degraded mode is allowed only when every independent verifier and read-only review path is unavailable.
 - Record verifier independence mode, independent review source, code-review source or skipped reason, review findings considered, and degraded-mode reason when applicable.
 - Record one verifier result: PASS, PASS_WITH_NOTES, BLOCKED, or NEEDS_HUMAN.
 - If the verifier or code-review pass returns a fixable BLOCKED inside the current contract, repair within the implementation loop budget, rerun validation, and rerun the verifier.

@@ -9,7 +9,7 @@ The verifier gate is a read-only check before final PR/MR readiness. `power-loop
 - Validation commands and results.
 - Acceptance criteria evidence.
 - PR/MR body or draft evidence package.
-- Code-review output from Codex `/review` or an equivalent read-only code-review subagent when relevant, or a skipped reason.
+- Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review subagent when relevant, or a skipped reason.
 - Risks, assumptions, and out-of-scope notes.
 
 ## Checks
@@ -26,6 +26,7 @@ The verifier gate is a read-only check before final PR/MR readiness. `power-loop
 - The PR/MR evidence package is complete enough for review.
 - The loop decision is justified by the diff, validation, and evidence.
 - The verifier result states the independence mode, independent review source, and degraded-mode reason if applicable.
+- Self-review degraded mode is used only when no fresh-context verifier, `power_verifier` custom agent, Codex `/review`, `codex review`, or equivalent read-only reviewer is available.
 
 ## Outcomes
 

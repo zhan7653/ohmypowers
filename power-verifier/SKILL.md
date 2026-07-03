@@ -30,7 +30,7 @@ Good inputs:
 - Acceptance-criteria evidence.
 - PR/MR body or draft evidence package.
 - Risks, assumptions, out-of-scope notes, and loop decision.
-- Code-review output from Codex `/review` or an equivalent read-only code-review subagent, when the diff includes code, behavior, tests, dependencies, or config.
+- Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review subagent, when the diff includes code, behavior, tests, dependencies, or config.
 
 Do not use this skill to clarify vague requirements before implementation. Send unclear contracts back to `power-grill` or `power-loop`.
 
@@ -38,15 +38,17 @@ Do not use this skill to clarify vague requirements before implementation. Send 
 
 Prefer the strongest available verifier independence mode:
 
-1. `fresh-context verifier agent`: use the bundled read-only verifier custom-agent configuration, or an equivalent fresh-context verifier, to audit the contract and implementation evidence.
-2. `external code review plus verifier`: use Codex `/review` or an equivalent read-only code-review pass for implementation-diff risks, then incorporate those findings into this verifier result.
-3. `self-review degraded mode`: use only when fresh-context or external review is unavailable. The verifier result must state the degraded mode reason.
+1. `fresh-context verifier agent`: use the bundled `power_verifier` read-only custom-agent configuration, the `power-verifier` skill in a fresh context, or an equivalent fresh-context verifier to audit the contract and implementation evidence.
+2. `external code review plus verifier`: use Codex `/review`, `codex review`, or an equivalent read-only code-review pass for implementation-diff risks, then incorporate those findings into this verifier result.
+3. `self-review degraded mode`: use only when no fresh-context verifier, `power_verifier` custom agent, Codex `/review`, `codex review`, or equivalent read-only reviewer is available. The verifier result must state the degraded mode reason.
+
+Do not mark the result as self-review degraded merely because one review surface is unavailable. If any independent verifier or read-only review path is available, use it and record that source.
 
 The verifier must inspect primary evidence directly. Parent-agent summaries, implementation-runner claims, PR descriptions, or pasted conclusions can orient the review, but they cannot be the sole evidence for completion.
 
 ## Code-Review Integration
 
-For implementation diffs that include code, behavior, tests, dependencies, or config, strongly prefer Codex `/review` or an equivalent read-only code-review subagent before final verifier selection.
+For implementation diffs that include code, behavior, tests, dependencies, or config, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent before final verifier selection whenever any of those paths is available.
 
 Pure documentation-only changes may skip code review. If skipped, the verifier result must state the reason.
 
