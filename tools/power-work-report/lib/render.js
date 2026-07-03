@@ -1,3 +1,5 @@
+import { itemKey, normalizeText } from './memory.js'
+
 export function buildFallbackDraft(rawSummary, options = {}) {
   const lang = options.lang || 'zh-CN'
   const projectSections = rawSummary.projects.map(project => {
@@ -81,15 +83,18 @@ export function buildFallbackDraft(rawSummary, options = {}) {
   }
 }
 
-export function buildMemoryProposal(report) {
+export function buildMemoryProposal(report, options = {}) {
   const todos = itemObjects([...(report.tasks?.tomorrowPriority || []), ...(report.tasks?.backlog || [])], report, 'todo')
   const ideas = itemObjects(report.ideas?.chips || [], report, 'idea')
+  const review = options.review || null
   return {
     schemaVersion: 1,
     date: report.date,
     status: report.status,
     todos,
     ideas,
+    todoUpdates: [],
+    review,
     report: {
       date: report.date,
       title: report.metadata?.title || report.title || `Codex 工作日报 · ${report.date}`,
@@ -98,6 +103,55 @@ export function buildMemoryProposal(report) {
       sessionIds: report.appendix?.sessionIds || [],
     },
   }
+}
+
+export function buildReviewModel({ report, proposal, memory }) {
+  const historicalOpenTodos = (memory.todos || []).filter(item => item.status === 'open')
+  const todayCompleted = todayCompletedItems(report)
+  const possibleCompletedTodos = historicalOpenTodos.filter(todo => matchesAnyCompletion(todo, todayCompleted))
+  const possibleKeys = new Set(possibleCompletedTodos.map(item => itemKey(item)))
+
+  return {
+    schemaVersion: 1,
+    date: report.date,
+    status: report.status,
+    todayCompleted,
+    possibleCompletedTodos,
+    newTodos: proposal.todos || [],
+    remainingTodos: historicalOpenTodos.filter(item => !possibleKeys.has(itemKey(item))),
+    newIdeas: proposal.ideas || [],
+  }
+}
+
+export function renderReviewMarkdown(review) {
+  const lines = []
+  lines.push(`# 日报确认清单 · ${review.date}`)
+  lines.push('')
+  lines.push(`- 状态: ${review.status}`)
+  lines.push('- 说明: 候选完成项只供人工确认，不会在 finalize 时自动关闭。')
+  lines.push('')
+  lines.push('## 今天完成了什么')
+  lines.push('')
+  appendBullets(lines, review.todayCompleted || [], item => formatTitledItem(item))
+  lines.push('## 可能完成的历史待办')
+  lines.push('')
+  appendBullets(lines, review.possibleCompletedTodos || [], item => formatReviewTodo(item))
+  lines.push('## 新增待办')
+  lines.push('')
+  appendBullets(lines, review.newTodos || [], item => formatReviewTodo(item))
+  lines.push('## 保留待办')
+  lines.push('')
+  appendBullets(lines, review.remainingTodos || [], item => formatReviewTodo(item))
+  lines.push('## 新想法')
+  lines.push('')
+  appendBullets(lines, review.newIdeas || [], item => formatReviewTodo(item))
+  lines.push('## finalize 前必须确认')
+  lines.push('')
+  lines.push('- 哪些“可能完成的历史待办”要写入 `todoUpdates` 并标记为 `done`。')
+  lines.push('- 哪些“新增待办”和“新想法”需要删除、改写或保留。')
+  lines.push('- 确认后再运行 `finalize`；未确认时不要更新 memory。')
+  lines.push('')
+  return `${lines.join('\n')}\n`
 }
 
 export function renderMarkdown(report) {
@@ -944,6 +998,12 @@ function formatTitledItem(item, options = {}) {
   return `${icon}${formatTextItem(item)}`
 }
 
+function formatReviewTodo(item) {
+  const text = formatTextItem(item)
+  const project = typeof item === 'string' ? '' : item.project || ''
+  return project ? `${text}（${project}）` : text
+}
+
 function formatTextItem(item) {
   if (typeof item === 'string') return item
   if (item?.text) return item.text
@@ -1042,6 +1102,60 @@ function memoryItemsFromProjects(projects, key) {
       sourceSessionIds: item.sourceSessionIds || project.sessionIds || [],
     })),
   )
+}
+
+function todayCompletedItems(report) {
+  const outcomeItems = (report.outcomes || []).map(item => ({
+    title: item.title || formatTextItem(item),
+    body: item.body || '',
+  }))
+  const projectResults = (report.projectSections || []).flatMap(project =>
+    (project.results || []).map(result => ({
+      title: formatTextItem(result),
+      body: project.path || project.project || '',
+    })),
+  )
+  return uniqueByText([...outcomeItems, ...projectResults])
+}
+
+function matchesAnyCompletion(todo, completedItems) {
+  const todoText = normalizeText(todo.text)
+  if (!todoText) return false
+  return completedItems.some(item => {
+    const completedText = normalizeText(`${item.title || ''} ${item.body || ''}`)
+    return textLooksRelated(todoText, completedText)
+  })
+}
+
+function textLooksRelated(todoText, completedText) {
+  if (!todoText || !completedText) return false
+  if (todoText.length >= 4 && completedText.includes(todoText)) return true
+  if (completedText.length >= 4 && todoText.includes(completedText)) return true
+
+  const todoTokens = significantTokens(todoText)
+  if (!todoTokens.length) return false
+  const completedTokens = new Set(significantTokens(completedText))
+  const hits = todoTokens.filter(token => completedTokens.has(token)).length
+  return hits >= Math.min(2, todoTokens.length)
+}
+
+function significantTokens(text) {
+  return text
+    .split(/[\s,，.。;；:：/\\()[\]{}"'`]+/)
+    .map(token => token.trim())
+    .filter(token => token.length >= 2)
+}
+
+function uniqueByText(items) {
+  const seen = new Set()
+  const result = []
+  for (const item of items) {
+    const key = normalizeText(`${item.title || ''} ${item.body || ''}`)
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    result.push(item)
+  }
+  return result
 }
 
 function itemObjects(items, report, type) {

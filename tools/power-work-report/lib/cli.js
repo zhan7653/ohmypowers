@@ -3,7 +3,15 @@ import { promises as fs } from 'node:fs'
 import { writeRawSummary } from './collector.js'
 import { generateDraftWithCodex } from './codex-draft.js'
 import { finalizeReport } from './finalize.js'
-import { buildFallbackDraft, buildMemoryProposal, renderHtml, renderMarkdown } from './render.js'
+import { readMemory } from './memory.js'
+import {
+  buildFallbackDraft,
+  buildMemoryProposal,
+  buildReviewModel,
+  renderHtml,
+  renderMarkdown,
+  renderReviewMarkdown,
+} from './render.js'
 import { pathsForDate, resolveCodexHome, resolveOutDir } from './paths.js'
 
 export async function runCli(argv) {
@@ -34,6 +42,12 @@ export async function runCli(argv) {
   if (command === 'run') {
     await collectCommand({ date, codexHome, paths })
     const result = await draftCommand({ date, codexHome, paths, options })
+    console.log(JSON.stringify(result.paths, null, 2))
+    return
+  }
+
+  if (command === 'render') {
+    const result = await renderDraftCommand({ paths })
     console.log(JSON.stringify(result.paths, null, 2))
     return
   }
@@ -74,15 +88,20 @@ async function draftCommand({ date, codexHome, paths, options }) {
     report.codexError = error instanceof Error ? error.message : String(error)
   }
 
+  const memory = await readMemory(paths.memoryFile)
   const proposal = buildMemoryProposal(report)
+  const review = buildReviewModel({ report, proposal, memory })
+  proposal.review = review
   const reportJsonPath = path.join(paths.draftDir, 'report.json')
   const reportMdPath = path.join(paths.draftDir, 'report.md')
   const reportHtmlPath = path.join(paths.draftDir, 'report.html')
+  const reviewPath = path.join(paths.draftDir, 'review.md')
   const proposalPath = path.join(paths.draftDir, 'memory-update.proposed.json')
 
   await fs.writeFile(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8')
   await fs.writeFile(reportMdPath, renderMarkdown(report), 'utf8')
   await fs.writeFile(reportHtmlPath, renderHtml(report), 'utf8')
+  await fs.writeFile(reviewPath, renderReviewMarkdown(review), 'utf8')
   await fs.writeFile(proposalPath, `${JSON.stringify(proposal, null, 2)}\n`, 'utf8')
 
   return {
@@ -91,7 +110,38 @@ async function draftCommand({ date, codexHome, paths, options }) {
       reportJsonPath,
       reportMdPath,
       reportHtmlPath,
+      reviewPath,
       rawSummaryPath,
+      proposalPath,
+    },
+  }
+}
+
+async function renderDraftCommand({ paths }) {
+  const reportJsonPath = path.join(paths.draftDir, 'report.json')
+  const reportMdPath = path.join(paths.draftDir, 'report.md')
+  const reportHtmlPath = path.join(paths.draftDir, 'report.html')
+  const reviewPath = path.join(paths.draftDir, 'review.md')
+  const proposalPath = path.join(paths.draftDir, 'memory-update.proposed.json')
+  const report = await readRequiredJson(reportJsonPath)
+  const proposal = await readRequiredJson(proposalPath)
+  const memory = await readMemory(paths.memoryFile)
+  const review = buildReviewModel({ report, proposal, memory })
+  proposal.review = review
+
+  await fs.writeFile(reportMdPath, renderMarkdown(report), 'utf8')
+  await fs.writeFile(reportHtmlPath, renderHtml(report), 'utf8')
+  await fs.writeFile(reviewPath, renderReviewMarkdown(review), 'utf8')
+  await fs.writeFile(proposalPath, `${JSON.stringify(proposal, null, 2)}\n`, 'utf8')
+
+  return {
+    report,
+    proposal,
+    paths: {
+      reportJsonPath,
+      reportMdPath,
+      reportHtmlPath,
+      reviewPath,
       proposalPath,
     },
   }
@@ -124,6 +174,14 @@ function requiredOption(options, key) {
   return options[key]
 }
 
+async function readRequiredJson(filePath) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, 'utf8'))
+  } catch (error) {
+    throw new Error(`Required JSON file is missing or invalid: ${filePath}: ${error.message}`)
+  }
+}
+
 function toCamel(value) {
   return value.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
 }
@@ -139,7 +197,8 @@ Usage:
   power-work-report collect --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR]
   power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
   power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
+  power-work-report render --date YYYY-MM-DD [--out-dir DIR]
   power-work-report finalize --date YYYY-MM-DD [--out-dir DIR] [--allow-fallback]
 
-V1 is manual: run/draft creates a draft only; finalize must be explicit.`)
+V1 is manual: run/draft creates report files plus draft/review.md only; finalize must be explicit.`)
 }

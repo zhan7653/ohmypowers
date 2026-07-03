@@ -1,6 +1,6 @@
 import path from 'node:path'
-import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
+import { itemKey, normalizeText, normalizeTodoStatus, readMemory, stableId, unique } from './memory.js'
 
 export async function finalizeReport({ paths, allowFallback = false }) {
   const draftReportPath = path.join(paths.draftDir, 'report.json')
@@ -17,10 +17,11 @@ export async function finalizeReport({ paths, allowFallback = false }) {
     await fs.copyFile(path.join(paths.draftDir, file), path.join(paths.finalDir, file))
   }
 
-  const memory = await readJson(paths.memoryFile, { schemaVersion: 1, todos: [], ideas: [], reports: [] })
+  const memory = await readMemory(paths.memoryFile)
   const now = new Date().toISOString()
   memory.schemaVersion = 1
   memory.todos = mergeItems(memory.todos || [], proposal.todos || [], now)
+  memory.todos = applyTodoUpdates(memory.todos, proposal.todoUpdates || [], proposal, now)
   memory.ideas = mergeItems(memory.ideas || [], proposal.ideas || [], now)
   memory.reports = upsertReport(memory.reports || [], proposal.report, paths.finalDir, now)
   await fs.mkdir(path.dirname(paths.memoryFile), { recursive: true })
@@ -68,6 +69,41 @@ function mergeItems(existing, proposed, now) {
   return merged
 }
 
+function applyTodoUpdates(existing, updates, proposal, now) {
+  const merged = existing.map(item => ({ ...item, status: normalizeTodoStatus(item.status) }))
+  const byId = new Map(merged.filter(item => item.id).map((item, index) => [item.id, index]))
+  const byKey = new Map(merged.map((item, index) => [itemKey(item), index]))
+
+  for (const update of updates) {
+    const status = normalizeTodoStatus(update.status)
+    const index = update.id ? byId.get(update.id) : byKey.get(itemKey(update))
+    if (index === undefined) continue
+
+    const current = merged[index]
+    current.status = status
+    current.updatedAt = now
+    current.sourceSessionIds = unique([...(current.sourceSessionIds || []), ...(update.sourceSessionIds || [])])
+    current.sourceDates = unique([...(current.sourceDates || []), update.sourceDate].filter(Boolean))
+
+    if (status === 'done') {
+      current.completedDate = update.completedDate || proposal.date || current.completedDate || ''
+      current.completedReportDate = update.completedReportDate || proposal.date || current.completedReportDate || ''
+      current.completedSourceSessionIds = unique([
+        ...(current.completedSourceSessionIds || []),
+        ...(update.completedSourceSessionIds || update.sourceSessionIds || []),
+      ])
+    }
+
+    if (status !== 'done') {
+      delete current.completedDate
+      delete current.completedReportDate
+      delete current.completedSourceSessionIds
+    }
+  }
+
+  return merged
+}
+
 function upsertReport(existing, report, finalDir, now) {
   if (!report) return existing
   const next = existing.filter(item => item.date !== report.date)
@@ -85,28 +121,4 @@ async function readRequiredJson(filePath) {
   } catch (error) {
     throw new Error(`Required JSON file is missing or invalid: ${filePath}: ${error.message}`)
   }
-}
-
-async function readJson(filePath, fallback) {
-  try {
-    return JSON.parse(await fs.readFile(filePath, 'utf8'))
-  } catch {
-    return fallback
-  }
-}
-
-function itemKey(item) {
-  return `${item.project || ''}::${normalizeText(item.text)}`
-}
-
-function normalizeText(value) {
-  return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase()
-}
-
-function stableId(project, text) {
-  return crypto.createHash('sha1').update(`${project}\n${normalizeText(text)}`).digest('hex').slice(0, 16)
-}
-
-function unique(values) {
-  return Array.from(new Set(values.filter(Boolean))).sort()
 }
