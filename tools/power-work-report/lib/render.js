@@ -19,12 +19,14 @@ export function buildFallbackDraft(rawSummary, options = {}) {
   })
   const todos = memoryItemsFromProjects(rawSummary.projects, 'todos')
   const ideas = memoryItemsFromProjects(rawSummary.projects, 'ideas')
-  const tomorrowPriority = todos.slice(0, 5)
-  const backlog = todos.slice(5)
+  const topLevelTodos = todos.filter(item => isHighAttentionTodo(item))
+  const tomorrowPriority = topLevelTodos.slice(0, 5)
+  const backlog = topLevelTodos.slice(5)
   const overviewText =
     lang === 'zh-CN'
       ? `共读取 ${rawSummary.sessionCount} 个 Codex 会话，覆盖 ${rawSummary.projects.length} 个项目。`
       : `Read ${rawSummary.sessionCount} Codex sessions across ${rawSummary.projects.length} projects.`
+  const skippedWarnings = skippedEventWarnings(rawSummary)
 
   return {
     schemaVersion: 2,
@@ -67,9 +69,12 @@ export function buildFallbackDraft(rawSummary, options = {}) {
         options.status === 'codex_failed'
           ? ['Codex draft generation failed; this is a deterministic fallback draft.']
           : [],
-      watch: rawSummary.sessions
-        .filter(session => session.malformedLines > 0)
-        .map(session => `${session.id} 包含 ${session.malformedLines} 行无法解析的 JSONL。`),
+      watch: [
+        ...rawSummary.sessions
+          .filter(session => session.malformedLines > 0)
+          .map(session => `${session.id} 包含 ${session.malformedLines} 行无法解析的 JSONL。`),
+        ...skippedWarnings,
+      ],
       limit: [],
     },
     ideas: {
@@ -920,6 +925,8 @@ export function normalizeReportShape(value, rawSummary, lang = 'zh-CN') {
   const fallback = buildFallbackDraft(rawSummary, { lang, status: 'draft' })
   const status = value.status || value.metadata?.status || fallback.status
   const date = value.date || value.metadata?.date || rawSummary.date
+  const projectSections = projectSectionList(value.projectSections, fallback.projectSections)
+  const normalizedTasks = normalizeTopLevelTasks(value.tasks, fallback.tasks)
   const metadata = {
     ...fallback.metadata,
     ...(isObject(value.metadata) ? value.metadata : {}),
@@ -946,10 +953,10 @@ export function normalizeReportShape(value, rawSummary, lang = 'zh-CN') {
     outcomes: titledItems(value.outcomes, fallback.outcomes),
     decisions: titledItems(value.decisions, fallback.decisions, { withIcon: true }),
     tasks: {
-      tomorrowPriority: memoryItemList(value.tasks?.tomorrowPriority, fallback.tasks.tomorrowPriority),
-      backlog: memoryItemList(value.tasks?.backlog, fallback.tasks.backlog),
+      tomorrowPriority: normalizedTasks.tomorrowPriority,
+      backlog: normalizedTasks.backlog,
     },
-    projectSections: projectSectionList(value.projectSections, fallback.projectSections),
+    projectSections,
     riskGroups: {
       blocked: textList(value.riskGroups?.blocked ?? fallback.riskGroups.blocked),
       watch: textList(value.riskGroups?.watch ?? fallback.riskGroups.watch),
@@ -1212,6 +1219,62 @@ function memoryItemList(value, fallback) {
       }
     })
     .filter(item => item.text)
+}
+
+function normalizeTopLevelTasks(value, fallback) {
+  const source = [
+    ...memoryItemList(value?.tomorrowPriority, fallback.tomorrowPriority),
+    ...memoryItemList(value?.backlog, fallback.backlog),
+  ]
+  const topLevel = uniqueMemoryItems(source.filter(item => isHighAttentionTodo(item)))
+  return {
+    tomorrowPriority: topLevel.slice(0, 5),
+    backlog: topLevel.slice(5),
+  }
+}
+
+function uniqueMemoryItems(items) {
+  const seen = new Set()
+  const result = []
+  for (const item of items) {
+    const key = `${item.project || ''}::${normalizeText(item.text)}`
+    if (!item.text || seen.has(key)) continue
+    seen.add(key)
+    result.push(item)
+  }
+  return result
+}
+
+function isHighAttentionTodo(item) {
+  const text = formatTextItem(item)
+  if (!text) return false
+  return !looksLikeLowLevelTodo(text)
+}
+
+function looksLikeLowLevelTodo(text) {
+  const value = String(text || '')
+  if (/(^|[\s（(])\/(?:home|tmp|var|workspace|Users)\//.test(value)) return true
+  if (/\b[\w.-]+\.(?:txt|log|json|jsonl|md|js|mjs|cjs|ts|tsx|jsx|py|sh|yml|yaml|toml|env)\b/i.test(value)) {
+    return true
+  }
+  if (/(本地|临时|测试|test).{0,12}(token|api token|密钥|凭据)/i.test(value)) return true
+  if (/(token|api token|密钥|凭据).{0,12}(本地|临时|测试|test)/i.test(value)) return true
+  return false
+}
+
+function skippedEventWarnings(rawSummary) {
+  const skipped = rawSummary.skippedEvents || {}
+  const warnings = []
+  if (Number(skipped.malformedLines || 0) > 0) {
+    warnings.push(`扫描中有 ${skipped.malformedLines} 行 JSONL 无法解析，已跳过。`)
+  }
+  if (Number(skipped.missingTimestamp || 0) > 0) {
+    warnings.push(`扫描中有 ${skipped.missingTimestamp} 个事件缺少 timestamp，无法归属到本地日期，已跳过。`)
+  }
+  if (Number(skipped.invalidTimestamp || 0) > 0) {
+    warnings.push(`扫描中有 ${skipped.invalidTimestamp} 个事件 timestamp 无法解析，已跳过。`)
+  }
+  return warnings
 }
 
 function textList(value) {
