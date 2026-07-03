@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process'
+import os from 'node:os'
+import path from 'node:path'
+import { promises as fs } from 'node:fs'
 import { normalizeReportShape } from './render.js'
 
 export async function generateDraftWithCodex(rawSummary, options = {}) {
@@ -25,13 +28,28 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
   candidates.push(String(stdout || ''))
 
   for (const candidate of candidates) {
-    const jsonText = extractFirstJsonObject(candidate)
-    if (!jsonText) continue
     try {
-      const parsed = JSON.parse(jsonText)
-      return normalizeDraft(parsed, rawSummary, lang)
+      const parsed = JSON.parse(candidate)
+      if (parsed?.type === 'item.completed' && parsed.item?.type === 'agent_message') {
+        return normalizeDraft(JSON.parse(parsed.item.text), rawSummary, lang)
+      }
+      if (parsed?.schemaVersion || parsed?.metadata || parsed?.overview) {
+        return normalizeDraft(parsed, rawSummary, lang)
+      }
     } catch {
-      // Try the next candidate.
+      const jsonText = extractFirstJsonObject(candidate)
+      if (!jsonText) continue
+      try {
+        const parsed = JSON.parse(jsonText)
+        if (parsed?.type === 'item.completed' && parsed.item?.type === 'agent_message') {
+          return normalizeDraft(JSON.parse(parsed.item.text), rawSummary, lang)
+        }
+        if (parsed?.schemaVersion || parsed?.metadata || parsed?.overview) {
+          return normalizeDraft(parsed, rawSummary, lang)
+        }
+      } catch {
+        // Try the next candidate.
+      }
     }
   }
 
@@ -119,35 +137,46 @@ Raw summary:
 ${JSON.stringify(rawSummary, null, 2)}`
 }
 
-function runCodex(codexBin, prompt, options) {
+async function runCodex(codexBin, prompt, options) {
   const args = ['exec', '--json', '--skip-git-repo-check', '--ephemeral', '-']
-  return new Promise((resolve, reject) => {
-    const child = spawn(codexBin, args, {
-      cwd: options.cwd || process.cwd(),
-      stdio: 'pipe',
-      env: process.env,
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pwr-codex-'))
+  const stdoutPath = path.join(tempDir, 'stdout.jsonl')
+  const stderrPath = path.join(tempDir, 'stderr.log')
+  const stdoutHandle = await fs.open(stdoutPath, 'w')
+  const stderrHandle = await fs.open(stderrPath, 'w')
+
+  try {
+    const code = await new Promise((resolve, reject) => {
+      const child = spawn(codexBin, args, {
+        cwd: options.cwd || process.cwd(),
+        stdio: ['pipe', stdoutHandle.fd, stderrHandle.fd],
+        env: process.env,
+      })
+      child.on('error', reject)
+      child.on('close', resolve)
+      child.stdin.write(prompt)
+      child.stdin.end()
     })
-    let stdout = ''
-    let stderr = ''
-    child.stdout.setEncoding('utf8')
-    child.stderr.setEncoding('utf8')
-    child.stdout.on('data', chunk => {
-      stdout += chunk
-    })
-    child.stderr.on('data', chunk => {
-      stderr += chunk
-    })
-    child.on('error', reject)
-    child.on('close', code => {
-      if (code !== 0) {
-        reject(new Error(`codex exec failed (${code}): ${stderr || stdout}`))
-        return
-      }
-      resolve({ stdout, stderr })
-    })
-    child.stdin.write(prompt)
-    child.stdin.end()
-  })
+    await stdoutHandle.close()
+    await stderrHandle.close()
+
+    const stdout = await readText(stdoutPath)
+    const stderr = await readText(stderrPath)
+    if (code !== 0) throw new Error(`codex exec failed (${code}): ${stderr || stdout}`)
+    return { stdout, stderr }
+  } finally {
+    await stdoutHandle.close().catch(() => {})
+    await stderrHandle.close().catch(() => {})
+    await fs.rm(tempDir, { recursive: true, force: true })
+  }
+}
+
+async function readText(filePath) {
+  try {
+    return await fs.readFile(filePath, 'utf8')
+  } catch {
+    return ''
+  }
 }
 
 function extractFirstJsonObject(text) {

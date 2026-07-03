@@ -11,9 +11,9 @@ Generate a local daily work report from Codex session history.
 
 This skill is a manual workflow wrapper around the `tools/power-work-report` Node CLI. It should generate a draft first, show the user where to review it, and only finalize after explicit user confirmation.
 
-V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, generates JSON/Markdown/HTML reports, proposes todo and idea memory updates, and merges those updates only during `finalize`.
+V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, reads existing JSON memory, generates JSON/Markdown/HTML reports plus `review.md`, proposes todo and idea memory updates, and merges those updates only during `finalize`.
 
-The draft report uses the component-style Codex daily report structure: metadata, overview, outcomes, decisions, tomorrow priorities, backlog, project sections, risk groups, idea chips, and appendix evidence. Markdown is the readable source of review; HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and responsive print support.
+The draft report uses the component-style Codex daily report structure: metadata, overview, outcomes, decisions, tomorrow priorities, backlog, project sections, risk groups, idea chips, and appendix evidence. `review.md` is the primary confirmation surface for memory-related review; report Markdown remains the readable full report. HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and responsive print support.
 
 ## Boundaries
 
@@ -23,6 +23,7 @@ The draft report uses the component-style Codex daily report structure: metadata
 - Do not install or modify schedulers.
 - Do not use root privileges.
 - Do not finalize reports or update memory without explicit user confirmation.
+- Do not auto-close historical todos. Completion candidates in `review.md` are advisory until the user confirms them.
 
 ## Workflow
 
@@ -34,11 +35,29 @@ The draft report uses the component-style Codex daily report structure: metadata
    ```
 
 3. Report the generated draft paths:
+   - `~/.codex/daily-reports/YYYY-MM-DD/draft/review.md`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.md`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.html`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.json`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/memory-update.proposed.json`
-4. Review the Markdown order before asking for finalization:
+4. Read and summarize `review.md` first. Cover these sections:
+   - 今天完成了什么
+   - 可能完成的历史待办
+   - 新增待办
+   - 保留待办
+   - 新想法
+   - finalize 前必须确认
+5. Ask the user to confirm or provide oral edits for todos, completion candidates, and ideas.
+6. If the user gives edits, update the draft JSON/proposal files, especially `memory-update.proposed.json`.
+   - Keep unconfirmed historical completion candidates in `review`, not `todoUpdates`.
+   - Add confirmed completions to `todoUpdates` with `status: "done"` and enough identity to match the memory todo (`id`, or `text` plus `project`).
+   - Remove or rewrite proposed new todos/ideas only when the user asks.
+   - Re-render affected Markdown/HTML/review files before asking again for final confirmation:
+
+     ```bash
+     node tools/power-work-report/bin/power-work-report.js render --date YYYY-MM-DD
+     ```
+7. Optionally review the full report Markdown order before finalization:
    - 今日概览
    - 关键成果
    - 关键决策
@@ -48,14 +67,13 @@ The draft report uses the component-style Codex daily report structure: metadata
    - 风险与阻塞
    - 想法与灵感
    - 附录：证据索引
-5. Ask the user to review the draft and confirm whether to finalize.
-6. Only after confirmation, run:
+8. Only after explicit user confirmation, run:
 
    ```bash
    node tools/power-work-report/bin/power-work-report.js finalize --date YYYY-MM-DD
    ```
 
-7. Report the final paths and memory file path.
+9. Report the final paths and memory file path.
 
 ## Failure Handling
 

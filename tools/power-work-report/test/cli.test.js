@@ -5,6 +5,7 @@ import { promises as fs } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import test from 'node:test'
+import { runCli } from '../lib/cli.js'
 
 const execFileAsync = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -52,11 +53,20 @@ test('run writes codex draft reports and proposed memory update', async t => {
   const report = await readJson(path.join(draftDir, 'report.json'))
   const proposal = await readJson(path.join(draftDir, 'memory-update.proposed.json'))
   const markdown = await fs.readFile(path.join(draftDir, 'report.md'), 'utf8')
+  const review = await fs.readFile(path.join(draftDir, 'review.md'), 'utf8')
   const html = await fs.readFile(path.join(draftDir, 'report.html'), 'utf8')
 
   assert.equal(report.status, 'draft')
   assert.equal(report.schemaVersion, 2)
   assert.equal(report.projectSections.length, 2)
+  assertMarkdownOrder(review, [
+    '## 今天完成了什么',
+    '## 可能完成的历史待办',
+    '## 新增待办',
+    '## 保留待办',
+    '## 新想法',
+    '## finalize 前必须确认',
+  ])
   assertMarkdownOrder(markdown, [
     '## 今日概览',
     '## 关键成果',
@@ -90,6 +100,57 @@ test('run writes codex draft reports and proposed memory update', async t => {
   assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'))
   assert.ok(proposal.todos.length >= 2)
   assert.ok(proposal.ideas.length >= 2)
+  assert.deepEqual(proposal.todoUpdates, [])
+  assert.ok(proposal.review)
+  assert.ok(proposal.review.newTodos.length >= 2)
+})
+
+test('run includes historical open todos and advisory completion candidates in review', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-review-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  await fs.writeFile(
+    path.join(tmp, 'memory.json'),
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        todos: [
+          { id: 'old-alpha', text: '修复日报生成的边界', project: '/workspace/alpha' },
+          { id: 'old-gamma', text: '历史遗留待办', project: '/workspace/gamma', status: 'open' },
+          { id: 'done-beta', text: '已完成旧任务', project: '/workspace/beta', status: 'done' },
+        ],
+        ideas: [],
+        reports: [],
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  )
+
+  await run([
+    'run',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--codex-bin',
+    successCodex,
+  ])
+
+  const draftDir = path.join(tmp, '2026-07-01', 'draft')
+  const review = await fs.readFile(path.join(draftDir, 'review.md'), 'utf8')
+  const proposal = await readJson(path.join(draftDir, 'memory-update.proposed.json'))
+  const memory = await readJson(path.join(tmp, 'memory.json'))
+
+  assert.ok(review.includes('修复日报生成的边界（/workspace/alpha）'))
+  assert.ok(review.includes('历史遗留待办（/workspace/gamma）'))
+  assert.ok(!review.includes('已完成旧任务'))
+  assert.equal(proposal.review.possibleCompletedTodos.length, 1)
+  assert.equal(proposal.review.possibleCompletedTodos[0].id, 'old-alpha')
+  assert.deepEqual(proposal.todoUpdates, [])
+  assert.equal(memory.todos.find(item => item.id === 'old-alpha').status, undefined)
 })
 
 test('codex failure writes fallback draft and finalize refuses without allow-fallback', async t => {
@@ -110,9 +171,10 @@ test('codex failure writes fallback draft and finalize refuses without allow-fal
 
   const report = await readJson(path.join(tmp, '2026-07-01', 'draft', 'report.json'))
   assert.equal(report.status, 'codex_failed')
+  assert.ok(await exists(path.join(tmp, '2026-07-01', 'draft', 'review.md')))
 
   await assert.rejects(
-    () => run(['finalize', '--date', '2026-07-01', '--out-dir', tmp]),
+    () => runCli(['finalize', '--date', '2026-07-01', '--out-dir', tmp]),
     /Refusing to finalize codex_failed draft/,
   )
 })
@@ -144,10 +206,124 @@ test('finalize writes final reports and deduplicates memory by normalized text a
     1,
   )
   assert.equal(
+    memory.todos.find(item => item.project === '/workspace/alpha' && item.text === '修复日报生成的边界').status,
+    'open',
+  )
+  assert.equal(
     memory.ideas.filter(item => item.project === '/workspace/alpha' && item.text === '把确认流程做成 skill').length,
     1,
   )
   assert.equal(memory.reports.length, 1)
+})
+
+test('finalize applies explicit confirmed todo completion updates', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-done-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  await fs.writeFile(
+    path.join(tmp, 'memory.json'),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      todos: [{ id: 'old-alpha', text: '修复日报生成的边界', project: '/workspace/alpha' }],
+      ideas: [],
+      reports: [],
+    })}\n`,
+    'utf8',
+  )
+
+  await run([
+    'run',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--codex-bin',
+    successCodex,
+  ])
+
+  const proposalPath = path.join(tmp, '2026-07-01', 'draft', 'memory-update.proposed.json')
+  const proposal = await readJson(proposalPath)
+  proposal.todoUpdates = [
+    {
+      id: 'old-alpha',
+      status: 'done',
+      completedSourceSessionIds: ['2026-07-01T09-00-00-session-a'],
+    },
+  ]
+  await fs.writeFile(proposalPath, `${JSON.stringify(proposal, null, 2)}\n`, 'utf8')
+
+  await run(['finalize', '--date', '2026-07-01', '--out-dir', tmp])
+
+  const memory = await readJson(path.join(tmp, 'memory.json'))
+  const todo = memory.todos.find(item => item.id === 'old-alpha')
+  assert.equal(todo.status, 'done')
+  assert.equal(todo.completedDate, '2026-07-01')
+  assert.equal(todo.completedReportDate, '2026-07-01')
+  assert.deepEqual(todo.completedSourceSessionIds, ['2026-07-01T09-00-00-session-a'])
+})
+
+test('render refreshes review after oral proposal edits', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-render-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+
+  await run([
+    'run',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--codex-bin',
+    successCodex,
+  ])
+
+  const proposalPath = path.join(tmp, '2026-07-01', 'draft', 'memory-update.proposed.json')
+  const proposal = await readJson(proposalPath)
+  proposal.todos = [
+    {
+      text: '口头确认后的新增待办',
+      project: '/workspace/alpha',
+      sourceDate: '2026-07-01',
+      sourceSessionIds: ['2026-07-01T09-00-00-session-a'],
+      status: 'open',
+    },
+  ]
+  await fs.writeFile(proposalPath, `${JSON.stringify(proposal, null, 2)}\n`, 'utf8')
+
+  await run(['render', '--date', '2026-07-01', '--out-dir', tmp])
+
+  const review = await fs.readFile(path.join(tmp, '2026-07-01', 'draft', 'review.md'), 'utf8')
+  const refreshedProposal = await readJson(proposalPath)
+  assert.ok(review.includes('口头确认后的新增待办（/workspace/alpha）'))
+  assert.ok(!review.includes('验证 memory 去重（/workspace/beta）'))
+  assert.deepEqual(
+    refreshedProposal.review.newTodos.map(item => item.text),
+    ['口头确认后的新增待办'],
+  )
+})
+
+test('malformed memory json fails draft clearly', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-bad-memory-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  await fs.writeFile(path.join(tmp, 'memory.json'), '{bad json', 'utf8')
+
+  await assert.rejects(
+    () =>
+      runCli([
+        'run',
+        '--date',
+        '2026-07-01',
+        '--codex-home',
+        fixtureCodexHome,
+        '--out-dir',
+        tmp,
+        '--codex-bin',
+        successCodex,
+      ]),
+    /Memory JSON is missing or invalid/,
+  )
 })
 
 async function run(args) {

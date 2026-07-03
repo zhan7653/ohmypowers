@@ -59,8 +59,10 @@ It is read-only and does not edit files, create branches, mutate issues, approve
 `power-work-report` generates a manual Codex daily work report:
 
 - Reads local Codex session JSONL for a target day.
-- Generates a draft Markdown/HTML/JSON report through `tools/power-work-report`.
-- Proposes todo and idea memory updates.
+- Generates a draft Markdown/HTML/JSON report and `review.md` through `tools/power-work-report`.
+- Reads JSON memory during draft so historical open todos roll forward.
+- Proposes todo and idea memory updates, including explicitly confirmed todo status changes.
+- Supports re-rendering edited draft JSON/proposal files before final confirmation.
 - Requires explicit confirmation before finalizing reports or merging `memory.json`.
 - V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
 
@@ -145,7 +147,7 @@ Use $power-verifier to check this issue contract, diff, validation output, and P
 Ask for a manual Codex work report draft:
 
 ```text
-Use $power-work-report to generate a daily work report draft for today.
+Use $power-work-report to generate a daily work report draft and review checklist for today.
 ```
 
 ## Repository Layout
