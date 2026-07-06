@@ -9,7 +9,8 @@ The verifier gate is a read-only check before final PR/MR readiness. `power-loop
 - Validation commands and results.
 - Acceptance criteria evidence.
 - PR/MR body or draft evidence package.
-- Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review subagent when relevant, or a skipped reason.
+- Fresh-context evidence-verifier output from `power_verifier`, `power-verifier` in a fresh context, or an equivalent read-only verifier subagent.
+- Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review subagent for code, behavior, test, dependency, or config diffs, or a skipped reason for documentation-only diffs.
 - Risks, assumptions, and out-of-scope notes.
 
 ## Checks
@@ -20,19 +21,21 @@ The verifier gate is a read-only check before final PR/MR readiness. `power-loop
 - Every acceptance criterion has evidence.
 - Validation evidence is concrete and relevant.
 - Tests or manual checks prove the acceptance criteria they are cited for.
+- A fresh-context evidence verifier or equivalent read-only verifier subagent inspected the primary evidence directly.
 - Code-review findings are reviewed and either resolved, routed back for repair, documented as notes, or escalated to a human decision.
 - Forbidden paths or high-risk areas were not touched without approval.
 - Risks and assumptions are disclosed.
 - The PR/MR evidence package is complete enough for review.
 - The loop decision is justified by the diff, validation, and evidence.
-- The verifier result states the independence mode, independent review source, and degraded-mode reason if applicable.
-- Self-review degraded mode is used only when no fresh-context verifier, `power_verifier` custom agent, Codex `/review`, `codex review`, or equivalent read-only reviewer is available.
+- The verifier result states the evidence-verifier source, code-review source or skipped reason, parallel/sequential execution status, and degraded-mode reason if applicable.
+- Code review is not used as a substitute for fresh-context evidence verification.
+- Evidence verification and code review are started in parallel when they can inspect the same stable inputs; if they run sequentially, the reason is recorded.
 
 ## Outcomes
 
 ### PASS
 
-The implementation satisfies the contract and has sufficient validation evidence.
+The implementation satisfies the contract, has sufficient validation evidence, has fresh-context evidence verification, and has required code review for code, behavior, test, dependency, or config diffs.
 
 ### PASS_WITH_NOTES
 

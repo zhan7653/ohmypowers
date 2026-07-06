@@ -28,13 +28,17 @@
 
 Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
-Verifier independence mode:
+Evidence verifier source:
 
-- <fresh-context verifier agent | external code review plus verifier | self-review degraded mode>
+- <power_verifier custom agent, power-verifier fresh-context pass, equivalent read-only verifier subagent, or missing>
 
 Code-review source or skipped reason:
 
-- <Codex /review, codex review, equivalent read-only reviewer, not applicable for documentation-only diff, or unavailable after checking all review paths>
+- <Codex /review, codex review, equivalent read-only reviewer, not applicable for documentation-only diff, or missing>
+
+Parallel execution status:
+
+- <parallel, sequential with reason, or not applicable>
 
 Notes:
 
@@ -42,7 +46,7 @@ Notes:
 
 Verifier source:
 
-- <power-verifier result, verifier-gate checklist, or equivalent read-only verifier pass>
+- <power_verifier custom-agent result, power-verifier fresh-context result, or equivalent read-only verifier subagent result>
 
 # Loop decision
 

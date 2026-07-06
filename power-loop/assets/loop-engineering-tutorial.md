@@ -250,9 +250,9 @@ Loop decision: pr-ready
 
 Use `blocked` or `needs-human` instead if validation or verifier checks fail.
 
-## Step 6: Run power-verifier As The Verifier
+## Step 6: Run The Verifier Gate
 
-Use `power-verifier` after implementation and before claiming the loop is ready:
+Use `power-verifier` after implementation and before claiming the loop is ready. For code, behavior, test, dependency, or config diffs, run two separate tracks: a fresh-context evidence verifier and a Codex `/review`, `codex review`, or equivalent code-review pass. Start both tracks in parallel when they can inspect the same stable inputs.
 
 ```text
 Use $power-verifier to check this issue contract, implementation diff, validation output, and PR evidence.
@@ -266,7 +266,7 @@ The verifier should check:
 - tests actually prove the acceptance criteria;
 - divergence handling is tested;
 - PR/MR body maps evidence to every AC;
-- verifier independence mode and code-review source or skipped reason are disclosed;
+- evidence-verifier source, code-review source or skipped reason, and parallel/sequential execution status are disclosed;
 - loop decision is justified.
 
 If the verifier returns a fixable `BLOCKED`, repair within the bounded loop budget, rerun validation, and rerun the verifier. If the verifier returns `NEEDS_HUMAN`, or `BLOCKED` remains after the allowed repair attempts, do not mark the loop complete.

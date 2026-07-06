@@ -4,10 +4,10 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 # Verifier Independence
 
-- Verifier Independence Mode: `fresh-context verifier agent | external code review plus verifier | self-review degraded mode`
-- Independent Review Source: `<power_verifier custom agent, power-verifier fresh-context pass, Codex /review, codex review, equivalent read-only subagent, or self-review>`
-- Code-review source or skipped reason: `<Codex /review, codex review, equivalent review source, not applicable for documentation-only diff, unavailable after checking available review paths, or other reason>`
-- Degraded Mode Reason: `<none, or why every independent verifier and read-only review path was unavailable>`
+- Evidence Verifier Source: `<power_verifier custom agent, power-verifier fresh-context pass, equivalent read-only verifier subagent, or missing>`
+- Code-review source or skipped reason: `<Codex /review, codex review, equivalent review source, not applicable for documentation-only diff, or missing>`
+- Parallel execution status: `<parallel, sequential with reason, or not applicable>`
+- Degraded Mode Reason: `<none, missing fresh-context evidence verifier, missing code-review path for code diff, or other reason>`
 
 # Sources Reviewed
 

@@ -58,15 +58,17 @@ Budget:
 - Pause if high-risk operations become necessary.
 
 Verifier gate:
-- Before finalizing the PR/MR, run a read-only verifier pass.
-- Use the strongest available independent verifier or reviewer. If the `power_verifier` custom agent, `power-verifier` in a fresh context, Codex `/review`, `codex review`, or an equivalent read-only reviewer is available, use it instead of self-review.
+- Before finalizing the PR/MR, run a read-only verifier gate with two separate tracks: evidence verification and code review.
+- Use `power_verifier`, `power-verifier` in a fresh context, or an equivalent read-only verifier subagent for evidence verification. Do not use Codex `/review`, `codex review`, or code-review findings as a substitute for this evidence verifier.
+- For code, behavior, test, dependency, or config diffs, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent as the separate code-review track.
+- Start evidence verification and code review in parallel whenever both can inspect the same stable contract, diff, validation output, and PR/MR evidence package. If the environment cannot run them in parallel, run them sequentially and record why.
 - Compare the diff against the contract.
 - Verify every acceptance criterion has evidence.
 - Check validation results, scope, non-goals, forbidden paths, and disclosed risks.
-- For code, behavior, test, dependency, or config diffs, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent whenever any of those paths is available.
+- For code, behavior, test, dependency, or config diffs, missing code review prevents `PASS` and `PASS_WITH_NOTES`.
 - For documentation-only diffs, state the code-review skipped reason if no code review is run.
-- Do not report self-review degraded mode merely because one review surface is unavailable; degraded mode is allowed only when every independent verifier and read-only review path is unavailable.
-- Record verifier independence mode, independent review source, code-review source or skipped reason, review findings considered, and degraded-mode reason when applicable.
+- Missing fresh-context evidence verification prevents `PASS` and `PASS_WITH_NOTES`.
+- Record evidence-verifier source, code-review source or skipped reason, parallel/sequential execution status, review findings considered, and degraded-mode reason when applicable.
 - Record one verifier result: PASS, PASS_WITH_NOTES, BLOCKED, or NEEDS_HUMAN.
 - If the verifier or code-review pass returns a fixable BLOCKED inside the current contract, repair within the implementation loop budget, rerun validation, and rerun the verifier.
 - Use NEEDS_HUMAN only for scope expansion, contract contradiction, high-risk work, or repeated repair failure beyond budget.
@@ -76,7 +78,7 @@ PR/MR evidence requirements:
 - Create a draft PR/MR only.
 - Link the contract source.
 - Include summary, rationale, changed files, tests run, acceptance-criteria evidence, verifier result, risks, assumptions, out-of-scope items, and reviewer checklist.
-- Include verifier independence mode and code-review source or skipped reason.
+- Include evidence-verifier source, code-review source or skipped reason, and parallel/sequential execution status.
 - Include an evidence table:
 
 | AC | Evidence | Validation | Files | Status |
@@ -84,7 +86,7 @@ PR/MR evidence requirements:
 | AC-1 |  |  |  |  |
 
 Loop decision:
-- pr-ready: draft PR/MR exists and verifier is PASS or PASS_WITH_NOTES.
+- pr-ready: draft PR/MR exists and verifier is PASS or PASS_WITH_NOTES with every required review track present.
 - blocked: technical blocker prevents progress within budget.
 - needs-human: human decision is required before continuing.
 - follow-up-needed: current contract is complete, but new work belongs in a follow-up issue.

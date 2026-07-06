@@ -37,7 +37,7 @@ It does not implement code, generate bounded `/goal`, automatically execute `/go
 - Risk level and execution decision.
 - Dedicated branch/worktree isolation rules.
 - Checkpoints, validation loop, iteration budget, and stop conditions.
-- Read-only verifier gate, using `power_verifier`, `power-verifier`, Codex `/review`, `codex review`, or an equivalent read-only reviewer whenever available.
+- Read-only verifier gate with a fresh-context evidence-verifier subagent plus a separate Codex `/review`, `codex review`, or equivalent code-review pass for code-like diffs.
 - PR/MR evidence requirements and loop decision rules.
 
 Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not clarify vague requirements deeply or implement code directly. If a contract is incomplete, it sends the task back to `power-grill`; if risk is high, it requires human handling instead of generating an implementation `/goal`.
@@ -49,8 +49,9 @@ For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
-- Independent evidence audit through the `power_verifier` custom agent, `power-verifier`, or another fresh-context verifier whenever available.
-- Mandatory code-review integration through Codex `/review`, `codex review`, or an equivalent read-only code-review subagent when the diff includes code, behavior, tests, dependencies, or config and any of those review paths is available.
+- Mandatory evidence audit through the `power_verifier` custom agent, `power-verifier` in a fresh context, or another fresh-context read-only verifier subagent.
+- Mandatory separate code-review integration through Codex `/review`, `codex review`, or an equivalent read-only code-review subagent when the diff includes code, behavior, tests, dependencies, or config.
+- Parallel evidence verification and code review whenever both tracks can inspect the same stable contract, diff, validation output, and PR/MR evidence.
 - Loop decision justification.
 - One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
 
@@ -68,7 +69,7 @@ It is read-only and does not edit files, create branches, mutate issues, approve
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
 
-For implementation diff correctness, use `power-verifier`, the `power_verifier` custom agent, Codex `/review`, `codex review`, or the repository's code review workflow.
+For implementation evidence correctness, use `power-verifier` with the `power_verifier` custom agent or another fresh-context verifier subagent. For code diff correctness, also use Codex `/review`, `codex review`, or the repository's code review workflow.
 
 Use them by phase:
 
@@ -108,7 +109,7 @@ The skill installation makes `$power-verifier` and `$power-critic` available.
 
 The verifier custom-agent installation makes the named `power_verifier` read-only agent discoverable by Codex. The critic custom-agent installation does the same for `power_critic`. These agents are recommended for installation.
 
-When a fresh-context verifier, Codex `/review`, `codex review`, or an equivalent read-only reviewer is available, the verifier must use it and must not report self-review degraded mode. Use self-review degraded mode only when all independent verifier and review paths are unavailable, and disclose the exact reason.
+When checking implementation evidence, use a fresh-context `power_verifier`, `power-verifier`, or equivalent read-only verifier subagent. For code, behavior, test, dependency, or config diffs, also run Codex `/review`, `codex review`, or an equivalent read-only code-review pass. Run the evidence-verifier and code-review tracks in parallel when they can inspect the same stable inputs; if not, disclose why they ran sequentially or why a required track is missing.
 
 Restart Codex after installing or updating skills or custom agents.
 

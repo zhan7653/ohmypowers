@@ -9,7 +9,7 @@ description: Read-only implementation verifier for Loop Engineering tasks. Use a
 
 Verify implementation evidence against a Loop Engineering task contract without changing files or project state.
 
-`power-verifier` is the maker-checker counterpart to a bounded Codex implementation loop. It independently audits whether the implementation diff, validation output, acceptance-criteria evidence, PR/MR evidence package, code-review findings when relevant, and loop decision satisfy the contract produced by `power-grill` and bounded by `power-loop`.
+`power-verifier` is the maker-checker counterpart to a bounded Codex implementation loop. A fresh-context evidence verifier audits whether the implementation diff, validation output, acceptance-criteria evidence, PR/MR evidence package, code-review findings when relevant, and loop decision satisfy the contract produced by `power-grill` and bounded by `power-loop`.
 
 It returns one verifier result:
 
@@ -34,23 +34,28 @@ Good inputs:
 
 Do not use this skill to clarify vague requirements before implementation. Send unclear contracts back to `power-grill` or `power-loop`.
 
-## Independence Modes
+## Evidence Verifier And Code Review
 
-Prefer the strongest available verifier independence mode:
+Run evidence verification and code review as separate read-only tracks:
 
-1. `fresh-context verifier agent`: use the bundled `power_verifier` read-only custom-agent configuration, the `power-verifier` skill in a fresh context, or an equivalent fresh-context verifier to audit the contract and implementation evidence.
-2. `external code review plus verifier`: use Codex `/review`, `codex review`, or an equivalent read-only code-review pass for implementation-diff risks, then incorporate those findings into this verifier result.
-3. `self-review degraded mode`: use only when no fresh-context verifier, `power_verifier` custom agent, Codex `/review`, `codex review`, or equivalent read-only reviewer is available. The verifier result must state the degraded mode reason.
+1. Evidence verification: use the bundled `power_verifier` read-only custom-agent configuration, the `power-verifier` skill in a fresh context, or an equivalent fresh-context read-only verifier subagent to audit the contract and implementation evidence.
+2. Code review: for implementation diffs that include code, behavior, tests, dependencies, or config, run Codex `/review`, `codex review`, or an equivalent read-only code-review pass for implementation-diff risks.
 
-Do not mark the result as self-review degraded merely because one review surface is unavailable. If any independent verifier or read-only review path is available, use it and record that source.
+When both tracks can inspect the same stable contract, diff, validation output, and PR/MR evidence package, start them in parallel. If the environment cannot run them in parallel, run them sequentially and record the reason.
 
-The verifier must inspect primary evidence directly. Parent-agent summaries, implementation-runner claims, PR descriptions, or pasted conclusions can orient the review, but they cannot be the sole evidence for completion.
+Do not use Codex `/review`, `codex review`, or code-review findings as a substitute for the fresh-context evidence verifier. If no fresh-context evidence verifier or equivalent read-only verifier subagent is available, return `BLOCKED` or `NEEDS_HUMAN` instead of claiming `PASS` or `PASS_WITH_NOTES`.
+
+Do not mark the result as self-review degraded merely because one review surface is unavailable. Self-review degraded mode is allowed only for documenting the gap when no fresh-context verifier can run; it must not produce `PASS` or `PASS_WITH_NOTES`.
+
+The evidence verifier and code reviewer must inspect primary evidence directly. Parent-agent summaries, implementation-runner claims, PR descriptions, or pasted conclusions can orient the review, but they cannot be the sole evidence for completion.
 
 ## Code-Review Integration
 
-For implementation diffs that include code, behavior, tests, dependencies, or config, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent before final verifier selection whenever any of those paths is available.
+For implementation diffs that include code, behavior, tests, dependencies, or config, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent before final verifier selection.
 
 Pure documentation-only changes may skip code review. If skipped, the verifier result must state the reason.
+
+If a code, behavior, test, dependency, or config diff cannot receive a read-only code-review pass, return `BLOCKED` when the missing review can be supplied within the current loop, or `NEEDS_HUMAN` when the missing review requires a human or tool decision. Do not return `PASS` or `PASS_WITH_NOTES` until the required code-review track exists.
 
 Handle code-review findings as follows:
 
@@ -108,7 +113,7 @@ Check:
 - Risks and assumptions disclosure.
 - PR/MR evidence completeness.
 - Loop decision justification.
-- Verifier independence mode and degraded-mode disclosure.
+- Evidence verifier source, code-review source, parallel/sequential execution disclosure, and degraded-mode disclosure.
 
 ## Outcomes
 
@@ -118,7 +123,7 @@ Use when the implementation satisfies the contract, required evidence is suffici
 
 ### PASS_WITH_NOTES
 
-Use when the implementation satisfies the contract, but reviewers should notice minor limitations, residual risks, degraded verifier independence, or follow-up candidates that do not block the current contract.
+Use when the implementation satisfies the contract and both required review tracks exist, but reviewers should notice minor limitations, sequential verifier/review execution, residual risks, or follow-up candidates that do not block the current contract.
 
 ### BLOCKED
 
@@ -137,12 +142,12 @@ Use [assets/verifier-result-template.md](assets/verifier-result-template.md).
 Always include:
 
 - Verifier result.
-- Verifier Independence Mode.
-- Independent Review Source.
+- Evidence Verifier Source.
+- Code-review source or skipped reason.
+- Parallel execution status.
 - Contract source.
 - Implementation source.
 - Validation evidence reviewed.
-- Code-review source or skipped reason.
 - Review Findings Considered.
 - Degraded Mode Reason, if any.
 - Acceptance-criteria evidence table.
