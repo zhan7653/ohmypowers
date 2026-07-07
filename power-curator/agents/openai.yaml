@@ -1,0 +1,4 @@
+interface:
+  display_name: "Power Curator"
+  short_description: "Curate Loop Engineering issue and PR state"
+  default_prompt: "Use $power-curator to curate Loop Engineering issues, PRs, comments, and follow-up state."

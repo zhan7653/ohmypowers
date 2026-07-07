@@ -20,6 +20,7 @@ Execution rules:
 - Do not bypass the verifier gate.
 - Do not merge.
 - Do not push directly to main, master, release, or protected branches.
+- Do not mutate issue bodies, labels, comments, or closure state unless the user explicitly confirms the exact curation mutation.
 - Pause if implementation requires auth, permissions, security, migration, production config, destructive data changes, or other high-risk work not already approved in the contract.
 
 Work isolation:
@@ -38,7 +39,7 @@ Checkpoints:
 5. Fix validation failures within budget.
 6. Run full required validation.
 7. Run the read-only verifier gate.
-8. Prepare a draft PR/MR with acceptance-criteria evidence.
+8. Prepare a draft PR/MR with acceptance-criteria evidence and issue curation handoff.
 9. Output the loop decision.
 
 Validation loop:
@@ -78,6 +79,7 @@ PR/MR evidence requirements:
 - Create a draft PR/MR only.
 - Link the contract source.
 - Include summary, rationale, changed files, tests run, acceptance-criteria evidence, verifier result, risks, assumptions, out-of-scope items, and reviewer checklist.
+- Include issue curation evidence: linked contract, closing intent, follow-up handling, and whether curator mutation was intentionally not executed during implementation.
 - Include evidence-verifier source, code-review source or skipped reason, and parallel/sequential execution status.
 - Include an evidence table:
 
@@ -86,7 +88,7 @@ PR/MR evidence requirements:
 | AC-1 |  |  |  |  |
 
 Loop decision:
-- pr-ready: draft PR/MR exists and verifier is PASS or PASS_WITH_NOTES with every required review track present.
+- pr-ready: draft PR/MR exists, issue curation evidence is present, and verifier is PASS or PASS_WITH_NOTES with every required review track present.
 - blocked: technical blocker prevents progress within budget.
 - needs-human: human decision is required before continuing.
 - follow-up-needed: current contract is complete, but new work belongs in a follow-up issue.

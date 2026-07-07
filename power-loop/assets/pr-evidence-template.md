@@ -6,6 +6,24 @@
 
 <Issue URL, issue number, local brief path, or pasted contract reference>
 
+# Issue curation evidence
+
+Linked contract status:
+
+- <open | in-progress | pr-ready | merged | done | superseded | follow-up-needed | unknown>
+
+closing intent:
+
+- <close after merge | keep open | follow-up-needed | needs-human | not applicable>
+
+follow-up handling:
+
+- <no follow-up needed | linked follow-up issue | follow-up recommended | needs-human>
+
+Curator mutation status:
+
+- <not executed during implementation | confirmed and applied with URL/evidence>
+
 # Rationale
 
 <Why this approach satisfies the contract with the smallest defensible change.>
