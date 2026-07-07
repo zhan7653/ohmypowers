@@ -36,6 +36,13 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 - `<finding, impact, disposition, or none>`
 
+# Issue Linkage And Curation Handoff
+
+- Linked contract assessment: `<present, missing, or issue>`
+- Closing intent assessment: `<present, missing, not applicable, or issue>`
+- Follow-up handling assessment: `<present, missing, not applicable, or issue>`
+- Curator mutation assessment: `<not executed, confirmed and applied, missing, or issue>`
+
 # Risks And Assumptions
 
 - `<risk, assumption, or none>`

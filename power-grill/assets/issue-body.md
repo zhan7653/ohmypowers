@@ -65,3 +65,22 @@
 # Change history
 
 - YYYY-MM-DD: Initial task contract created.
+
+# Curation status
+
+State: open
+
+Linked PRs:
+- None yet.
+
+Latest canonical context:
+Initial issue body is the canonical task contract.
+
+Decisions since contract:
+- None.
+
+Follow-up issues:
+- None.
+
+Closure evidence:
+- None yet.

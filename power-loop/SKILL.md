@@ -131,6 +131,7 @@ Every bounded `/goal` must include:
 - iteration budget;
 - verifier gate;
 - PR/MR evidence requirements;
+- issue linkage, closing intent, and follow-up handling requirements;
 - stop conditions;
 - pause-and-ask conditions;
 - loop decision rules.
@@ -144,7 +145,7 @@ Default checkpoints:
 5. Fix validation failures within budget.
 6. Run full required validation.
 7. Run the read-only verifier gate.
-8. Prepare draft PR/MR evidence.
+8. Prepare draft PR/MR evidence, including issue curation handoff.
 9. Output a loop decision.
 
 Default budget:
@@ -192,6 +193,7 @@ Output:
 - missing fields or blockers, if any;
 - bounded `/goal`, only when allowed;
 - PR/MR evidence requirements;
+- issue linkage, closing intent, and follow-up handling requirements;
 - verifier instructions;
 - status transition recommendation;
 - loop decision rules.

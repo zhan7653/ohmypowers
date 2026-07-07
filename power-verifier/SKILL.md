@@ -28,7 +28,7 @@ Good inputs:
 - The implementation diff or PR/MR URL.
 - Validation commands and outputs.
 - Acceptance-criteria evidence.
-- PR/MR body or draft evidence package.
+- PR/MR body or draft evidence package, including issue linkage and curation handoff evidence.
 - Risks, assumptions, out-of-scope notes, and loop decision.
 - Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review subagent, when the diff includes code, behavior, tests, dependencies, or config.
 
@@ -87,7 +87,7 @@ Prefer inputs in this order:
 2. Implementation source: branch, worktree, diff, commit range, or PR/MR URL.
 3. Validation evidence: commands and output.
 4. Acceptance-criteria evidence.
-5. PR/MR evidence package.
+5. PR/MR evidence package with issue linkage, closing intent, follow-up handling, and curator mutation status.
 6. Code-review output or skipped reason.
 7. Risks, assumptions, out-of-scope notes, and loop decision.
 
@@ -107,6 +107,7 @@ Check:
 - Acceptance criteria evidence.
 - Validation relevance, trustworthiness, and failure disclosure.
 - Test relevance to the acceptance criteria.
+- Issue linkage and curation handoff evidence, including closing intent and follow-up handling.
 - Code-review output or skipped reason.
 - Forbidden path or high-risk area violations.
 - Generated artifact handling.
@@ -149,6 +150,7 @@ Always include:
 - Implementation source.
 - Validation evidence reviewed.
 - Review Findings Considered.
+- Issue linkage and curation handoff assessment.
 - Degraded Mode Reason, if any.
 - Acceptance-criteria evidence table.
 - Scope and non-goal assessment.

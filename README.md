@@ -57,6 +57,16 @@ For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.
 
 It is read-only and does not edit files, create branches, mutate issues, approve work, merge, or close PRs/MRs.
 
+`power-curator` manually curates Loop Engineering issue and PR lifecycle state:
+
+- Reads issue bodies, PR/MR bodies, comments, labels, branches, and local git state.
+- Treats issue body `Curation status` as canonical lifecycle context and comments as supplementary evidence.
+- Produces a curation plan before any mutation.
+- Applies issue body updates, comments, labels, closure, or follow-up issue creation only after explicit user confirmation.
+- Uses simple optional labels: `agent-active`, `agent-done`, `agent-follow-up`, `agent-superseded`, and `agent-curation-needed`.
+
+It does not run as a daemon, scheduler, webhook, database, persistent index, or auto-close service, and it does not replace `power-verifier` for implementation evidence review.
+
 `power-work-report` generates a manual Codex daily work report:
 
 - Reads local Codex session JSONL for a target day.
@@ -77,8 +87,9 @@ Use them by phase:
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
 - `power-loop`: agent-ready issue/local brief -> bounded implementation `/goal`.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
+- `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review`.
+- Recommended Loop Engineering flow: `power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -91,6 +102,7 @@ cp -R power-think ~/.codex/skills/power-think
 cp -R power-grill ~/.codex/skills/power-grill
 cp -R power-loop ~/.codex/skills/power-loop
 cp -R power-verifier ~/.codex/skills/power-verifier
+cp -R power-curator ~/.codex/skills/power-curator
 cp -R power-work-report ~/.codex/skills/power-work-report
 cp -R power-critic ~/.codex/skills/power-critic
 ```
@@ -105,7 +117,7 @@ cp power-verifier/agents/power-verifier.toml ~/.codex/agents/power-verifier.toml
 cp power-critic/agents/power-critic.toml ~/.codex/agents/power-critic.toml
 ```
 
-The skill installation makes `$power-verifier` and `$power-critic` available.
+The skill installation makes `$power-verifier`, `$power-curator`, and `$power-critic` available.
 
 The verifier custom-agent installation makes the named `power_verifier` read-only agent discoverable by Codex. The critic custom-agent installation does the same for `power_critic`. These agents are recommended for installation.
 
@@ -143,6 +155,12 @@ Ask for implementation verification:
 
 ```text
 Use $power-verifier to check this issue contract, diff, validation output, and PR evidence.
+```
+
+Ask for issue and PR lifecycle curation:
+
+```text
+Use $power-curator to curate this issue, linked PRs, comments, and follow-up state.
 ```
 
 Ask for a manual Codex work report draft:
@@ -188,6 +206,10 @@ power-verifier/
   assets/
     implementation-verifier-checklist.md
     verifier-result-template.md
+power-curator/
+  SKILL.md
+  agents/
+    openai.yaml
 power-work-report/
   SKILL.md
   agents/

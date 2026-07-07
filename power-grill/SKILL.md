@@ -14,15 +14,16 @@ This skill incorporates the core idea of grill-me-style pre-implementation quest
 The output is:
 
 1. a clarified task summary;
-2. an issue draft for user review;
-3. after confirmation, a hosted issue or local issue brief;
-4. a clear next step to run `power-loop` on the hosted issue or local brief.
+2. a related-issue recommendation: update existing issue, create a linked follow-up, or create a new issue;
+3. an issue draft for user review;
+4. after confirmation, a hosted issue or local issue brief;
+5. a clear next step to run `power-loop` on the hosted issue or local brief.
 
 Do not implement code during this skill.
 Do not generate or start `/goal`; bounded `/goal` generation belongs to `power-loop`.
 Do not create hosted issues, pull requests, or merge requests by default.
 
-After the user reviews the generated issue body, you may create the hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. If hosted issue creation is not available or not desired, save a local issue brief after user confirmation. PR/MR creation and PR/MR body generation belong to the implementation phase after `power-loop` has produced a bounded `/goal` and Codex has run it.
+After the user reviews the generated issue body and related-issue recommendation, you may create or update a hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. If hosted issue creation or update is not available or not desired, save a local issue brief after user confirmation. PR/MR creation and PR/MR body generation belong to the implementation phase after `power-loop` has produced a bounded `/goal` and Codex has run it.
 
 ## When To Use
 
@@ -52,6 +53,7 @@ Look for:
 - `docs/`, `docs/adr/`
 - `CONTEXT.md`, `CONTEXT-MAP.md`
 - existing issue or PR templates
+- related existing issues, PRs, comments, labels, branches, or local refs when hosted state is available
 - GitHub, GitLab, `gh`, or `glab` host rules, especially repository URL rules in `AGENTS.md`
 - test, lint, typecheck, and build commands
 - modules, files, or workflows named by the user
@@ -68,6 +70,7 @@ After inspection, briefly summarize:
 - relevant files or modules;
 - validation commands found or missing;
 - assumptions that still need user confirmation.
+- related issue candidates and the current recommendation: update existing issue, linked follow-up issue, or new issue.
 
 ## Phase 2: Grill The User
 
@@ -181,7 +184,15 @@ When generating the issue body, read and fill `assets/issue-body.md`.
 
 The issue body is the sole canonical task contract. Keep it specific to this task. Do not turn it into project-wide documentation.
 
-If the task contract changes, update the issue body and append a concise entry to the `Change history` section at the bottom of the issue body. Use `Change history` only for contract-level changes, not ordinary implementation progress.
+Before drafting a new issue, search for related existing issues when hosted or local issue state is available. Use conservative matching over title/body keywords, touched files/modules, branch issue ids, `Linked contract` or `Closes #N` references, and comments mentioning follow-up work. Present candidates as evidence, not conclusions, and choose one of:
+
+- update an existing open issue when the new work belongs in the current canonical contract;
+- create a linked follow-up issue when the old issue is complete, nearly complete, or should not be expanded;
+- create a new issue when no existing candidate is a good canonical home.
+
+If important context exists only in comments, propose putting it in the issue body `Curation status` section or in a linked follow-up issue. Comments are supplementary evidence, not the durable contract.
+
+If the task contract changes, update the issue body and append a concise entry to the `Change history` section in the issue body. Use `Change history` only for contract-level changes, not ordinary implementation progress.
 
 After the current issue is completed, put new phases, new features, or substantial follow-up work in a new linked follow-up issue instead of reopening or extending the completed issue.
 
@@ -189,26 +200,28 @@ Do not generate `/goal` in this phase. Ask the user to review and confirm the is
 
 ## Phase 4: Confirm Issue Contract
 
-After the user confirms the issue draft, create or save the issue contract.
+After the user confirms the issue draft and related-issue recommendation, create, update, or save the issue contract.
 
 Options:
 
-- If the user explicitly confirms hosted issue creation and a supported CLI is available, create the hosted issue.
+- If the recommendation is to update an existing hosted issue, ask the user to confirm the target issue and exact body changes, then update that issue body only after confirmation.
+- If the recommendation is to create a linked follow-up issue and the user explicitly confirms hosted issue creation, create the follow-up issue and link the source issue in the body.
+- If the recommendation is to create a new hosted issue and the user explicitly confirms hosted issue creation, create the hosted issue.
 - If hosted issue creation is unavailable or the user prefers local-only flow, save the confirmed issue body to a local brief such as `.codex/power-grill/issue-brief.md`.
 
 Prefer existing repository conventions if they conflict with the local brief path.
 
-Before creating any hosted issue, inspect repository guidance such as `AGENTS.md`, issue templates, and remotes to determine whether the project uses GitHub or GitLab. Follow project-specific host rules over generic defaults.
+Before creating or updating any hosted issue, inspect repository guidance such as `AGENTS.md`, issue templates, and remotes to determine whether the project uses GitHub or GitLab. Follow project-specific host rules over generic defaults.
 
 If project guidance specifies a canonical GitLab remote or says to use `glab -R <full repository URL>`, preserve that exact full URL form in generated commands. Do not replace it with shorthand such as `group/project`.
 
-When the user confirms issue creation:
+When the user confirms hosted issue creation or update:
 
 - For GitHub or `gh`, read `references/github-issue-creation.md`.
 - For GitLab or `glab`, read `references/gitlab-issue-creation.md`.
-- If host rules are unclear, stop and ask before running a creation command.
+- If host rules are unclear, stop and ask before running a creation or update command.
 
-After the hosted issue is created or local brief is saved, record the issue URL, issue number, or local brief path. This reference is the input for `power-loop`.
+After the hosted issue is created or updated, or the local brief is saved, record the issue URL, issue number, or local brief path. This reference is the input for `power-loop`.
 
 ## Phase 5: Hand Off To power-loop
 
@@ -243,9 +256,10 @@ At the end of the power-grill phase, output:
 
 1. Clarified summary
 2. Issue draft
-3. Ask the user to confirm the draft and choose hosted issue creation or local brief
+3. Related-issue recommendation: update existing issue, linked follow-up issue, or new issue
+4. Ask the user to confirm the draft and choose confirmed hosted issue update, hosted issue creation, or local brief
 
-After the user confirms and the hosted issue or local brief exists, output:
+After the user confirms and the hosted issue or local brief exists or is updated, output:
 
 1. Issue reference
 2. Readiness summary and suggested `agent-ready` status

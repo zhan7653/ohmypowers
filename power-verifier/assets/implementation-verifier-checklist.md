@@ -8,7 +8,7 @@ Use this checklist for a read-only verifier pass over implementation evidence.
 - Implementation diff: branch, commit range, PR/MR diff, or pasted diff.
 - Validation commands and outputs.
 - Acceptance-criteria evidence.
-- PR/MR body or draft evidence package.
+- PR/MR body or draft evidence package, including issue linkage and curation handoff evidence.
 - Fresh-context evidence-verifier output from `power_verifier`, `power-verifier` in a fresh context, or an equivalent read-only verifier subagent.
 - Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review pass, or a skipped reason for documentation-only diffs.
 - Risks, assumptions, out-of-scope notes, and loop decision.
@@ -24,12 +24,14 @@ Use this checklist for a read-only verifier pass over implementation evidence.
 - Acceptance criteria: map every AC to concrete evidence, files, and validation.
 - Validation: confirm commands are relevant, outputs are concrete, failures are disclosed, and passing commands actually cover the ACs.
 - Test relevance: confirm tests or manual checks prove the behavior claimed by the acceptance criteria.
+- Issue linkage: confirm PR/MR evidence links the canonical contract source.
+- Curation handoff: confirm PR/MR evidence states linked contract status, closing intent, follow-up handling, and whether curator mutation was intentionally not executed or was explicitly confirmed.
 - Evidence verifier: confirm a fresh-context verifier or equivalent read-only verifier subagent inspected the primary contract, diff, validation, acceptance-criteria evidence, PR/MR evidence, risks, assumptions, out-of-scope notes, and loop decision.
 - Code-review findings: inspect `/review`, `codex review`, or equivalent output for code, behavior, test, dependency, or config diffs; if skipped, confirm the diff is documentation-only.
 - Forbidden paths: confirm protected or out-of-scope paths were not touched without approval.
 - Generated artifacts: confirm generated or local-only artifacts are handled according to the contract.
 - Risks and assumptions: confirm residual risk is disclosed and not hidden as completion.
-- PR/MR evidence: confirm summary, rationale, changed files, validation, AC evidence, verifier result, risks, out-of-scope items, reviewer checklist, and loop decision are present.
+- PR/MR evidence: confirm summary, rationale, changed files, validation, AC evidence, issue linkage, curation handoff, verifier result, risks, out-of-scope items, reviewer checklist, and loop decision are present.
 - Loop decision: confirm `pr-ready`, `blocked`, `needs-human`, `follow-up-needed`, or `done` is justified by the evidence.
 - Parallelism: confirm evidence verification and code review were started in parallel when they could inspect the same stable inputs, or record why they ran sequentially.
 - Verifier independence: record the evidence-verifier source and code-review source separately. Do not treat code review as a substitute for a fresh-context evidence verifier.
