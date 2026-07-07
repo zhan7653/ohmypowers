@@ -119,6 +119,8 @@ Naming:
 - Branch: `agent/<issue-id>-<short-name>`
 - Worktree: `.worktrees/agent-<issue-id>-<short-name>`
 - If there is no hosted issue, use a local brief slug instead of `<issue-id>`.
+- Never recommend worktree paths outside the repository root.
+- If an older issue, local brief, or pasted contract mentions an outside-root worktree path, override that stale path with `.worktrees/agent-<issue-id>-<short-name>` in the generated `/goal`.
 
 Repository-local worktrees keep sibling directories tidy, but they require `.worktrees/` to be ignored by Git. Do not run destructive clean commands such as `git clean -fdx` from the parent worktree unless `.worktrees/` is explicitly excluded or the nested worktrees have already been removed safely.
 
