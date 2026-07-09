@@ -132,6 +132,10 @@ Required JSON shape:
 Use the raw summary as evidence. Preserve local paths when useful. Keep Markdown order compatible with:
 今日概览, 关键成果, 关键决策, 明日优先, 后续待办, 项目进展, 风险与阻塞, 想法与灵感, 附录：证据索引.
 Split tasks into tomorrowPriority and backlog. Put only concrete ideas into ideas.chips.
+rawSummary.sessions/projects are today's event-derived data after timezone date filtering.
+rawSummary.context is historical background only. Use it for continuity, but do not count it as today's completed work, today's sessions, or today's files.
+tasks.tomorrowPriority and tasks.backlog are top-level human attention surfaces. Include only project-level or cross-project priorities there.
+Keep local-file, one-off operational, or narrow implementation details out of top-level tasks. If still useful, place them under the relevant projectSections[].pending item instead.
 
 Raw summary:
 ${JSON.stringify(rawSummary, null, 2)}`

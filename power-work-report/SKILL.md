@@ -13,11 +13,13 @@ This skill is a manual workflow wrapper around the `tools/power-work-report` Nod
 
 V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, reads existing JSON memory, generates JSON/Markdown/HTML reports plus `review.md`, proposes todo and idea memory updates, and merges those updates only during `finalize`.
 
+Daily collection is based on event timestamps mapped to the user's local date, not only the rollout file's directory date. The default scan window is the target date plus the previous 30 days, so a long-running Codex session that started earlier can still contribute today's events.
+
 The draft report uses the component-style Codex daily report structure: metadata, overview, outcomes, decisions, tomorrow priorities, backlog, project sections, risk groups, idea chips, and appendix evidence. `review.md` is the primary confirmation surface for memory-related review; report Markdown remains the readable full report. HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and responsive print support.
 
 ## Boundaries
 
-- Read only Codex session JSONL under `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`.
+- Read only Codex session JSONL under `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` within the configured lookback window.
 - Do not read `state_*.sqlite`.
 - Do not support non-Codex agent logs, web UI, databases, vector stores, or remote APIs.
 - Do not install or modify schedulers.
@@ -31,7 +33,7 @@ The draft report uses the component-style Codex daily report structure: metadata
 2. Run the CLI in draft mode:
 
    ```bash
-   node tools/power-work-report/bin/power-work-report.js run --date YYYY-MM-DD --lang zh-CN
+   node tools/power-work-report/bin/power-work-report.js run --date YYYY-MM-DD --lang zh-CN --timezone Asia/Shanghai
    ```
 
 3. Report the generated draft paths:

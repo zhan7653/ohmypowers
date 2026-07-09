@@ -1,34 +1,70 @@
 import path from 'node:path'
 import { promises as fs } from 'node:fs'
-import { sessionDirForDate } from './paths.js'
+import { dateWindow, localDateForTimestamp, resolveTimezone } from './paths.js'
+import { readMemory } from './memory.js'
 
 const USER_LIMIT = 1200
 const ASSISTANT_LIMIT = 1200
+const DEFAULT_LOOKBACK_DAYS = 30
 
-export async function collectDay({ date, codexHome }) {
-  const sessionDir = sessionDirForDate(codexHome, date)
-  const files = await findRolloutFiles(sessionDir)
-  const sessions = []
-
-  for (const filePath of files) {
-    sessions.push(await summarizeRollout(filePath))
+export async function collectDay({ date, codexHome, lookbackDays = DEFAULT_LOOKBACK_DAYS, timezone, memoryFile }) {
+  const resolvedTimezone = resolveTimezone(timezone)
+  const resolvedLookbackDays = normalizeLookbackDays(lookbackDays)
+  const scanDirs = dateWindow({ codexHome, date, lookbackDays: resolvedLookbackDays, timezone: resolvedTimezone })
+  const scan = {
+    startDate: scanDirs[0]?.date || date,
+    endDate: date,
+    directories: [],
+    files: [],
+    scannedDirectoryCount: 0,
+    scannedFileCount: 0,
   }
+  const sessions = []
+  const skippedEvents = emptySkippedEvents()
+  const seenFiles = new Set()
+
+  for (const dir of scanDirs) {
+    const files = await findRolloutFiles(dir.path)
+    scan.directories.push({
+      date: dir.date,
+      path: dir.path,
+      exists: files.exists,
+      fileCount: files.paths.length,
+    })
+    if (files.exists) scan.scannedDirectoryCount += 1
+
+    for (const filePath of files.paths) {
+      if (seenFiles.has(filePath)) continue
+      seenFiles.add(filePath)
+      scan.files.push(filePath)
+      const result = await summarizeRollout(filePath, { targetDate: date, timezone: resolvedTimezone })
+      addSkippedEvents(skippedEvents, result.skippedEvents)
+      if (result.summary) sessions.push(result.summary)
+    }
+  }
+  scan.scannedFileCount = scan.files.length
 
   const projects = groupProjects(sessions)
+  const context = memoryFile ? await buildContext(memoryFile) : emptyContext()
   return {
     schemaVersion: 1,
     date,
     generatedAt: new Date().toISOString(),
     codexHome,
-    sessionDir,
+    timezone: resolvedTimezone,
+    lookbackDays: resolvedLookbackDays,
+    scan,
+    skippedEvents,
+    sessionDir: scanDirs.at(-1)?.path || '',
     sessionCount: sessions.length,
+    context,
     projects,
     sessions,
   }
 }
 
-export async function writeRawSummary({ date, codexHome, outDir }) {
-  const summary = await collectDay({ date, codexHome })
+export async function writeRawSummary({ date, codexHome, outDir, lookbackDays, timezone, memoryFile }) {
+  const summary = await collectDay({ date, codexHome, lookbackDays, timezone, memoryFile })
   await fs.mkdir(outDir, { recursive: true })
   const rawSummaryPath = path.join(outDir, 'raw-summary.json')
   await fs.writeFile(rawSummaryPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8')
@@ -40,7 +76,7 @@ async function findRolloutFiles(sessionDir) {
   try {
     entries = await fs.readdir(sessionDir, { withFileTypes: true })
   } catch (error) {
-    if (error?.code === 'ENOENT') return []
+    if (error?.code === 'ENOENT') return { exists: false, paths: [] }
     throw error
   }
 
@@ -48,22 +84,44 @@ async function findRolloutFiles(sessionDir) {
     .filter(entry => entry.isFile() && /^rollout-.*\.jsonl$/.test(entry.name))
     .map(entry => path.join(sessionDir, entry.name))
     .sort()
-  return files
+  return { exists: true, paths: files }
 }
 
-async function summarizeRollout(filePath) {
+async function summarizeRollout(filePath, { targetDate, timezone }) {
   const raw = await fs.readFile(filePath, 'utf8')
   const events = []
-  let malformedLines = 0
+  const fileMetadata = { cwd: '', title: '' }
+  const skippedEvents = emptySkippedEvents()
 
   for (const line of raw.split('\n')) {
     if (!line.trim()) continue
     try {
-      events.push(JSON.parse(line))
+      const event = JSON.parse(line)
+      const payload = event.payload || {}
+      if (event.cwd && !fileMetadata.cwd) fileMetadata.cwd = String(event.cwd)
+      if (payload.cwd && !fileMetadata.cwd) fileMetadata.cwd = String(payload.cwd)
+      if (payload.title && !fileMetadata.title) fileMetadata.title = String(payload.title)
+      const timestamp = typeof event.timestamp === 'string' ? event.timestamp : ''
+      if (!timestamp) {
+        skippedEvents.missingTimestamp += 1
+        continue
+      }
+      const localDate = localDateForTimestamp(timestamp, timezone)
+      if (!localDate) {
+        skippedEvents.invalidTimestamp += 1
+        continue
+      }
+      if (localDate !== targetDate) {
+        skippedEvents.outsideTargetDate += 1
+        continue
+      }
+      events.push(event)
     } catch {
-      malformedLines += 1
+      skippedEvents.malformedLines += 1
     }
   }
+
+  if (!events.length) return { summary: null, skippedEvents }
 
   const sessionId = extractSessionId(filePath)
   const summary = {
@@ -80,7 +138,8 @@ async function summarizeRollout(filePath) {
     filesModified: [],
     todos: [],
     ideas: [],
-    malformedLines,
+    malformedLines: skippedEvents.malformedLines,
+    skippedEvents,
   }
   const filesModified = new Set()
 
@@ -138,9 +197,11 @@ async function summarizeRollout(filePath) {
   }
 
   summary.filesModified = Array.from(filesModified).sort()
+  if (!summary.cwd) summary.cwd = fileMetadata.cwd
+  if (!summary.title) summary.title = fileMetadata.title
   if (!summary.cwd) summary.cwd = '(unknown project)'
   if (!summary.title) summary.title = summary.userMessages[0]?.text?.slice(0, 80) || sessionId
-  return summary
+  return { summary, skippedEvents }
 }
 
 function groupProjects(sessions) {
@@ -219,4 +280,52 @@ function sanitize(value, limit) {
 
 function extractSessionId(filePath) {
   return path.basename(filePath, '.jsonl').replace(/^rollout-/, '')
+}
+
+async function buildContext(memoryFile) {
+  const memory = await readMemory(memoryFile)
+  return {
+    openTodos: (memory.todos || [])
+      .filter(item => item.status === 'open')
+      .map(item => ({
+        id: item.id || '',
+        text: item.text,
+        project: item.project || '',
+        status: item.status || 'open',
+      })),
+    recentReports: (memory.reports || []).slice(-10).map(item => ({
+      date: item.date || '',
+      title: item.title || '',
+      status: item.status || '',
+      generatedAt: item.generatedAt || '',
+      sessionIds: Array.isArray(item.sessionIds) ? item.sessionIds : [],
+    })),
+  }
+}
+
+function emptyContext() {
+  return { openTodos: [], recentReports: [] }
+}
+
+function emptySkippedEvents() {
+  return {
+    malformedLines: 0,
+    missingTimestamp: 0,
+    invalidTimestamp: 0,
+    outsideTargetDate: 0,
+  }
+}
+
+function addSkippedEvents(target, source) {
+  for (const key of Object.keys(target)) {
+    target[key] += Number(source?.[key] || 0)
+  }
+}
+
+function normalizeLookbackDays(value) {
+  const number = Number(value ?? DEFAULT_LOOKBACK_DAYS)
+  if (!Number.isInteger(number) || number < 0) {
+    throw new Error(`Invalid --lookback-days "${value}". Expected a non-negative integer.`)
+  }
+  return number
 }

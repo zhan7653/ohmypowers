@@ -19,16 +19,400 @@ test('collect writes deterministic raw summary grouped by project', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-collect-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
 
-  await run(['collect', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp])
+  await run([
+    'collect',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--timezone',
+    'Asia/Shanghai',
+  ])
 
   const raw = await readJson(path.join(tmp, '2026-07-01', 'draft', 'raw-summary.json'))
   assert.equal(raw.sessionCount, 2)
+  assert.equal(raw.lookbackDays, 30)
+  assert.equal(raw.timezone, 'Asia/Shanghai')
+  assert.equal(raw.scan.directories.length, 32)
   assert.deepEqual(
     raw.projects.map(project => project.project).sort(),
     ['/workspace/alpha', '/workspace/beta'],
   )
   assert.equal(raw.sessions.find(session => session.cwd === '/workspace/alpha').malformedLines, 1)
+  assert.equal(raw.skippedEvents.malformedLines, 1)
   assert.ok(JSON.stringify(raw).includes('修复日报生成的边界'))
+})
+
+test('collect slices cross-day rollout files by configured local date', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-cross-day-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  await writeRollout(codexHome, '2026-07-01', 'cross', [
+    event('2026-07-01T01:00:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '旧日期工作。待办: 不应进入 7 月 2 日。',
+        cwd: '/workspace/old',
+        title: 'Old day',
+      },
+    }),
+    event('2026-07-01T01:05:00.000Z', {
+      type: 'response_item',
+      payload: { type: 'function_call', name: 'apply_patch', arguments: patchFor('old.js') },
+    }),
+    event('2026-07-01T16:05:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '目标日工作。待办: 收敛跨天日报能力。想法: 增量汇总。',
+        cwd: '/workspace/cross',
+        title: 'Cross target',
+      },
+    }),
+    event('2026-07-01T16:06:00.000Z', {
+      type: 'response_item',
+      payload: { type: 'function_call', name: 'apply_patch', arguments: patchFor('target.js') },
+    }),
+    event('2026-07-01T16:07:00.000Z', {
+      type: 'event_msg',
+      payload: { type: 'exec_command_end', command: ['bash', '-lc', 'npm test'], exit_code: 0, status: 'completed' },
+    }),
+    event('2026-07-02T15:59:00.000Z', {
+      type: 'response_item',
+      payload: { type: 'message', role: 'assistant', content: [{ text: '完成目标日切片。后续: 补测试。' }] },
+    }),
+    event('2026-07-02T16:01:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '次日内容不应进入。',
+        cwd: '/workspace/future',
+        title: 'Future day',
+      },
+    }),
+    { type: 'event_msg', payload: { type: 'user_message', message: '无 timestamp 不应进入。' } },
+    event('not-a-date', {
+      type: 'event_msg',
+      payload: { type: 'user_message', message: '坏 timestamp 不应进入。' },
+    }),
+    'not-json',
+  ])
+  await writeRollout(codexHome, '2026-07-03', 'future-dir', [
+    event('2026-07-01T16:10:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '未来目录里的目标日事件不应被扫描。',
+        cwd: '/workspace/future-dir',
+        title: 'Future dir',
+      },
+    }),
+  ])
+
+  await run([
+    'collect',
+    '--date',
+    '2026-07-02',
+    '--codex-home',
+    codexHome,
+    '--out-dir',
+    tmp,
+    '--lookback-days',
+    '1',
+    '--timezone',
+    'Asia/Shanghai',
+  ])
+
+  const raw = await readJson(path.join(tmp, '2026-07-02', 'draft', 'raw-summary.json'))
+  assert.equal(raw.sessionCount, 1)
+  assert.equal(raw.timezone, 'Asia/Shanghai')
+  assert.equal(raw.lookbackDays, 1)
+  assert.ok(raw.scan.directories.some(item => item.date === '2026-07-01'))
+  assert.ok(raw.scan.directories.some(item => item.date === '2026-07-02'))
+  assert.ok(!raw.scan.directories.some(item => item.date === '2026-07-03'))
+  assert.equal(raw.scan.files.length, 1)
+  assert.equal(raw.sessions[0].startedAt, '2026-07-01T16:05:00.000Z')
+  assert.equal(raw.sessions[0].endedAt, '2026-07-02T15:59:00.000Z')
+  assert.equal(raw.sessions[0].cwd, '/workspace/cross')
+  assert.deepEqual(raw.sessions[0].filesModified, ['target.js'])
+  assert.equal(raw.sessions[0].commands.length, 1)
+  assert.ok(JSON.stringify(raw).includes('目标日工作'))
+  assert.ok(!JSON.stringify(raw).includes('旧日期工作'))
+  assert.ok(!JSON.stringify(raw).includes('次日内容不应进入'))
+  assert.ok(!JSON.stringify(raw).includes('未来目录里的目标日事件'))
+  assert.deepEqual(raw.skippedEvents, {
+    malformedLines: 1,
+    missingTimestamp: 1,
+    invalidTimestamp: 1,
+    outsideTargetDate: 3,
+  })
+})
+
+test('collect rerun for original date excludes later local-date events', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-rerun-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  await writeRollout(codexHome, '2026-07-01', 'cross', [
+    event('2026-07-01T01:00:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '原日期内容。待办: 保留原日。',
+        cwd: '/workspace/original',
+        title: 'Original day',
+      },
+    }),
+    event('2026-07-01T16:05:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '后一天内容不应混入。',
+        cwd: '/workspace/cross',
+        title: 'Later day',
+      },
+    }),
+  ])
+
+  await run([
+    'collect',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    codexHome,
+    '--out-dir',
+    tmp,
+    '--lookback-days',
+    '0',
+    '--timezone',
+    'Asia/Shanghai',
+  ])
+
+  const raw = await readJson(path.join(tmp, '2026-07-01', 'draft', 'raw-summary.json'))
+  assert.equal(raw.sessionCount, 1)
+  assert.equal(raw.sessions[0].cwd, '/workspace/original')
+  assert.ok(JSON.stringify(raw).includes('原日期内容'))
+  assert.ok(!JSON.stringify(raw).includes('后一天内容不应混入'))
+})
+
+test('collect scans next UTC directory when timezone maps it to target local date', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-west-tz-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  await writeRollout(codexHome, '2026-07-02', 'la-night', [
+    event('2026-07-02T06:30:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: 'LA 本地 7 月 1 日晚间工作。待办: 跟进本地日期切片。',
+        cwd: '/workspace/la',
+        title: 'LA local day',
+      },
+    }),
+  ])
+
+  await run([
+    'collect',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    codexHome,
+    '--out-dir',
+    tmp,
+    '--lookback-days',
+    '0',
+    '--timezone',
+    'America/Los_Angeles',
+  ])
+
+  const raw = await readJson(path.join(tmp, '2026-07-01', 'draft', 'raw-summary.json'))
+  assert.deepEqual(
+    raw.scan.directories.map(item => item.date),
+    ['2026-07-01', '2026-07-02'],
+  )
+  assert.equal(raw.sessionCount, 1)
+  assert.equal(raw.sessions[0].cwd, '/workspace/la')
+  assert.ok(JSON.stringify(raw).includes('LA 本地 7 月 1 日晚间工作'))
+})
+
+test('collect scans previous UTC directory when timezone maps it to target local date', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-east-tz-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  await writeRollout(codexHome, '2026-06-30', 'shanghai-morning', [
+    event('2026-06-30T16:30:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '上海本地 7 月 1 日凌晨工作。待办: 跟进正时区切片。',
+        cwd: '/workspace/shanghai',
+        title: 'Shanghai local day',
+      },
+    }),
+  ])
+
+  await run([
+    'collect',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    codexHome,
+    '--out-dir',
+    tmp,
+    '--lookback-days',
+    '0',
+    '--timezone',
+    'Asia/Shanghai',
+  ])
+
+  const raw = await readJson(path.join(tmp, '2026-07-01', 'draft', 'raw-summary.json'))
+  assert.deepEqual(
+    raw.scan.directories.map(item => item.date),
+    ['2026-06-30', '2026-07-01'],
+  )
+  assert.equal(raw.sessionCount, 1)
+  assert.equal(raw.sessions[0].cwd, '/workspace/shanghai')
+  assert.ok(JSON.stringify(raw).includes('上海本地 7 月 1 日凌晨工作'))
+})
+
+test('collect preserves rollout metadata without counting earlier content', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-metadata-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  await writeRollout(codexHome, '2026-07-01', 'metadata', [
+    event('2026-07-01T15:50:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: '前一天的上下文正文不应进入目标日。',
+        cwd: '/workspace/metadata',
+        title: 'Metadata source',
+      },
+    }),
+    event('2026-07-01T16:05:00.000Z', {
+      type: 'response_item',
+      payload: { type: 'function_call', name: 'apply_patch', arguments: patchFor('metadata.js') },
+    }),
+    event('2026-07-01T16:10:00.000Z', {
+      type: 'response_item',
+      payload: { type: 'message', role: 'assistant', content: [{ text: '目标日完成。' }] },
+    }),
+  ])
+
+  await run([
+    'collect',
+    '--date',
+    '2026-07-02',
+    '--codex-home',
+    codexHome,
+    '--out-dir',
+    tmp,
+    '--lookback-days',
+    '1',
+    '--timezone',
+    'Asia/Shanghai',
+  ])
+
+  const raw = await readJson(path.join(tmp, '2026-07-02', 'draft', 'raw-summary.json'))
+  assert.equal(raw.sessions[0].cwd, '/workspace/metadata')
+  assert.equal(raw.sessions[0].title, 'Metadata source')
+  assert.deepEqual(raw.sessions[0].userMessages, [])
+  assert.ok(!JSON.stringify(raw.projects).includes('前一天的上下文正文'))
+  assert.deepEqual(raw.sessions[0].filesModified, ['metadata.js'])
+})
+
+test('collect writes memory context separately from today data', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-context-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  await fs.writeFile(
+    path.join(tmp, 'memory.json'),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      todos: [
+        { id: 'hist-open', text: '历史开放待办', project: '/workspace/history', status: 'open' },
+        { id: 'hist-done', text: '历史已完成待办', project: '/workspace/history', status: 'done' },
+      ],
+      ideas: [],
+      reports: [
+        {
+          date: '2026-06-30',
+          title: '旧日报正文标题',
+          status: 'final',
+          generatedAt: '2026-06-30T12:00:00.000Z',
+          sessionIds: ['old-session'],
+          body: '旧日报正文不应进入 context',
+        },
+      ],
+    })}\n`,
+    'utf8',
+  )
+
+  await run([
+    'collect',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    fixtureCodexHome,
+    '--out-dir',
+    tmp,
+    '--timezone',
+    'Asia/Shanghai',
+  ])
+
+  const raw = await readJson(path.join(tmp, '2026-07-01', 'draft', 'raw-summary.json'))
+  assert.deepEqual(raw.context.openTodos, [
+    { id: 'hist-open', text: '历史开放待办', project: '/workspace/history', status: 'open' },
+  ])
+  assert.equal(raw.context.recentReports.length, 1)
+  assert.equal(raw.context.recentReports[0].title, '旧日报正文标题')
+  assert.equal(raw.context.recentReports[0].body, undefined)
+  assert.ok(!JSON.stringify(raw.projects).includes('历史开放待办'))
+})
+
+test('fallback keeps narrow implementation details out of top-level todos', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-top-todos-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const lowLevelTodo = '处理本地 test.txt 中真实 API Token 的留存方式，确保不被误提交或共享'
+  const projectTodo = '收敛 partyagent 项目的凭据留存策略'
+  await writeRollout(codexHome, '2026-07-01', 'detail', [
+    event('2026-07-01T09:00:00.000Z', {
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: `待办: ${lowLevelTodo}。待办: ${projectTodo}。`,
+        cwd: '/workspace/partyagent',
+        title: 'PartyAgent credentials',
+      },
+    }),
+  ])
+
+  await run([
+    'run',
+    '--date',
+    '2026-07-01',
+    '--codex-home',
+    codexHome,
+    '--out-dir',
+    tmp,
+    '--timezone',
+    'Asia/Shanghai',
+    '--codex-bin',
+    failCodex,
+  ])
+
+  const draftDir = path.join(tmp, '2026-07-01', 'draft')
+  const report = await readJson(path.join(draftDir, 'report.json'))
+  const review = await fs.readFile(path.join(draftDir, 'review.md'), 'utf8')
+  const markdown = await fs.readFile(path.join(draftDir, 'report.md'), 'utf8')
+  const topLevelTexts = [...report.tasks.tomorrowPriority, ...report.tasks.backlog].map(item => item.text)
+  assert.deepEqual(topLevelTexts, [`待办: ${projectTodo}`])
+  assert.ok(report.projectSections[0].pending.includes(`待办: ${lowLevelTodo}`))
+  assert.ok(markdown.includes(`待办: ${lowLevelTodo}`))
+  assert.ok(!review.includes(lowLevelTodo))
+  assert.ok(review.includes(projectTodo))
 })
 
 test('run writes codex draft reports and proposed memory update', async t => {
@@ -45,6 +429,8 @@ test('run writes codex draft reports and proposed memory update', async t => {
     tmp,
     '--lang',
     'zh-CN',
+    '--timezone',
+    'Asia/Shanghai',
     '--codex-bin',
     successCodex,
   ])
@@ -135,6 +521,8 @@ test('run includes historical open todos and advisory completion candidates in r
     fixtureCodexHome,
     '--out-dir',
     tmp,
+    '--timezone',
+    'Asia/Shanghai',
     '--codex-bin',
     successCodex,
   ])
@@ -165,6 +553,8 @@ test('codex failure writes fallback draft and finalize refuses without allow-fal
     fixtureCodexHome,
     '--out-dir',
     tmp,
+    '--timezone',
+    'Asia/Shanghai',
     '--codex-bin',
     failCodex,
   ])
@@ -191,6 +581,8 @@ test('finalize writes final reports and deduplicates memory by normalized text a
     fixtureCodexHome,
     '--out-dir',
     tmp,
+    '--timezone',
+    'Asia/Shanghai',
     '--codex-bin',
     successCodex,
   ])
@@ -238,6 +630,8 @@ test('finalize applies explicit confirmed todo completion updates', async t => {
     fixtureCodexHome,
     '--out-dir',
     tmp,
+    '--timezone',
+    'Asia/Shanghai',
     '--codex-bin',
     successCodex,
   ])
@@ -275,6 +669,8 @@ test('render refreshes review after oral proposal edits', async t => {
     fixtureCodexHome,
     '--out-dir',
     tmp,
+    '--timezone',
+    'Asia/Shanghai',
     '--codex-bin',
     successCodex,
   ])
@@ -319,6 +715,8 @@ test('malformed memory json fails draft clearly', async t => {
         fixtureCodexHome,
         '--out-dir',
         tmp,
+        '--timezone',
+        'Asia/Shanghai',
         '--codex-bin',
         successCodex,
       ]),
@@ -344,6 +742,22 @@ async function exists(filePath) {
   } catch {
     return false
   }
+}
+
+async function writeRollout(codexHome, date, id, lines) {
+  const [year, month, day] = date.split('-')
+  const dir = path.join(codexHome, 'sessions', year, month, day)
+  await fs.mkdir(dir, { recursive: true })
+  const body = lines.map(line => (typeof line === 'string' ? line : JSON.stringify(line))).join('\n')
+  await fs.writeFile(path.join(dir, `rollout-${id}.jsonl`), `${body}\n`, 'utf8')
+}
+
+function event(timestamp, rest) {
+  return { timestamp, ...rest }
+}
+
+function patchFor(filePath) {
+  return `*** Begin Patch\n*** Update File: ${filePath}\n+changed\n*** End Patch`
 }
 
 function assertMarkdownOrder(markdown, headings) {

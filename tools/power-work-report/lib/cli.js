@@ -12,7 +12,7 @@ import {
   renderMarkdown,
   renderReviewMarkdown,
 } from './render.js'
-import { pathsForDate, resolveCodexHome, resolveOutDir } from './paths.js'
+import { pathsForDate, resolveCodexHome, resolveOutDir, resolveTimezone } from './paths.js'
 
 export async function runCli(argv) {
   const [command, ...rest] = argv
@@ -26,22 +26,26 @@ export async function runCli(argv) {
   const codexHome = resolveCodexHome(options.codexHome)
   const outDir = resolveOutDir(options.outDir, codexHome)
   const paths = pathsForDate({ date, outDir })
+  const collectOptions = {
+    lookbackDays: parseLookbackDays(options.lookbackDays),
+    timezone: resolveTimezone(options.timezone),
+  }
 
   if (command === 'collect') {
-    const result = await collectCommand({ date, codexHome, paths })
+    const result = await collectCommand({ date, codexHome, paths, collectOptions })
     console.log(JSON.stringify({ rawSummaryPath: result.rawSummaryPath }, null, 2))
     return
   }
 
   if (command === 'draft') {
-    const result = await draftCommand({ date, codexHome, paths, options })
+    const result = await draftCommand({ date, codexHome, paths, options, collectOptions })
     console.log(JSON.stringify(result.paths, null, 2))
     return
   }
 
   if (command === 'run') {
-    await collectCommand({ date, codexHome, paths })
-    const result = await draftCommand({ date, codexHome, paths, options })
+    await collectCommand({ date, codexHome, paths, collectOptions })
+    const result = await draftCommand({ date, codexHome, paths, options, collectOptions })
     console.log(JSON.stringify(result.paths, null, 2))
     return
   }
@@ -61,18 +65,32 @@ export async function runCli(argv) {
   throw new Error(`Unknown command "${command}".`)
 }
 
-async function collectCommand({ date, codexHome, paths }) {
-  return writeRawSummary({ date, codexHome, outDir: paths.draftDir })
+async function collectCommand({ date, codexHome, paths, collectOptions }) {
+  return writeRawSummary({
+    date,
+    codexHome,
+    outDir: paths.draftDir,
+    memoryFile: paths.memoryFile,
+    ...collectOptions,
+  })
 }
 
-async function draftCommand({ date, codexHome, paths, options }) {
+async function draftCommand({ date, codexHome, paths, options, collectOptions }) {
   await fs.mkdir(paths.draftDir, { recursive: true })
   const rawSummaryPath = path.join(paths.draftDir, 'raw-summary.json')
   let rawSummary
   try {
     rawSummary = JSON.parse(await fs.readFile(rawSummaryPath, 'utf8'))
   } catch {
-    rawSummary = (await writeRawSummary({ date, codexHome, outDir: paths.draftDir })).summary
+    rawSummary = (
+      await writeRawSummary({
+        date,
+        codexHome,
+        outDir: paths.draftDir,
+        memoryFile: paths.memoryFile,
+        ...collectOptions,
+      })
+    ).summary
   }
 
   const lang = options.lang || 'zh-CN'
@@ -174,6 +192,15 @@ function requiredOption(options, key) {
   return options[key]
 }
 
+function parseLookbackDays(value) {
+  if (value === undefined) return 30
+  const number = Number(value)
+  if (!Number.isInteger(number) || number < 0) {
+    throw new Error(`Invalid --lookback-days "${value}". Expected a non-negative integer.`)
+  }
+  return number
+}
+
 async function readRequiredJson(filePath) {
   try {
     return JSON.parse(await fs.readFile(filePath, 'utf8'))
@@ -194,9 +221,9 @@ function printHelp() {
   console.log(`power-work-report
 
 Usage:
-  power-work-report collect --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR]
-  power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
-  power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lang zh-CN|en] [--codex-bin BIN]
+  power-work-report collect --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ]
+  power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ] [--lang zh-CN|en] [--codex-bin BIN]
+  power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ] [--lang zh-CN|en] [--codex-bin BIN]
   power-work-report render --date YYYY-MM-DD [--out-dir DIR]
   power-work-report finalize --date YYYY-MM-DD [--out-dir DIR] [--allow-fallback]
 

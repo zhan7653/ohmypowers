@@ -69,7 +69,7 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 `power-work-report` generates a manual Codex daily work report:
 
-- Reads local Codex session JSONL for a target day.
+- Reads local Codex session JSONL for a target local date, scanning a lookback window so cross-day Codex sessions can still be sliced by event timestamp.
 - Generates a draft Markdown/HTML/JSON report and `review.md` through `tools/power-work-report`.
 - Reads JSON memory during draft so historical open todos roll forward.
 - Proposes todo and idea memory updates, including explicitly confirmed todo status changes.
