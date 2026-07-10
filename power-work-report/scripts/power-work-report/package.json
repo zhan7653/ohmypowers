@@ -7,8 +7,7 @@
     "power-work-report": "bin/power-work-report.js"
   },
   "scripts": {
-    "test": "node --test test/*.test.js",
-    "check": "node --check bin/power-work-report.js && node --check lib/*.js && node --check test/*.test.js"
+    "check": "node --check bin/power-work-report.js && node --check lib/*.js"
   },
   "engines": {
     "node": ">=18"

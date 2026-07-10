@@ -1,158 +1,81 @@
 ---
 name: power-grill
-description: Run a persistent grill-me-style pre-implementation interview across scope, risks, contracts, validation, and stop conditions, then produce an issue contract for user confirmation. After the issue is created or saved as a local brief, point the user to power-loop for bounded /goal generation. This skill is self-contained and does not require the original grill-me skill.
+description: Turn a vague or half-clear coding task, or an existing reviewed spec, into a requirements-focused issue contract through targeted pre-implementation questioning. Cover behavior, scope, external contracts, risks, validation expectations, and stop conditions; persist the confirmed contract for later repository-aware planning by power-loop.
 ---
 
 # Power Grill
 
 ## Overview
 
-Turn a vague or half-clear coding task into an agent-ready issue contract before implementation starts. The main value is the multi-round grilling process; the issue draft is generated first, then saved as a hosted issue or local brief after the user confirms it.
+Produce a requirements-ready issue contract before implementation starts. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
 
-This skill incorporates the core idea of grill-me-style pre-implementation questioning, but it is self-contained and does not require the original grill-me skill to be installed.
+Leave exact files, private interfaces, internal flow, test seams, concrete commands, implementation order, ownership, and subagent routing to `power-loop`.
 
-The output is:
+The output is a clarified summary, a related-issue recommendation, an issue draft, and—after explicit confirmation—a hosted issue or persisted local brief. Do not implement code, generate or start `/goal`, create PRs/MRs, or create/update hosted issues by default.
 
-1. a clarified task summary;
-2. a related-issue recommendation: update existing issue, create a linked follow-up, or create a new issue;
-3. an issue draft for user review;
-4. after confirmation, a hosted issue or local issue brief;
-5. a clear next step to run `power-loop` on the hosted issue or local brief.
+## Inputs
 
-Do not implement code during this skill.
-Do not generate or start `/goal`; bounded `/goal` generation belongs to `power-loop`.
-Do not create hosted issues, pull requests, or merge requests by default.
+Accept:
 
-After the user reviews the generated issue body and related-issue recommendation, you may create or update a hosted issue only if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. If hosted issue creation or update is not available or not desired, save a local issue brief after user confirmation. PR/MR creation and PR/MR body generation belong to the implementation phase after `power-loop` has produced a bounded `/goal` and Codex has run it.
+- a vague or half-clear coding task;
+- a request for an issue contract;
+- a reviewed `power-think` spec or equivalent confirmed spec;
+- an existing issue that needs requirement-level revision.
 
-## When To Use
+Use `power-think` instead when the user still wants product exploration or a long-lived spec. Use `power-critic` for independent critique.
 
-Use this skill when the user wants to turn a coding task into an issue contract, especially before handing the task to `power-loop`.
+## Workflow
 
-Good inputs:
+### 1. Inspect Requirement Facts
 
-- "Grill me on this implementation idea."
-- "Turn this feature into an issue contract."
-- "Help me prepare a Codex task contract."
-- "Before implementation, make sure the scope and validation are clear."
+Before asking questions, inspect only enough repository and hosted context to avoid asking the user for discoverable requirement facts.
 
-Do not use this skill for early product exploration where the expected output is a long-lived spec. Use `power-think` for that.
+Read relevant project guidance, existing specs, user-facing behavior, external API/schema/config documentation, compatibility or security constraints, issue templates, and directly related issues or comments. Do not precompute exact affected files, internal interfaces, implementation flow, test commands, branch/worktree choices, or task ownership.
 
-Do not use this skill for independent critique of an existing spec, plan, conversation, or model reply. Use `power-critic` for that.
+When repository evidence answers a requirement question, state the evidence and assumption and ask the user to correct it only if necessary.
 
-## Phase 1: Inspect Before Asking
+Summarize:
 
-Before asking the user, inspect the repository when possible.
+- current user or operator problem;
+- externally visible behavior and contract facts;
+- material constraints or risks;
+- unresolved requirement assumptions;
+- obvious related issue candidates and the current update/follow-up/new recommendation.
 
-Look for:
+### 2. Use The Reviewed-Spec Fast Path When Available
 
-- `README.md`
-- `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
-- `CONTRIBUTING.md`
-- `package.json`, `pyproject.toml`, `go.mod`, `pom.xml`
-- `docs/`, `docs/adr/`
-- `CONTEXT.md`, `CONTEXT-MAP.md`
-- existing issue or PR templates
-- related existing issues, PRs, comments, labels, branches, or local refs when hosted state is available
-- GitHub, GitLab, `gh`, or `glab` host rules, especially repository URL rules in `AGENTS.md`
-- test, lint, typecheck, and build commands
-- modules, files, or workflows named by the user
+When the input is a reviewed spec, map its confirmed content into the Task Contract fields before asking anything:
 
-If a question can be answered by reading code or docs, answer it yourself and state the assumption:
+- background/problem -> Problem;
+- requirement objective -> Goal and User-observable behavior;
+- functional requirements -> Scope;
+- out-of-scope section -> Non-goals;
+- public API, schema, config, compatibility, permission, security, migration, and business decisions -> External API/data contracts and Constraints;
+- risks and premises -> Risks and assumptions;
+- acceptance criteria -> Acceptance criteria and Validation expectations.
 
-```text
-I found <evidence>, so I will assume <assumption>. Correct me if that is wrong.
-```
+Ask only for fields that remain absent, contradictory, or too vague for an issue contract, especially dependencies/blockers, stop condition, pause-and-ask conditions, or issue lifecycle choice. Do not repeat multi-round grilling when the mapped contract is already complete. Show the readiness check, then offer the issue draft.
 
-After inspection, briefly summarize:
+### 3. Grill Only The Missing Requirement Boundaries
 
-- the likely change area;
-- relevant files or modules;
-- validation commands found or missing;
-- assumptions that still need user confirmation.
-- related issue candidates and the current recommendation: update existing issue, linked follow-up issue, or new issue.
+For non-spec input, interview in focused rounds of one to three questions. After each answer, update the working understanding, inspect newly named requirement evidence when useful, and ask only the highest-leverage unresolved questions.
 
-## Phase 2: Grill The User
+Each question must explain why it matters, provide a recommended default, and ask the user to confirm or correct it.
 
-Interview the user until the task is clear enough to become a bounded implementation goal.
+Cover or explicitly mark not applicable:
 
-Ask 1 to 3 questions at a time, but do not stop after one batch unless the task is genuinely trivial and all readiness criteria below are satisfied. This skill should feel like a persistent design interview, not a short intake form.
-
-Run multiple rounds. After each user answer:
-
-1. update the working understanding;
-2. identify what is still ambiguous;
-3. inspect the repository again if the answer names files, modules, commands, APIs, or constraints you can verify;
-4. ask the next 1 to 3 highest-leverage questions.
-
-Each question must include:
-
-1. why it matters;
-2. your recommended default answer;
-3. a request for the user to confirm or correct it.
-
-Cover these areas before moving to Phase 3:
-
-- objective;
-- current problem and current workaround;
-- user-facing behavior;
-- scope;
-- non-goals;
-- affected modules;
-- implementation approach and code change shape;
-- new files, modified files, and integration points;
-- internal data flow, API flow, or control flow;
-- error handling and fallback behavior;
-- test seam and mock strategy;
+- objective and current problem/workaround;
+- user-observable behavior;
+- scope and non-goals;
 - dependencies and blockers;
-- API or data contract changes;
-- auth and permission boundaries;
-- security, privacy, compatibility, migration, or rollback concerns when relevant;
-- tests and validation commands;
-- acceptance criteria;
-- risky assumptions;
-- stop condition;
-- pause-and-ask conditions.
+- external API, schema, config, compatibility, auth, permission, security, privacy, migration, rollback, and business decisions when relevant;
+- constraints, validation expectations, acceptance criteria, risks, stop condition, and pause-and-ask conditions.
 
-Do not treat a topic as covered just because it was mentioned. It is covered only when it has a concrete decision, a repository-derived assumption, or an explicit "not applicable" decision.
+Do not ask the user to choose internal function signatures, private module boundaries, exact paths, internal control flow, error-handling shape, test seams, commands, implementation order, ownership, or Agent assignments unless they are externally meaningful requirements.
 
-Use this coverage matrix internally during the interview:
+Treat a topic as covered only when it has a confirmed decision, a stated repository-derived assumption, or an explicit not-applicable decision.
 
-```text
-Objective: unknown | assumed | confirmed
-Current problem/workaround: unknown | assumed | confirmed
-User-facing behavior: unknown | assumed | confirmed
-Scope: unknown | assumed | confirmed
-Non-goals: unknown | assumed | confirmed
-Affected modules: unknown | assumed | confirmed
-Implementation approach: unknown | assumed | confirmed
-Code change shape: unknown | assumed | confirmed
-Data/API/control flow: unknown | assumed | confirmed
-Error handling/fallbacks: unknown | assumed | confirmed
-Test seam/mock strategy: unknown | assumed | confirmed
-Dependencies/blockers: unknown | none | assumed | confirmed
-API/data contract: unknown | none | assumed | confirmed
-Auth/permissions: unknown | none | assumed | confirmed
-Security/privacy/compatibility/migration/rollback: unknown | none | assumed | confirmed
-Validation: unknown | assumed | confirmed
-Acceptance criteria: unknown | assumed | confirmed
-Risks/assumptions: unknown | assumed | confirmed
-Stop condition: unknown | assumed | confirmed
-Pause-and-ask conditions: unknown | assumed | confirmed
-```
-
-Use this question format:
-
-```markdown
-I need to confirm 3 boundaries:
-
-1. <question>
-   - Why it matters: <reason>
-   - Recommended default: <default>
-   - Please confirm or correct: <specific ask>
-```
-
-Before moving to Phase 3, show a short readiness check:
+Before drafting, show:
 
 ```markdown
 Readiness check:
@@ -164,103 +87,48 @@ Readiness check:
   - <item>
 ```
 
-Then ask whether to continue grilling or generate the issue contract. Recommend continuing if any high-risk area is still assumed.
+Generate the draft when all requirement fields are resolved, the user explicitly asks to proceed with visible assumptions, or only low-risk assumptions remain after the readiness check. Keep grilling when a missing choice changes public behavior, compatibility, schema, security, permissions, migration, or a business rule.
 
-Do not produce the issue draft until one of these is true:
+### 4. Produce The Issue Draft
 
-- all coverage matrix items are confirmed, repository-derived, or explicitly not applicable;
-- the user explicitly says to stop grilling and proceed;
-- after at least two rounds of questions, only low-risk assumptions remain and you have shown them in the readiness check.
+Read and fill [assets/issue-body.md](assets/issue-body.md). Treat its `Task Contract` section as the sole canonical source for what and why.
 
-If the user asks to skip questions, ask the single most important remaining boundary question, then proceed only after stating the assumptions you will carry into the issue contract.
+Leave the marked Execution Blueprint and Agent Dispatch Plan sections at `Planning status: not-generated`. `power-loop` owns those sections and may populate them only through a displayed, explicitly confirmed Issue Patch.
 
-Before producing the issue draft, include at least one implementation-design round for non-trivial coding tasks. Ask about concrete code-level choices the repository inspection cannot answer, such as where the change should live, what interfaces or adapters should be introduced or reused, how data should flow through the system, how errors should be handled, and how the behavior should be tested. Keep these questions at the design-boundary level; do not write code or create a step-by-step implementation plan.
+Search conservatively for directly related existing issues when hosted or local issue state is available. Recommend:
 
-## Phase 3: Produce Issue Draft
+- update an open issue when the work belongs in its current canonical contract;
+- create a linked follow-up when the prior issue is complete or should not expand;
+- create a new issue when no candidate is a defensible canonical home.
 
-When enough information is available, produce an issue draft for user review.
+Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`.
 
-When generating the issue body, read and fill `assets/issue-body.md`.
+Ask the user to confirm the complete issue draft and related-issue recommendation. Do not generate `/goal`.
 
-The issue body is the sole canonical task contract. Keep it specific to this task. Do not turn it into project-wide documentation.
+### 5. Persist Only After Confirmation
 
-Before drafting a new issue, search for related existing issues when hosted or local issue state is available. Use conservative matching over title/body keywords, touched files/modules, branch issue ids, `Linked contract` or `Closes #N` references, and comments mentioning follow-up work. Present candidates as evidence, not conclusions, and choose one of:
+After explicit confirmation, create, update, or save the contract:
 
-- update an existing open issue when the new work belongs in the current canonical contract;
-- create a linked follow-up issue when the old issue is complete, nearly complete, or should not be expanded;
-- create a new issue when no existing candidate is a good canonical home.
+- update the confirmed target issue body only when the user confirmed the exact target and body changes;
+- create a linked follow-up or new hosted issue only when explicitly confirmed;
+- otherwise save a local brief such as `.codex/power-grill/issue-brief.md`, respecting repository conventions.
 
-If important context exists only in comments, propose putting it in the issue body `Curation status` section or in a linked follow-up issue. Comments are supplementary evidence, not the durable contract.
+Before hosted mutation, inspect project host guidance and remotes. For GitHub read [references/github-issue-creation.md](references/github-issue-creation.md); for GitLab read [references/gitlab-issue-creation.md](references/gitlab-issue-creation.md). Preserve any project-required full GitLab repository URL. Stop if the canonical host or target is unclear.
 
-If the task contract changes, update the issue body and append a concise entry to the `Change history` section in the issue body. Use `Change history` only for contract-level changes, not ordinary implementation progress.
+Record the resulting issue URL/number or local brief path. A pasted-only contract is not sufficient for final Goal generation because the confirmed execution sections need a canonical home.
 
-After the current issue is completed, put new phases, new features, or substantial follow-up work in a new linked follow-up issue instead of reopening or extending the completed issue.
+### 6. Hand Off To power-loop
 
-Do not generate `/goal` in this phase. Ask the user to review and confirm the issue draft first.
+Stop after persistence. Return:
 
-## Phase 4: Confirm Issue Contract
+1. the issue URL/number or local brief path;
+2. the readiness summary;
+3. the next step: run `power-loop` on that persisted source.
 
-After the user confirms the issue draft and related-issue recommendation, create, update, or save the issue contract.
+Do not include internal interfaces, exact implementation paths, worktree choices, Agent/model assignments, iteration budgets, verifier prompts, a PR/MR body, or a complete `/goal`.
 
-Options:
+## Output
 
-- If the recommendation is to update an existing hosted issue, ask the user to confirm the target issue and exact body changes, then update that issue body only after confirmation.
-- If the recommendation is to create a linked follow-up issue and the user explicitly confirms hosted issue creation, create the follow-up issue and link the source issue in the body.
-- If the recommendation is to create a new hosted issue and the user explicitly confirms hosted issue creation, create the hosted issue.
-- If hosted issue creation is unavailable or the user prefers local-only flow, save the confirmed issue body to a local brief such as `.codex/power-grill/issue-brief.md`.
+Before persistence, output the clarified summary, complete issue draft, related-issue recommendation, and confirmation request.
 
-Prefer existing repository conventions if they conflict with the local brief path.
-
-Before creating or updating any hosted issue, inspect repository guidance such as `AGENTS.md`, issue templates, and remotes to determine whether the project uses GitHub or GitLab. Follow project-specific host rules over generic defaults.
-
-If project guidance specifies a canonical GitLab remote or says to use `glab -R <full repository URL>`, preserve that exact full URL form in generated commands. Do not replace it with shorthand such as `group/project`.
-
-When the user confirms hosted issue creation or update:
-
-- For GitHub or `gh`, read `references/github-issue-creation.md`.
-- For GitLab or `glab`, read `references/gitlab-issue-creation.md`.
-- If host rules are unclear, stop and ask before running a creation or update command.
-
-After the hosted issue is created or updated, or the local brief is saved, record the issue URL, issue number, or local brief path. This reference is the input for `power-loop`.
-
-## Phase 5: Hand Off To power-loop
-
-After the hosted issue is created or the local issue brief is saved, stop at the issue contract and tell the user to run `power-loop`.
-
-Do not generate a bounded implementation `/goal`.
-Do not automatically execute `/goal`.
-Tell the user to run `power-loop` on the hosted issue URL or local brief path when they want a bounded Codex implementation loop.
-
-The handoff must include:
-
-- issue number, issue URL, or local issue brief path;
-- readiness summary;
-- suggested status label such as `agent-ready`, when labels are used;
-- next step: run `power-loop` on the issue URL or local brief.
-
-Do not include worktree paths, iteration budgets, verifier prompts, full PR evidence tables, or a complete `/goal` in the issue handoff. Those are owned by `power-loop`.
-
-## Phase 6: PR/MR Evidence Requirements
-
-Do not output a full PR/MR body during power-grill. The PR/MR body should be generated during the implementation phase after code changes and validation exist.
-
-The issue contract should include acceptance criteria, validation, stop conditions, and pause-and-ask conditions so `power-loop` can require a draft PR or MR with evidence mapped to the contract. The implementation phase may read `assets/pr-body.md` when it needs a PR/MR body template.
-
-Never merge PRs or MRs.
-Never push directly to `main`, `master`, `release`, or protected branches.
-Prefer draft PRs or draft MRs for agent-generated implementation work.
-
-## Final Response Format
-
-At the end of the power-grill phase, output:
-
-1. Clarified summary
-2. Issue draft
-3. Related-issue recommendation: update existing issue, linked follow-up issue, or new issue
-4. Ask the user to confirm the draft and choose confirmed hosted issue update, hosted issue creation, or local brief
-
-After the user confirms and the hosted issue or local brief exists or is updated, output:
-
-1. Issue reference
-2. Readiness summary and suggested `agent-ready` status
-3. Clear next step: run `power-loop` on the hosted issue URL or local brief to generate the bounded Codex `/goal`
+After persistence, output the canonical reference, readiness summary, and the instruction to run `power-loop` for the Execution Blueprint, Agent Dispatch Plan, confirmable Issue Patch, and final manual Goal Prompt.

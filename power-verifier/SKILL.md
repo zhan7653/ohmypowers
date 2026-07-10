@@ -9,7 +9,7 @@ description: Read-only implementation verifier for Loop Engineering tasks. Use a
 
 Verify implementation evidence against a Loop Engineering task contract without changing files or project state.
 
-`power-verifier` is the maker-checker counterpart to a bounded Codex implementation loop. A fresh-context evidence verifier audits whether the implementation diff, validation output, acceptance-criteria evidence, PR/MR evidence package, code-review findings when relevant, and loop decision satisfy the contract produced by `power-grill` and bounded by `power-loop`.
+`power-verifier` is the maker-checker counterpart to a bounded Codex implementation loop. The bundled `power_verifier` custom agent uses `gpt-5.6-sol` High in read-only mode to audit whether the implementation diff, validation output, acceptance-criteria evidence, PR/MR evidence package, code-review findings, and loop decision satisfy the canonical Task Contract and confirmed execution sections.
 
 It returns one verifier result:
 
@@ -25,12 +25,13 @@ Use this skill after implementation work exists and before claiming PR/MR readin
 Good inputs:
 
 - A hosted issue or local issue contract.
+- Its confirmed Execution Blueprint and Agent Dispatch Plan.
 - The implementation diff or PR/MR URL.
 - Validation commands and outputs.
 - Acceptance-criteria evidence.
 - PR/MR body or draft evidence package, including issue linkage and curation handoff evidence.
 - Risks, assumptions, out-of-scope notes, and loop decision.
-- Code-review output from Codex `/review`, `codex review`, or an equivalent read-only code-review subagent, when the diff includes code, behavior, tests, dependencies, or config.
+- Code-review output from `power_code_reviewer` using `gpt-5.6-sol` High in read-only mode.
 
 Do not use this skill to clarify vague requirements before implementation. Send unclear contracts back to `power-grill` or `power-loop`.
 
@@ -38,24 +39,24 @@ Do not use this skill to clarify vague requirements before implementation. Send 
 
 Run evidence verification and code review as separate read-only tracks:
 
-1. Evidence verification: use the bundled `power_verifier` read-only custom-agent configuration, the `power-verifier` skill in a fresh context, or an equivalent fresh-context read-only verifier subagent to audit the contract and implementation evidence.
-2. Code review: for implementation diffs that include code, behavior, tests, dependencies, or config, run Codex `/review`, `codex review`, or an equivalent read-only code-review pass for implementation-diff risks.
+1. Evidence verification: use the bundled `power_verifier` custom agent with `gpt-5.6-sol` High in read-only mode to audit the contract and implementation evidence.
+2. Code review: use the bundled `power_code_reviewer` custom agent with `gpt-5.6-sol` High in read-only mode to inspect implementation-diff risks.
 
 When both tracks can inspect the same stable contract, diff, validation output, and PR/MR evidence package, start them in parallel. If the environment cannot run them in parallel, run them sequentially and record the reason.
 
-Do not use Codex `/review`, `codex review`, or code-review findings as a substitute for the fresh-context evidence verifier. If no fresh-context evidence verifier or equivalent read-only verifier subagent is available, return `BLOCKED` or `NEEDS_HUMAN` instead of claiming `PASS` or `PASS_WITH_NOTES`.
+Do not make `power_verifier` wait for or consume `power_code_reviewer` output during the parallel pass. After both independent results exist, the invoking orchestrator or `power-verifier` workflow combines them into the final verifier result.
 
-Do not mark the result as self-review degraded merely because one review surface is unavailable. Self-review degraded mode is allowed only for documenting the gap when no fresh-context verifier can run; it must not produce `PASS` or `PASS_WITH_NOTES`.
+Do not substitute either track for the other. If either required custom agent is missing, return `BLOCKED` or `NEEDS_HUMAN` instead of inheriting the parent model or claiming `PASS` or `PASS_WITH_NOTES`. Use a different profile only after explicit approval names the substitute and confirms equivalent Sol High read-only behavior.
+
+Record a missing-profile reason when either required custom agent is unavailable. Missing-profile mode must not produce `PASS` or `PASS_WITH_NOTES`.
 
 The evidence verifier and code reviewer must inspect primary evidence directly. Parent-agent summaries, implementation-runner claims, PR descriptions, or pasted conclusions can orient the review, but they cannot be the sole evidence for completion.
 
 ## Code-Review Integration
 
-For implementation diffs that include code, behavior, tests, dependencies, or config, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent before final verifier selection.
+Run `power_code_reviewer` before final verifier selection for every implementation diff, including documentation-only changes. The review focus may change by diff type, but the code-review track remains separate from evidence verification.
 
-Pure documentation-only changes may skip code review. If skipped, the verifier result must state the reason.
-
-If a code, behavior, test, dependency, or config diff cannot receive a read-only code-review pass, return `BLOCKED` when the missing review can be supplied within the current loop, or `NEEDS_HUMAN` when the missing review requires a human or tool decision. Do not return `PASS` or `PASS_WITH_NOTES` until the required code-review track exists.
+If the diff cannot receive the required Sol High read-only code-review pass, return `BLOCKED` when the missing review can be supplied within the current loop, or `NEEDS_HUMAN` when resolving the missing profile requires a human or tool decision. Do not return `PASS` or `PASS_WITH_NOTES` until both review tracks exist.
 
 Handle code-review findings as follows:
 
@@ -88,7 +89,7 @@ Prefer inputs in this order:
 3. Validation evidence: commands and output.
 4. Acceptance-criteria evidence.
 5. PR/MR evidence package with issue linkage, closing intent, follow-up handling, and curator mutation status.
-6. Code-review output or skipped reason.
+6. `power_code_reviewer` output.
 7. Risks, assumptions, out-of-scope notes, and loop decision.
 
 If required evidence is unavailable, return `BLOCKED` or `NEEDS_HUMAN` instead of guessing.
@@ -108,13 +109,13 @@ Check:
 - Validation relevance, trustworthiness, and failure disclosure.
 - Test relevance to the acceptance criteria.
 - Issue linkage and curation handoff evidence, including closing intent and follow-up handling.
-- Code-review output or skipped reason.
+- `power_code_reviewer` output.
 - Forbidden path or high-risk area violations.
 - Generated artifact handling.
 - Risks and assumptions disclosure.
 - PR/MR evidence completeness.
 - Loop decision justification.
-- Evidence verifier source, code-review source, parallel/sequential execution disclosure, and degraded-mode disclosure.
+- Evidence verifier source, code-review source, parallel/sequential execution disclosure, and missing-profile disclosure.
 
 ## Outcomes
 
@@ -144,14 +145,14 @@ Always include:
 
 - Verifier result.
 - Evidence Verifier Source.
-- Code-review source or skipped reason.
+- Code-review source.
 - Parallel execution status.
 - Contract source.
 - Implementation source.
 - Validation evidence reviewed.
 - Review Findings Considered.
 - Issue linkage and curation handoff assessment.
-- Degraded Mode Reason, if any.
+- Missing Profile Reason, if any.
 - Acceptance-criteria evidence table.
 - Scope and non-goal assessment.
 - Validation assessment.

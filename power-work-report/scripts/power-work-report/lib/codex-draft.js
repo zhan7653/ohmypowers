@@ -1,13 +1,25 @@
 import { spawn } from 'node:child_process'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { promises as fs } from 'node:fs'
 import { normalizeReportShape } from './render.js'
 
+const DEFAULT_MODEL = 'gpt-5.6-luna'
+const DEFAULT_REASONING_EFFORT = 'medium'
+const REPORT_SCHEMA_PATH = fileURLToPath(new URL('../schemas/report.schema.json', import.meta.url))
+
 export async function generateDraftWithCodex(rawSummary, options = {}) {
   const codexBin = options.codexBin || process.env.POWER_WORK_REPORT_CODEX_BIN || 'codex'
+  const model = options.model || process.env.POWER_WORK_REPORT_MODEL || DEFAULT_MODEL
+  const reasoningEffort =
+    options.reasoningEffort || process.env.POWER_WORK_REPORT_REASONING_EFFORT || DEFAULT_REASONING_EFFORT
   const prompt = buildPrompt(rawSummary, options.lang || 'zh-CN')
-  const result = await runCodex(codexBin, prompt, options)
+  const result = await runCodex(codexBin, prompt, {
+    ...options,
+    model,
+    reasoningEffort,
+  })
   return parseDraftJson(result.stdout, rawSummary, options.lang || 'zh-CN')
 }
 
@@ -63,71 +75,12 @@ export function normalizeDraft(value, rawSummary, lang = 'zh-CN') {
 function buildPrompt(rawSummary, lang) {
   return `You are generating a local Codex daily work report.
 
-Return ONLY one valid JSON object. Do not include Markdown fences.
+Return only the JSON object required by the configured output schema. Do not include Markdown fences.
 
 Language: ${lang}
 Date: ${rawSummary.date}
 
-Required JSON shape:
-{
-  "schemaVersion": 2,
-  "status": "draft",
-  "lang": "${lang}",
-  "date": "${rawSummary.date}",
-  "generatedAt": "ISO-8601 timestamp",
-  "metadata": {
-    "date": "${rawSummary.date}",
-    "status": "draft",
-    "projectCount": ${rawSummary.projects.length},
-    "sessionCount": ${rawSummary.sessionCount},
-    "title": "Codex 工作日报 · ${rawSummary.date}",
-    "lead": "one concise lead paragraph",
-    "routeSteps": ["Issue Contract", "Bounded /goal", "Verifier Evidence", "Markdown-first Report"]
-  },
-  "overview": {
-    "overview": "one readable overview paragraph",
-    "readingFocus": "one sentence naming what to read first"
-  },
-  "outcomes": [
-    { "title": "short outcome title", "body": "concrete outcome detail" }
-  ],
-  "decisions": [
-    { "icon": "short symbol", "title": "short decision title", "body": "decision detail" }
-  ],
-  "tasks": {
-    "tomorrowPriority": [
-      { "text": "task", "project": "project path", "sourceSessionIds": ["..."] }
-    ],
-    "backlog": [
-      { "text": "task", "project": "project path", "sourceSessionIds": ["..."] }
-    ]
-  },
-  "projectSections": [
-    {
-      "project": "display name",
-      "path": "project path",
-      "badge": "short badge",
-      "results": ["..."],
-      "pending": ["..."],
-      "ideas": ["..."],
-      "evidence": { "sessionIds": ["..."], "filesModified": ["..."] }
-    }
-  ],
-  "riskGroups": {
-    "blocked": ["..."],
-    "watch": ["..."],
-    "limit": ["..."]
-  },
-  "ideas": {
-    "chips": [
-      { "text": "idea", "project": "project path", "sourceSessionIds": ["..."] }
-    ]
-  },
-  "appendix": {
-    "sessionIds": ["..."],
-    "filesModified": ["..."]
-  }
-}
+Set schemaVersion to 2, status to draft, lang and date to the values above, metadata.projectCount to ${rawSummary.projects.length}, and metadata.sessionCount to ${rawSummary.sessionCount}. Use an ISO-8601 generatedAt value and metadata.routeSteps ["Issue Contract", "Bounded /goal", "Verifier Evidence", "Markdown-first Report"].
 
 Use the raw summary as evidence. Preserve local paths when useful. Keep Markdown order compatible with:
 今日概览, 关键成果, 关键决策, 明日优先, 后续待办, 项目进展, 风险与阻塞, 想法与灵感, 附录：证据索引.
@@ -142,8 +95,13 @@ ${JSON.stringify(rawSummary, null, 2)}`
 }
 
 async function runCodex(codexBin, prompt, options) {
-  const args = ['exec', '--json', '--skip-git-repo-check', '--ephemeral', '-']
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pwr-codex-'))
+  const args = buildCodexArgs({
+    model: options.model,
+    reasoningEffort: options.reasoningEffort,
+    tempDir,
+    schemaPath: options.schemaPath,
+  })
   const stdoutPath = path.join(tempDir, 'stdout.jsonl')
   const stderrPath = path.join(tempDir, 'stderr.log')
   const stdoutHandle = await fs.open(stdoutPath, 'w')
@@ -152,7 +110,7 @@ async function runCodex(codexBin, prompt, options) {
   try {
     const code = await new Promise((resolve, reject) => {
       const child = spawn(codexBin, args, {
-        cwd: options.cwd || process.cwd(),
+        cwd: tempDir,
         stdio: ['pipe', stdoutHandle.fd, stderrHandle.fd],
         env: process.env,
       })
@@ -173,6 +131,31 @@ async function runCodex(codexBin, prompt, options) {
     await stderrHandle.close().catch(() => {})
     await fs.rm(tempDir, { recursive: true, force: true })
   }
+}
+
+export function buildCodexArgs({
+  model = DEFAULT_MODEL,
+  reasoningEffort = DEFAULT_REASONING_EFFORT,
+  tempDir,
+  schemaPath = REPORT_SCHEMA_PATH,
+}) {
+  return [
+    'exec',
+    '--json',
+    '--skip-git-repo-check',
+    '--ephemeral',
+    '--model',
+    model,
+    '--sandbox',
+    'read-only',
+    '--config',
+    `model_reasoning_effort="${reasoningEffort}"`,
+    '--cd',
+    tempDir,
+    '--output-schema',
+    schemaPath,
+    '-',
+  ]
 }
 
 async function readText(filePath) {

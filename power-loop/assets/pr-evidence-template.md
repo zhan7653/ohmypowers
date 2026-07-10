@@ -48,11 +48,11 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 Evidence verifier source:
 
-- <power_verifier custom agent, power-verifier fresh-context pass, equivalent read-only verifier subagent, or missing>
+- <power_verifier on gpt-5.6-sol High, or missing>
 
-Code-review source or skipped reason:
+Code-review source:
 
-- <Codex /review, codex review, equivalent read-only reviewer, not applicable for documentation-only diff, or missing>
+- <power_code_reviewer on gpt-5.6-sol High, or missing>
 
 Parallel execution status:
 
@@ -64,7 +64,29 @@ Notes:
 
 Verifier source:
 
-- <power_verifier custom-agent result, power-verifier fresh-context result, or equivalent read-only verifier subagent result>
+- <power_verifier custom-agent result>
+
+# Dispatch Summary
+
+Planned tasks: <count>
+
+Actual tasks: <count>
+
+| Task ID | Role | Initial model | Final model | Escalated | Reason | Execution wave/mode | Status |
+|---|---|---|---|---|---|---|---|
+| `<TASK-ID>` | `<role>` | `<model>` | `<model>` | `<yes/no>` | `<reason or None>` | `<wave; parallel/sequential>` | `<complete/blocked/incomplete>` |
+
+Ownership conflicts:
+
+- <conflict and resolution, or None>
+
+Pause reasons:
+
+- <reason, or None>
+
+Initial Assignment Accuracy:
+
+- `<tasks completed without escalation> / <completed or attempted implementation tasks with an initial assignment> = <percentage>`
 
 # Loop decision
 

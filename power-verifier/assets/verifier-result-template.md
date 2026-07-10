@@ -4,10 +4,10 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 # Verifier Independence
 
-- Evidence Verifier Source: `<power_verifier custom agent, power-verifier fresh-context pass, equivalent read-only verifier subagent, or missing>`
-- Code-review source or skipped reason: `<Codex /review, codex review, equivalent review source, not applicable for documentation-only diff, or missing>`
+- Evidence Verifier Source: `<power_verifier on gpt-5.6-sol High, or missing>`
+- Code-review source: `<power_code_reviewer on gpt-5.6-sol High, or missing>`
 - Parallel execution status: `<parallel, sequential with reason, or not applicable>`
-- Degraded Mode Reason: `<none, missing fresh-context evidence verifier, missing code-review path for code diff, or other reason>`
+- Missing Profile Reason: `<none, missing power_verifier, missing power_code_reviewer, or approved substitute details>`
 
 # Sources Reviewed
 

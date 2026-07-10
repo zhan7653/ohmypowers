@@ -20,6 +20,7 @@ You must not:
 - mutate issue bodies, issue comments, issue labels, issue closure state, or follow-up issue creation without explicit user confirmation of the exact mutation;
 - auto-close issues;
 - rewrite old issue contracts wholesale;
+- modify the `Task Contract`, `Execution Blueprint`, or `Agent Dispatch Plan` while performing lifecycle-only curation;
 - treat comments as the canonical task contract;
 - approve, merge, or retarget PRs/MRs;
 - decide implementation correctness without `power-verifier` evidence when correctness is in question.
@@ -86,7 +87,7 @@ Output candidates, not final matches. Let the user confirm whether to update an 
 
 ## Canonical Issue Body
 
-Use the issue body as canonical. If important context exists only in comments, propose promoting the short current truth into `Curation status` or creating a linked follow-up issue.
+Use the issue body as canonical. Preserve the `Task Contract`, `Execution Blueprint`, and `Agent Dispatch Plan` as separately owned sections. If important lifecycle context exists only in comments, propose promoting the short current truth into `Curation status` or creating a linked follow-up issue.
 
 Append this section to old issues only when curation is confirmed or when drafting a new issue contract:
 
@@ -136,7 +137,7 @@ Labels are helpful but not required for correctness. Use them only after confirm
 - `agent-superseded`
 - `agent-curation-needed`
 
-When labels are unavailable or mutation is not confirmed, record equivalent status in `Curation status` or the curation plan.
+`Curation status` is the sole lifecycle source of truth. Labels are optional presentation aids and must never drive readiness, execution, verification, or closure decisions. When labels are unavailable or mutation is not confirmed, record equivalent status in `Curation status` or the curation plan.
 
 ## Output Format
 

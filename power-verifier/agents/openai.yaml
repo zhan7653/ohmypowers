@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Verifier"
-  short_description: "Verify implementation evidence against a Loop Engineering contract"
-  default_prompt: "Use $power-verifier to check this issue contract, diff, validation output, and PR evidence."
+  short_description: "Verify loop evidence with two Sol reviews"
+  default_prompt: "Use $power-verifier to combine the Sol High evidence-verification and code-review tracks for this contract, diff, validation, and PR evidence."

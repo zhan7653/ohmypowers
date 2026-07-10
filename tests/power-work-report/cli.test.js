@@ -5,15 +5,51 @@ import { promises as fs } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import test from 'node:test'
-import { runCli } from '../lib/cli.js'
+import { runCli } from '../../power-work-report/scripts/power-work-report/lib/cli.js'
+import { buildCodexArgs } from '../../power-work-report/scripts/power-work-report/lib/codex-draft.js'
 
 const execFileAsync = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const root = path.resolve(__dirname, '..')
-const bin = path.join(root, 'bin', 'power-work-report.js')
+const root = path.resolve(__dirname, '../..')
+const runtimeRoot = path.join(root, 'power-work-report', 'scripts', 'power-work-report')
+const bin = path.join(runtimeRoot, 'bin', 'power-work-report.js')
 const fixtureCodexHome = path.join(__dirname, 'fixtures', 'codex-home')
 const successCodex = path.join(__dirname, 'fixtures', 'bin', 'mock-codex-success.cjs')
 const failCodex = path.join(__dirname, 'fixtures', 'bin', 'mock-codex-fail.cjs')
+
+test('codex args default to Luna Medium in an isolated read-only run', () => {
+  const args = buildCodexArgs({ tempDir: '/tmp/pwr-codex-test', schemaPath: '/tmp/report.schema.json' })
+
+  assert.deepEqual(args, [
+    'exec',
+    '--json',
+    '--skip-git-repo-check',
+    '--ephemeral',
+    '--model',
+    'gpt-5.6-luna',
+    '--sandbox',
+    'read-only',
+    '--config',
+    'model_reasoning_effort="medium"',
+    '--cd',
+    '/tmp/pwr-codex-test',
+    '--output-schema',
+    '/tmp/report.schema.json',
+    '-',
+  ])
+})
+
+test('codex args allow an explicit model and reasoning override', () => {
+  const args = buildCodexArgs({
+    model: 'gpt-5.6-terra',
+    reasoningEffort: 'high',
+    tempDir: '/tmp/pwr-codex-test',
+    schemaPath: '/tmp/report.schema.json',
+  })
+
+  assert.equal(args[args.indexOf('--model') + 1], 'gpt-5.6-terra')
+  assert.equal(args[args.indexOf('--config') + 1], 'model_reasoning_effort="high"')
+})
 
 test('collect writes deterministic raw summary grouped by project', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-collect-'))

@@ -99,7 +99,8 @@ async function draftCommand({ date, codexHome, paths, options, collectOptions })
     report = await generateDraftWithCodex(rawSummary, {
       lang,
       codexBin: options.codexBin,
-      cwd: process.cwd(),
+      model: options.model,
+      reasoningEffort: options.reasoningEffort,
     })
   } catch (error) {
     report = buildFallbackDraft(rawSummary, { lang, status: 'codex_failed' })
@@ -222,8 +223,8 @@ function printHelp() {
 
 Usage:
   power-work-report collect --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ]
-  power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ] [--lang zh-CN|en] [--codex-bin BIN]
-  power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ] [--lang zh-CN|en] [--codex-bin BIN]
+  power-work-report draft --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ] [--lang zh-CN|en] [--codex-bin BIN] [--model MODEL] [--reasoning-effort EFFORT]
+  power-work-report run --date YYYY-MM-DD [--out-dir DIR] [--codex-home DIR] [--lookback-days N] [--timezone TZ] [--lang zh-CN|en] [--codex-bin BIN] [--model MODEL] [--reasoning-effort EFFORT]
   power-work-report render --date YYYY-MM-DD [--out-dir DIR]
   power-work-report finalize --date YYYY-MM-DD [--out-dir DIR] [--allow-fallback]
 

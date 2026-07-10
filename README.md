@@ -4,7 +4,7 @@ Codex ecosystem skills for Loop Engineering.
 
 `ohmypowers` is a collection of Codex skills and supporting tools that turn agentic coding work into explicit loops: clarify the task, contract the work, execute within boundaries, verify the evidence, and keep reviewable artifacts.
 
-The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex, with optional Codex custom-agent templates for read-only verifier and critic passes.
+The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex, with explicit custom-agent templates for cost-aware implementation workers, read-only reviewers, and critics.
 
 ## What It Does
 
@@ -21,37 +21,44 @@ The repository is Codex-first. Skills are plain `SKILL.md` directories designed 
 
 It does not write implementation code or implementation plans.
 
-`power-grill` turns a clarified or half-clear coding task into an execution contract before implementation starts:
+`power-grill` turns a clarified or half-clear coding task into a requirements-focused contract before implementation starts:
 
-- Repository inspection before asking the user.
-- Focused grill-style questions with recommended defaults.
+- Requirement-fact inspection before asking the user, without precomputing implementation files or commands.
+- A fast path that maps an existing reviewed `power-think` spec and asks only for missing contract fields.
+- Focused grill-style questions over behavior, scope, external contracts, risks, validation expectations, and stop conditions.
 - An issue draft for user review.
 - A hosted issue or local issue brief after user confirmation.
-- Agent-ready handoff guidance for running `power-loop` on the issue contract.
+- Reserved `Execution Blueprint` and `Agent Dispatch Plan` sections for later planning.
+- Requirements-ready handoff guidance for running `power-loop` on the persisted contract.
 
-It does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. Bounded `/goal` generation belongs to `power-loop`.
+It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
 
-`power-loop` converts an agent-ready task contract into a bounded Codex implementation loop:
+`power-loop` converts a requirements-ready persisted contract into a confirmed, cost-aware Codex implementation loop:
 
 - Loop readiness check over a hosted issue, local brief, or pasted task contract.
 - Risk level and execution decision.
-- Dedicated branch/worktree isolation rules.
-- Checkpoints, validation loop, iteration budget, and stop conditions.
-- Read-only verifier gate with a fresh-context evidence-verifier subagent plus a separate Codex `/review`, `codex review`, or equivalent code-review pass for code-like diffs.
+- Repository inspection with source branch and commit baseline.
+- Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, isolation, test seams, validation commands, and staleness rules.
+- Fixed-shape Agent Dispatch Plan with exact per-task Luna/Terra/Sol assignments, useful parallelism, allowed write paths, dependency waves, and one bounded implementation escalation; the issue does not repeat the static routing table.
+- Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
+- Final Goal Prompt only after the confirmed patch is applied and verified; the user starts it manually.
+- One task-level branch/worktree rather than one worktree per subagent.
+- Separate Sol High `power_code_reviewer` and Sol High `power_verifier` read-only tracks.
+- Final Dispatch Summary with model assignments, escalation evidence, parallelism, ownership conflicts, pause reasons, and Initial Assignment Accuracy.
 - PR/MR evidence requirements and loop decision rules.
 
-Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not clarify vague requirements deeply or implement code directly. If a contract is incomplete, it sends the task back to `power-grill`; if risk is high, it requires human handling instead of generating an implementation `/goal`.
+Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement code directly, mutate requirements, or automatically run `/goal`. Ultra is a recommended user-selected runtime, while the orchestration artifacts are generated for every loop-ready contract.
 
-For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.md](power-loop/assets/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate issue contracts, bounded `/goal` generation, validation loops, verifier evidence, and PR review.
+For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, manual Goal execution, validation, dispatch reporting, and review.
 
 `power-verifier` checks implementation evidence after a bounded loop has run:
 
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
-- Mandatory evidence audit through the `power_verifier` custom agent, `power-verifier` in a fresh context, or another fresh-context read-only verifier subagent.
-- Mandatory separate code-review integration through Codex `/review`, `codex review`, or an equivalent read-only code-review subagent when the diff includes code, behavior, tests, dependencies, or config.
-- Parallel evidence verification and code review whenever both tracks can inspect the same stable contract, diff, validation output, and PR/MR evidence.
+- Mandatory evidence audit through the Sol High read-only `power_verifier` custom agent.
+- Mandatory separate code review through the Sol High read-only `power_code_reviewer` custom agent.
+- Parallel evidence verification and code review over the same stable implementation snapshot, using a contract/evidence-focused verifier packet and a smaller diff/code-focused reviewer packet.
 - Loop decision justification.
 - One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
 
@@ -70,7 +77,8 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 `power-work-report` generates a manual Codex daily work report:
 
 - Reads local Codex session JSONL for a target local date, scanning a lookback window so cross-day Codex sessions can still be sliced by event timestamp.
-- Generates a draft Markdown/HTML/JSON report and `review.md` through `tools/power-work-report`.
+- Generates a draft Markdown/HTML/JSON report and `review.md` through the CLI bundled inside the installed skill.
+- Uses an isolated read-only Luna Medium Codex run by default, with explicit model/reasoning override flags and no automatic escalation.
 - Reads JSON memory during draft so historical open todos roll forward.
 - Proposes todo and idea memory updates, including explicitly confirmed todo status changes.
 - Supports re-rendering edited draft JSON/proposal files before final confirmation.
@@ -79,49 +87,34 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
 
-For implementation evidence correctness, use `power-verifier` with the `power_verifier` custom agent or another fresh-context verifier subagent. For code diff correctness, also use Codex `/review`, `codex review`, or the repository's code review workflow.
+For implementation evidence correctness, use `power_verifier`. For code-diff correctness, use the separate `power_code_reviewer`. Both are explicitly pinned to `gpt-5.6-sol` High and read-only mode.
 
 Use them by phase:
 
 - `power-think`: vague idea -> reviewed spec.
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: agent-ready issue/local brief -> bounded implementation `/goal`.
+- `power-loop`: requirements-ready issue/local brief -> Blueprint and Dispatch Plan -> confirmed Issue Patch -> ready-to-run `/goal`.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
+- Recommended Loop Engineering flow: `power-grill -> power-loop plan and Issue Patch -> user confirmation -> manual Codex /goal -> Sol High code review + evidence verification -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
 
-Copy or symlink the skill directories into Codex skills:
+Run the idempotent installer from the repository root:
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R power-think ~/.codex/skills/power-think
-cp -R power-grill ~/.codex/skills/power-grill
-cp -R power-loop ~/.codex/skills/power-loop
-cp -R power-verifier ~/.codex/skills/power-verifier
-cp -R power-curator ~/.codex/skills/power-curator
-cp -R power-work-report ~/.codex/skills/power-work-report
-cp -R power-critic ~/.codex/skills/power-critic
+./scripts/install.sh
 ```
 
-If `CODEX_HOME` is set, use `$CODEX_HOME/skills` instead of `~/.codex/skills`.
+The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed skill directories without creating nested copies, and updates only the custom-agent files owned by this repository. It requires `rsync` and preserves unrelated personal agents.
 
-For Codex read-only custom-agent hardening, also install the bundled verifier and critic agents into Codex's custom-agent path:
+The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
 
-```bash
-mkdir -p ~/.codex/agents
-cp power-verifier/agents/power-verifier.toml ~/.codex/agents/power-verifier.toml
-cp power-critic/agents/power-critic.toml ~/.codex/agents/power-critic.toml
-```
+The worker profiles pin Luna Medium, Terra Medium, Terra High, and the Sol Medium implementation escalation ceiling. The reviewer profiles pin separate Sol High read-only code-review and evidence-verification tracks. The critic custom-agent installation remains independent from implementation review.
 
-The skill installation makes `$power-verifier`, `$power-curator`, and `$power-critic` available.
-
-The verifier custom-agent installation makes the named `power_verifier` read-only agent discoverable by Codex. The critic custom-agent installation does the same for `power_critic`. These agents are recommended for installation.
-
-When checking implementation evidence, use a fresh-context `power_verifier`, `power-verifier`, or equivalent read-only verifier subagent. For code, behavior, test, dependency, or config diffs, also run Codex `/review`, `codex review`, or an equivalent read-only code-review pass. Run the evidence-verifier and code-review tracks in parallel when they can inspect the same stable inputs; if not, disclose why they ran sequentially or why a required track is missing.
+When checking implementation evidence, run `power_verifier` and `power_code_reviewer` as separate read-only Sol High tracks over tailored packets from the same stable snapshot. Start them in parallel; if either required profile is missing, pause instead of substituting the parent model.
 
 Restart Codex after installing or updating skills or custom agents.
 
@@ -139,10 +132,10 @@ Ask for a task contract before implementation:
 Use $power-grill to grill this feature and draft an issue contract.
 ```
 
-Ask for a bounded implementation loop from an existing task contract:
+Ask for repository-aware execution planning from an existing persisted task contract:
 
 ```text
-Use $power-loop on this issue to generate a bounded Codex /goal.
+Use $power-loop on this issue to generate the Blueprint, Dispatch Plan, and Issue Patch. Show the patch for confirmation before generating the Goal Prompt.
 ```
 
 Ask for independent critique:
@@ -182,7 +175,6 @@ power-grill/
     openai.yaml
   assets/
     issue-body.md
-    pr-body.md
   references/
     github-issue-creation.md
     gitlab-issue-creation.md
@@ -190,14 +182,18 @@ power-loop/
   SKILL.md
   agents/
     openai.yaml
+    power-luna-worker.toml
+    power-terra-worker.toml
+    power-terra-complex-worker.toml
+    power-sol-escalation.toml
+    power-code-reviewer.toml
   assets/
+    execution-blueprint.md
+    agent-dispatch-plan.md
+    issue-patch.md
     codex-loop-goal.txt
     loop-readiness-checklist.md
-    verifier-gate.md
     pr-evidence-template.md
-    status-transitions.md
-    sample-contracts.md
-    loop-engineering-tutorial.md
 power-verifier/
   SKILL.md
   agents/
@@ -214,16 +210,24 @@ power-work-report/
   SKILL.md
   agents/
     openai.yaml
-tools/power-work-report/
-  package.json
-  bin/
-  lib/
-  test/
+  scripts/
+    power-work-report/
+      package.json
+      bin/
+      lib/
+      schemas/
 power-critic/
   SKILL.md
   agents/
     openai.yaml
     power-critic.toml
+docs/
+  loop-engineering-tutorial.md
+  specs/
+tests/
+  install.test.js
+  fixtures/power-loop/sample-contracts.md
+  power-work-report/
 ```
 
 ## License

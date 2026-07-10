@@ -9,7 +9,7 @@ description: Generate a manual Codex daily work report draft, review it with the
 
 Generate a local daily work report from Codex session history.
 
-This skill is a manual workflow wrapper around the `tools/power-work-report` Node CLI. It should generate a draft first, show the user where to review it, and only finalize after explicit user confirmation.
+This skill uses the bundled `scripts/power-work-report` Node CLI. Generate a draft first, show the user where to review it, and only finalize after explicit user confirmation.
 
 V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, reads existing JSON memory, generates JSON/Markdown/HTML reports plus `review.md`, proposes todo and idea memory updates, and merges those updates only during `finalize`.
 
@@ -33,8 +33,10 @@ The draft report uses the component-style Codex daily report structure: metadata
 2. Run the CLI in draft mode:
 
    ```bash
-   node tools/power-work-report/bin/power-work-report.js run --date YYYY-MM-DD --lang zh-CN --timezone Asia/Shanghai
+   node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" run --date YYYY-MM-DD --lang zh-CN --timezone Asia/Shanghai
    ```
+
+   Draft generation defaults to `gpt-5.6-luna` Medium in an isolated read-only Codex run. Use `--model` and `--reasoning-effort` only when the user explicitly requests an override. Do not add an automatic model retry or escalation.
 
 3. Report the generated draft paths:
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/review.md`
@@ -57,7 +59,7 @@ The draft report uses the component-style Codex daily report structure: metadata
    - Re-render affected Markdown/HTML/review files before asking again for final confirmation:
 
      ```bash
-     node tools/power-work-report/bin/power-work-report.js render --date YYYY-MM-DD
+     node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" render --date YYYY-MM-DD
      ```
 7. Optionally review the full report Markdown order before finalization:
    - 今日概览
@@ -72,7 +74,7 @@ The draft report uses the component-style Codex daily report structure: metadata
 8. Only after explicit user confirmation, run:
 
    ```bash
-   node tools/power-work-report/bin/power-work-report.js finalize --date YYYY-MM-DD
+   node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" finalize --date YYYY-MM-DD
    ```
 
 9. Report the final paths and memory file path.

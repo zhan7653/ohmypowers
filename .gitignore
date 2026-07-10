@@ -15,5 +15,8 @@ superpowers/
 !examples/linear-regression-optimizer/requirements.txt
 gstack-analysis.md
 resource/
-docs/
+docs/*
+!docs/specs/
+!docs/specs/**
+!docs/loop-engineering-tutorial.md
 examples/linear-regression-optimizer/training_result.png

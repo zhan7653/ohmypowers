@@ -1,103 +1,94 @@
-/goal Complete <contract-source> under a bounded implementation loop. Read the contract first and treat it as the canonical source of truth.
+/goal Execute the confirmed Task Contract at <contract-source> using its confirmed Execution Blueprint and Agent Dispatch Plan. Treat that persisted source as canonical; do not copy or reinterpret its requirements or execution plan.
 
-If the contract is incomplete or contradicts discovered facts, pause and ask to update the contract before implementing.
+Confirmed planning references:
+- Contract source: <contract-source>
+- Execution Blueprint section: <section heading or anchor>
+- Agent Dispatch Plan section: <section heading or anchor>
+- Planned source baseline: <source-branch>@<full-commit-sha>
 
-Loop contract:
-- Objective: <objective>
-- Background/current problem: <background-or-current-problem>
-- Scope: <scope>
-- Non-goals: <non-goals>
-- Affected files/modules: <affected-files-or-modules>
-- Constraints: <constraints>
-- Validation plan: <validation-plan>
-- Acceptance criteria: <acceptance-criteria>
-- Stop condition: <stop-condition>
-- Pause-and-ask conditions: <pause-and-ask-conditions>
+Preflight:
+1. Read the persisted Task Contract, Execution Blueprint, and Agent Dispatch Plan.
+2. Require both execution sections to say `Planning status: confirmed`.
+3. Check the current repository against the recorded source branch and commit. If the commit differs, inspect whether changes materially affect planned paths, interfaces, dependencies, validation commands, or assumptions. Stop for a new power-loop pass or confirmed plan revision when drift is material.
+4. Confirm every required custom agent named by the Dispatch Plan is discoverable with the specified model, reasoning effort, and sandbox. Do not silently inherit or substitute the parent Sol Ultra model. Pause and report missing configuration unless the confirmed plan explicitly names an approved alternative.
+5. Confirm the Task Contract still has precedence over both execution sections. Stop on any conflict.
 
-Execution rules:
-- Do not expand scope beyond the contract.
-- Do not ignore validation failures.
-- Do not bypass the verifier gate.
-- Do not merge.
-- Do not push directly to main, master, release, or protected branches.
-- Do not mutate issue bodies, labels, comments, or closure state unless the user explicitly confirms the exact curation mutation.
-- Pause if implementation requires auth, permissions, security, migration, production config, destructive data changes, or other high-risk work not already approved in the contract.
+Main-agent role:
+- Act as the orchestrator for interfaces, dependency coordination, conflict resolution, dispatch, waiting, steering, escalation decisions, validation coordination, review coordination, and result consolidation.
+- Do not normally edit implementation files. Delegate implementation changes to the exact worker profiles and Task IDs in the confirmed Dispatch Plan.
+- If delegation is unavailable, pause unless the confirmed Dispatch Plan explicitly authorizes a narrow main-agent exception with exact paths and rationale.
+- Do not expand scope, alter public contracts, or revise confirmed execution sections during the run.
 
-Work isolation:
-- Use a dedicated branch or worktree.
-- Branch name: agent/<issue-id>-<short-name>
-- Worktree path, when needed: .worktrees/agent-<issue-id>-<short-name>
-- Never create worktrees outside the repository root.
-- If the source issue, local brief, or pasted contract contains an older outside-root worktree path, treat it as stale and use .worktrees/agent-<issue-id>-<short-name> instead.
-- Use a worktree when the current worktree has unrelated changes, multiple agents may run in parallel, or the task spans multiple medium-risk areas.
-- Pause if the required branch or worktree cannot be created safely.
-- Do not run destructive clean commands such as `git clean -fdx` from the parent worktree unless `.worktrees/` is explicitly excluded or the nested worktrees have already been removed safely.
+Work isolation and ownership:
+- Create or enter the dedicated implementation branch/worktree specified by the Execution Blueprint, based on its recorded source branch.
+- Do not perform normal implementation writes directly on the shared source/integration branch.
+- Do not create one worktree per subagent.
+- Preserve unrelated user changes.
+- Start write-capable workers in parallel only when their allowed write paths and interface responsibilities do not overlap.
+- Serialize overlapping files, unstable shared interfaces, and unresolved dependencies.
+- Keep explicit ownership throughout the run; stop and resolve ambiguity before additional writes.
 
-Checkpoints:
-1. Inspect the contract, relevant code, and relevant docs.
-2. Restate the minimal implementation approach and confirm it stays within scope.
-3. Implement the smallest required change.
-4. Run targeted validation.
-5. Fix validation failures within budget.
-6. Run full required validation.
-7. Run the read-only verifier gate.
-8. Prepare a draft PR/MR with acceptance-criteria evidence and issue curation handoff.
-9. Output the loop decision.
+Dispatch:
+- Execute the confirmed task graph and dependency waves.
+- Preserve meaningful parallelism for independent deliverables; do not reduce agent count merely as a cost metric.
+- Give every agent its Task ID, objective, relevant contract and Blueprint excerpts, allowed paths, dependencies, deliverable, validation responsibility, and stop conditions.
+- Wait for required task results, steer only within the confirmed contract, and consolidate artifacts without redoing completed worker exploration.
+
+Model escalation:
+- Allow at most one model escalation per implementation task.
+- Escalate only when failure evidence shows that the initial model assignment underestimated capability or reasoning needs.
+- Do not escalate for permission, environment, dependency, unavailable validation, interface-conflict, or other non-capability failures.
+- Reclassify directly to the lowest sufficient target allowed by the confirmed task entry; do not step through every tier.
+- Use Terra Medium or Terra High when sufficient. Sol Medium is the ceiling, not the default escalation target.
+- Never exceed `power_sol_escalation` on `gpt-5.6-sol` Medium for implementation.
+- Give the replacement worker the prior worker's useful findings, failure evidence, artifacts, and current state.
+- If Sol Medium cannot complete the task, stop and report the blocker.
 
 Validation loop:
-- Run relevant tests after meaningful changes.
-- Run lint, typecheck, or docs checks when available and relevant.
-- Summarize each command and result.
-- Diagnose failures before retrying.
-- Retry only within budget.
-- Pause if validation is missing, unreliable, or cannot cover the acceptance criteria.
+- Run the exact validation commands and manual checks from the confirmed Execution Blueprint.
+- Run targeted validation after meaningful changes, then the full required validation before review.
+- Diagnose failures before retrying and do not hide failing or unreliable validation.
+- Pause when validation cannot prove the acceptance criteria or when forbidden/high-risk work becomes necessary.
 
 Budget:
 - Max implementation iterations: 5.
-- same failure retry limit: 3.
+- Same-failure retry limit: 3.
 - Stop after 3 consecutive no-progress iterations.
-- Pause if scope expansion is required.
-- Pause if forbidden paths become necessary.
-- Pause if high-risk operations become necessary.
+- Pause on scope expansion, material plan drift, missing validation, forbidden paths, unapproved high-risk operations, or missing required agents.
 
 Verifier gate:
-- Before finalizing the PR/MR, run a read-only verifier gate with two separate tracks: evidence verification and code review.
-- Use `power_verifier`, `power-verifier` in a fresh context, or an equivalent read-only verifier subagent for evidence verification. Do not use Codex `/review`, `codex review`, or code-review findings as a substitute for this evidence verifier.
-- For code, behavior, test, dependency, or config diffs, run Codex `/review`, `codex review`, or an equivalent read-only code-review subagent as the separate code-review track.
-- Start evidence verification and code review in parallel whenever both can inspect the same stable contract, diff, validation output, and PR/MR evidence package. If the environment cannot run them in parallel, run them sequentially and record why.
-- Compare the diff against the contract.
-- Verify every acceptance criterion has evidence.
-- Check validation results, scope, non-goals, forbidden paths, and disclosed risks.
-- For code, behavior, test, dependency, or config diffs, missing code review prevents `PASS` and `PASS_WITH_NOTES`.
-- For documentation-only diffs, state the code-review skipped reason if no code review is run.
-- Missing fresh-context evidence verification prevents `PASS` and `PASS_WITH_NOTES`.
-- Record evidence-verifier source, code-review source or skipped reason, parallel/sequential execution status, review findings considered, and degraded-mode reason when applicable.
-- Record one verifier result: PASS, PASS_WITH_NOTES, BLOCKED, or NEEDS_HUMAN.
-- If the verifier or code-review pass returns a fixable BLOCKED inside the current contract, repair within the implementation loop budget, rerun validation, and rerun the verifier.
-- Use NEEDS_HUMAN only for scope expansion, contract contradiction, high-risk work, or repeated repair failure beyond budget.
-- If the verifier returns BLOCKED or NEEDS_HUMAN after allowed repair attempts, do not claim completion.
+- After the implementation diff, validation output, acceptance-criteria evidence, and draft PR/MR evidence package are stable, start two independent read-only tracks. The evidence package may remain local until review finishes.
+- Code review: use `power_code_reviewer` on `gpt-5.6-sol` High with the relevant Task Contract and AC excerpts, stable diff, interface changes, tests, and validation output.
+- Evidence verification: use `power_verifier` on `gpt-5.6-sol` High with the full Task Contract and confirmed plans, AC evidence, validation results, changed-path/scope manifest, draft PR/MR evidence, risks, assumptions, and non-goals. Allow diff inspection only for scope and contract mapping.
+- Run the two tracks in parallel over the same stable implementation snapshot. Record why if they must run sequentially.
+- Do not make either track wait for or consume the other track's result. The orchestrator combines both results afterward.
+- Do not substitute either track for the other. Missing either Sol High read-only track prevents PASS and PASS_WITH_NOTES.
+- Route fixable BLOCKED findings back to the owning implementation task within the remaining budget, then rerun validation and both affected review tracks.
+- Use NEEDS_HUMAN for scope changes, contract conflicts, high-risk decisions, missing required capabilities that need user approval, or repeated repair failure beyond budget.
 
-PR/MR evidence requirements:
-- Create a draft PR/MR only.
-- Link the contract source.
-- Include summary, rationale, changed files, tests run, acceptance-criteria evidence, verifier result, risks, assumptions, out-of-scope items, and reviewer checklist.
-- Include issue curation evidence: linked contract, closing intent, follow-up handling, and whether curator mutation was intentionally not executed during implementation.
-- Include evidence-verifier source, code-review source or skipped reason, and parallel/sequential execution status.
-- Include an evidence table:
+PR/MR evidence:
+- After both review tracks finish, create or update a draft PR/MR only; do not merge or push directly to a protected branch.
+- Link <contract-source> and reference its confirmed Execution Blueprint and Agent Dispatch Plan.
+- Include summary, rationale, changed files, validation results, acceptance-criteria evidence, verifier result, review sources, the final Dispatch Summary, risks, assumptions, out-of-scope items, issue curation handoff, and loop decision.
+- Do not mutate issue bodies, labels, comments, or closure state without separate explicit confirmation of the exact curation mutation.
 
-| AC | Evidence | Validation | Files | Status |
-|---|---|---|---|---|
-| AC-1 |  |  |  |  |
+Dispatch Summary:
+- Report planned and actual task counts.
+- For every task, report initial model and final model. For every implementation task, also report escalation status and reason.
+- Report dependency wave and parallel/sequential execution.
+- Report ownership conflicts and resolutions.
+- Report incomplete tasks and pause reasons.
+- Calculate Initial Assignment Accuracy as implementation tasks completed without escalation divided by completed or attempted implementation tasks that received an initial assignment.
 
 Loop decision:
-- pr-ready: draft PR/MR exists, issue curation evidence is present, and verifier is PASS or PASS_WITH_NOTES with every required review track present.
-- blocked: technical blocker prevents progress within budget.
-- needs-human: human decision is required before continuing.
-- follow-up-needed: current contract is complete, but new work belongs in a follow-up issue.
-- done: use only after human confirmation, not immediately after agent implementation.
+- `pr-ready`: draft PR/MR exists, required validation passes, both required review tracks exist, and the verifier result is PASS or PASS_WITH_NOTES.
+- `blocked`: a technical or capability blocker prevents progress within the confirmed contract and budget.
+- `needs-human`: a human decision or approval is required.
+- `follow-up-needed`: the current contract is complete, but new work belongs in a separate issue.
+- `done`: use only after human confirmation, not immediately after agent implementation.
 
 Final response:
 - State the loop decision.
 - Summarize completed work and validation evidence.
-- List remaining risks or human decisions.
+- Include the Dispatch Summary and remaining risks or human decisions.
 - Do not merge.

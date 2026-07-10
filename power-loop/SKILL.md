@@ -1,213 +1,148 @@
 ---
 name: power-loop
-description: Convert an agent-ready hosted issue, local brief, or pasted task contract into a bounded implementation loop for Codex /goal. Use after power-grill or another clarification step has produced a clear task contract.
+description: Convert a requirements-ready hosted issue, local brief, or pasted task contract into a repository-aware Execution Blueprint, cost-aware Agent Dispatch Plan, reviewable Issue Patch, and, only after the confirmed patch is applied, a bounded ready-to-run Codex /goal. Use after power-grill or another clarification step has produced a clear task contract.
 ---
 
 # Power Loop
 
 ## Overview
 
-Convert an agent-ready task contract into a bounded implementation loop for Codex `/goal`.
+Turn a requirements-ready Task Contract into a confirmed implementation loop for Codex `/goal`.
 
-Loop Engineering in this repository means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries.
-
-`power-loop` is an orchestrator. It does not implement code directly. Its output is a readiness decision and, only when the contract is loop-ready, a ready-to-run bounded `/goal`. It owns bounded `/goal` generation; `power-grill` owns issue contracts.
-
-Recommended flow:
+Use this order without skipping or reordering stages:
 
 ```text
-power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review
+Task Contract
+-> readiness and risk gates
+-> repository inspection
+-> Execution Blueprint
+-> Agent Dispatch Plan
+-> exact Issue Patch
+-> explicit user confirmation
+-> apply and verify the patch
+-> final Goal Prompt
+-> user manually starts /goal
 ```
 
-## When To Use
+Do not detect Ultra mode. Generate the same planning artifacts whenever the contract passes the gates. Ultra is a user-selected runtime, not a feature flag.
 
-Use this skill when the user has a clear task contract and wants a bounded implementation loop for Codex.
+## Sources And Boundaries
 
-Good inputs:
+Use this precedence:
 
-- A GitHub or GitLab issue URL or issue number.
-- A local issue brief created by `power-grill`.
-- A pasted task contract with objective, scope, validation, acceptance criteria, stop conditions, and pause conditions.
+1. Task Contract: canonical what and why.
+2. Execution Blueprint: confirmed repository-aware how.
+3. Agent Dispatch Plan: confirmed tasks, agents, models, ownership, dependencies, and escalation targets.
+4. Goal runtime decisions: operational choices that do not change the three confirmed layers.
 
-Do not use this skill to clarify vague requirements. Send vague or incomplete tasks back to `power-grill`.
+Stop when a derived artifact conflicts with the Task Contract. Return `NEEDS_GRILL` for an unresolved requirement boundary and `NEEDS_HUMAN` for a material public, product, business, security, permission, compatibility, schema, or migration decision.
 
-## Hard Boundaries
-
-You must not:
+Do not:
 
 - deeply clarify vague requirements;
-- implement code directly;
-- modify production files;
-- create branches or worktrees yourself;
-- create, approve, merge, or close PRs/MRs;
-- approve your own work;
-- ignore missing validation;
-- ignore high-risk operations;
-- generate an implementation `/goal` for incomplete or high-risk contracts.
+- implement code or create implementation branches/worktrees during planning;
+- mutate requirements or `Curation status`;
+- update a hosted issue or local brief before exact patch confirmation;
+- generate the Goal Prompt before the patch is applied and verified;
+- invoke `/goal` automatically;
+- silently replace a missing custom agent with the parent model;
+- create, approve, merge, or close PRs/MRs.
 
-You may inspect the repository and read hosted issues or local briefs. If a hosted issue cannot be read through `gh`, `glab`, or an available browser/source, ask the user to paste the issue body or provide a local brief.
+After explicit patch confirmation, update only the marked Execution Blueprint and Agent Dispatch Plan blocks.
 
 ## Inputs
 
-Prefer inputs in this order:
+Prefer a hosted issue, then a persisted local brief, then a pasted Task Contract. A pasted-only contract may receive readiness, Blueprint, and Dispatch drafts, but it must be persisted before a target-specific Issue Patch or final Goal Prompt can be produced.
 
-1. Hosted issue: GitHub or GitLab issue URL or issue number.
-2. Local brief: a saved issue contract file.
-3. Pasted task contract.
+Treat the `Task Contract` section as canonical. For legacy issues, treat requirement sections before Execution Blueprint, Agent Dispatch Plan, or `Curation status` as the Task Contract. Do not reuse an execution section unless it is explicitly `Planning status: confirmed` and still matches the contract and repository baseline.
 
-Hosted issue support is provider-agnostic. Use repository context and available tools to choose `gh issue view` or `glab issue view`. If authentication, network, or host detection is unavailable, fall back to a pasted issue body or local brief.
+## Workflow
 
-## Phase 1: Read The Contract
+### 1. Gate Readiness And Risk
 
-Read the task contract before deciding anything. Treat the contract as the canonical source of truth.
+Read [assets/loop-readiness-checklist.md](assets/loop-readiness-checklist.md).
 
-If the contract contradicts repository facts, do not silently resolve the contradiction. Output `NEEDS_HUMAN` and list the contradiction.
+Return one readiness result:
 
-## Phase 2: Loop Readiness Check
+- `LOOP_READY`: requirement decisions are sufficient for repository-aware planning.
+- `NEEDS_GRILL`: externally observable behavior, scope, acceptance criteria, validation expectations, stop condition, or pause condition is missing or vague.
+- `NEEDS_HUMAN`: repository facts, permissions, high-risk work, or a material human decision blocks planning.
 
-Use [assets/loop-readiness-checklist.md](assets/loop-readiness-checklist.md).
+Classify risk as `LOW`, `MEDIUM`, or `HIGH` and select:
 
-Required fields:
+- `ALLOW_GOAL`: `LOW` and `LOOP_READY`.
+- `GOAL_WITH_STRICT_GATE`: `MEDIUM` and `LOOP_READY`.
+- `HUMAN_ONLY`: `HIGH` or an unresolved human decision.
 
-- Objective
-- Background or current problem
-- Scope
-- Non-goals
-- Affected files or modules
-- Constraints
-- Validation plan
-- Acceptance criteria
-- Stop condition
-- Pause-and-ask conditions
+For any blocked result, return only the decision, blockers, and smallest next action. Do not generate execution artifacts.
 
-Readiness results:
+### 2. Inspect The Repository
 
-- `LOOP_READY`: the contract is clear enough to generate a bounded `/goal`.
-- `NEEDS_GRILL`: the contract is vague, incomplete, or missing required implementation-loop fields.
-- `NEEDS_HUMAN`: repository facts, risk, permissions, or business decisions block automatic implementation-loop generation.
+Inspect only enough context to derive the implementation. Record the contract source, source branch and full commit, timestamp, relevant facts and assumptions, worktree state, exact affected paths, internal interfaces, flow, error handling, dependencies, validation commands, and material-drift conditions.
 
-If the result is `NEEDS_GRILL` or `NEEDS_HUMAN`, do not generate an implementation `/goal`. Return the result, blockers, and the smallest useful next action.
+If inspection exposes a requirement decision, stop instead of hiding it in the plan.
 
-## Phase 3: Risk Level And Execution Decision
+### 3. Generate The Execution Blueprint
 
-Classify risk:
+Read and fill [assets/execution-blueprint.md](assets/execution-blueprint.md) in its existing field order. Set the standalone draft to `Planning status: proposed`.
 
-- `LOW`: docs, tests, small bug fixes, small utility changes, simple styling, low-risk refactors.
-- `MEDIUM`: new features, API/data contract changes, multi-module changes, non-core refactors.
-- `HIGH`: auth, permissions, security, database migrations, production config, payment, destructive data changes, irreversible operations, or broad architecture changes.
+Plan one dedicated task-level implementation branch, optionally with one repository-local worktree. Base it on repository guidance such as `develop`; do not plan normal writes directly on the shared integration branch and do not create one worktree per subagent.
 
-Execution decisions:
+### 4. Generate The Agent Dispatch Plan
 
-- `ALLOW_GOAL`: risk is `LOW` and the contract is `LOOP_READY`.
-- `GOAL_WITH_STRICT_GATE`: risk is `MEDIUM` and the contract is `LOOP_READY`.
-- `HUMAN_ONLY`: risk is `HIGH` or an unresolved human decision is present.
+Read and fill [assets/agent-dispatch-plan.md](assets/agent-dispatch-plan.md) after the Blueprint exists. The issue must contain exact task assignments, not the static routing table.
 
-For `HUMAN_ONLY`, do not generate an implementation `/goal`. Output the human decision checklist instead.
+Use these installed profiles when selecting the lowest capable initial tier:
 
-## Phase 4: Work Isolation
+- `power_luna_worker`: Luna Medium for mechanical, deterministic, low-risk work.
+- `power_terra_worker`: Terra Medium for normal implementation, tests, fixes, and bounded integration.
+- `power_terra_complex_worker`: Terra High for complexity known in advance.
+- `power_sol_escalation`: Sol Medium as the implementation ceiling after evidence-backed under-classification.
+- `power_code_reviewer`: Sol High, read-only code review.
+- `power_verifier`: Sol High, read-only evidence verification.
 
-Every bounded `/goal` must define work isolation. `power-loop` does not create the branch or worktree itself.
+Do not minimize agent count as a cost target. Preserve useful parallel work with independent deliverables and non-overlapping ownership. Serialize overlapping paths, unstable interfaces, and unresolved dependencies. Keep the main agent as orchestrator rather than a normal implementation writer.
 
-Default policy:
+Allow at most one direct model escalation per implementation task, choose the lowest sufficient allowed target, and never exceed Sol Medium. Do not escalate for permission, environment, dependency, validation-infrastructure, or ownership failures.
 
-- Use a dedicated branch for ordinary single-agent work.
-- Use a dedicated worktree when the current worktree has unrelated changes, multiple agents may run in parallel, the task has medium risk across multiple files, or the user requests stronger isolation.
-- Pause if a branch or worktree cannot be created safely.
+Always plan two independent Sol High review tasks over the same stable implementation snapshot, using tailored evidence packets:
 
-Naming:
+- Code-review packet: relevant Task Contract and AC excerpts, stable diff, interface changes, tests, and validation output.
+- Evidence-verification packet: full Task Contract and confirmed plans, AC evidence, validation results, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals. Provide diff access only for scope and contract mapping.
 
-- Branch: `agent/<issue-id>-<short-name>`
-- Worktree: `.worktrees/agent-<issue-id>-<short-name>`
-- If there is no hosted issue, use a local brief slug instead of `<issue-id>`.
-- Never recommend worktree paths outside the repository root.
-- If an older issue, local brief, or pasted contract mentions an outside-root worktree path, override that stale path with `.worktrees/agent-<issue-id>-<short-name>` in the generated `/goal`.
+Run both tracks in parallel when possible. Neither track consumes or substitutes for the other.
 
-Repository-local worktrees keep sibling directories tidy, but they require `.worktrees/` to be ignored by Git. Do not run destructive clean commands such as `git clean -fdx` from the parent worktree unless `.worktrees/` is explicitly excluded or the nested worktrees have already been removed safely.
+### 5. Generate, Confirm, And Apply The Issue Patch
 
-## Phase 5: Checkpoints, Validation Loop, And Budget
+Read [assets/issue-patch.md](assets/issue-patch.md).
 
-Every bounded `/goal` must include:
+For pasted-only input, display the proposed artifacts and ask the user to persist the unchanged Task Contract. Re-read the persisted source before generating a target-specific patch.
 
-- checkpoints;
-- validation loop;
-- iteration budget;
-- verifier gate;
-- PR/MR evidence requirements;
-- issue linkage, closing intent, and follow-up handling requirements;
-- stop conditions;
-- pause-and-ask conditions;
-- loop decision rules.
+For a persisted target:
 
-Default checkpoints:
+1. Build complete replacement blocks whose planning status is `confirmed` after application.
+2. Display one exact patch that changes only the marked Blueprint and Dispatch blocks.
+3. State that Task Contract and `Curation status` remain byte-for-byte unchanged.
+4. Ask the user to confirm that exact patch and withhold the Goal Prompt.
 
-1. Inspect the contract and relevant code.
-2. Restate the minimal implementation approach.
-3. Implement the smallest required change.
-4. Run targeted validation.
-5. Fix validation failures within budget.
-6. Run full required validation.
-7. Run the read-only verifier gate.
-8. Prepare draft PR/MR evidence, including issue curation handoff.
-9. Output a loop decision.
+Treat confirmation as patch-specific. Any revision requires a complete regenerated patch and new confirmation.
 
-Default budget:
+After confirmation, re-read the target, verify the Task Contract is unchanged, apply only the two blocks, re-read again, and compare them exactly. On any failure, return `PATCH_NOT_APPLIED` or `PATCH_VERIFICATION_FAILED` and withhold the Goal Prompt.
 
-- Max implementation iterations: 5.
-- same failure retry limit: 3.
-- No-progress stop: 3 consecutive iterations.
-- Pause on scope expansion.
-- Pause on missing or unreliable validation.
-- Pause if forbidden paths become necessary.
-- Pause on high-risk operations.
+### 6. Generate The Final Goal Prompt
 
-## Phase 6: Verifier Gate
+Read [assets/codex-loop-goal.txt](assets/codex-loop-goal.txt) only after successful patch verification.
 
-Use [assets/verifier-gate.md](assets/verifier-gate.md).
+Check custom-agent availability when the host exposes it. If a required profile is known missing, stop for installation or explicit approval of a named alternative. Otherwise keep the mandatory check in Goal preflight.
 
-The verifier gate must be read-only. It checks the implementation diff, validation evidence, acceptance criteria evidence, scope boundaries, non-goals, forbidden paths, disclosed risks, and code-review findings when relevant. `power-loop` defines the verifier gate in the bounded `/goal`; the gate must use `power_verifier`, `power-verifier` in a fresh context, or an equivalent read-only verifier subagent for evidence verification. For code, behavior, test, dependency, or config diffs, it must also use Codex `/review`, `codex review`, or an equivalent read-only code-review subagent as a separate code-review track. These tracks should run in parallel whenever they can inspect the same stable inputs.
+Fill the Goal Prompt by reference to the persisted contract and confirmed sections. Preserve baseline drift checks, delegated implementation, exact task ownership, bounded escalation, validation, the two tailored Sol High review tracks, PR/MR evidence, Dispatch Summary, loop decisions, and manual execution. Do not copy the full contract or plans into the Goal Prompt.
 
-Verifier outcomes:
+Use [assets/pr-evidence-template.md](assets/pr-evidence-template.md) for the implementation evidence package. Never merge.
 
-- `PASS`
-- `PASS_WITH_NOTES`
-- `BLOCKED`
-- `NEEDS_HUMAN`
+## Output
 
-If the verifier returns `BLOCKED` or `NEEDS_HUMAN`, the implementation runner must not claim completion.
+Before patch confirmation, output the contract source, readiness/risk decision, proposed Blueprint, proposed Dispatch Plan, complete confirmed-state Issue Patch, confirmation request, and `Goal Prompt: withheld until this exact patch is applied and verified.`
 
-If the verifier or code-review pass returns a fixable `BLOCKED` inside the current contract, the implementation runner should repair within the bounded loop budget, rerun validation, and rerun the verifier gate. Use `NEEDS_HUMAN` only when the fix requires scope expansion, a contract change, high-risk work, or repeated failure beyond budget.
+After application, output the verification result, persisted reference, ready-to-run Goal Prompt, and an explicit instruction for the user to start it manually.
 
-## Phase 7: Generate The Bounded /goal
-
-Generate a bounded `/goal` from [assets/codex-loop-goal.txt](assets/codex-loop-goal.txt) only when:
-
-- readiness result is `LOOP_READY`;
-- execution decision is `ALLOW_GOAL` or `GOAL_WITH_STRICT_GATE`;
-- validation plan is concrete enough to run;
-- pause-and-ask conditions are explicit.
-
-Output:
-
-- contract source;
-- readiness result;
-- risk level;
-- execution decision;
-- missing fields or blockers, if any;
-- bounded `/goal`, only when allowed;
-- PR/MR evidence requirements;
-- issue linkage, closing intent, and follow-up handling requirements;
-- verifier instructions;
-- status transition recommendation;
-- loop decision rules.
-
-## Status Protocol
-
-Use [assets/status-transitions.md](assets/status-transitions.md) as a recommended protocol, not a hard dependency. If a project cannot create labels, record equivalent status in the issue discussion, PR/MR body, or PR/MR comments.
-
-## Sample Contracts
-
-Use [assets/sample-contracts.md](assets/sample-contracts.md) for manual dry-runs of:
-
-- `LOOP_READY`
-- `NEEDS_GRILL`
-- `NEEDS_HUMAN`
+For a blocked contract, output only the decision, blockers, and smallest useful next action.
