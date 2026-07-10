@@ -12,6 +12,7 @@ const fixedTopologyPaths = [
   'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
   'power-loop/SKILL.md',
   'power-loop/assets/agent-dispatch-plan.md',
+  'power-loop/assets/codex-loop-goal.txt',
   'power-loop/assets/execution-blueprint.md',
   'power-loop/assets/issue-patch.md',
   'power-loop/assets/loop-readiness-checklist.md',
@@ -32,11 +33,27 @@ async function readFixture(name) {
   return JSON.parse(await readFile(path.join(fixtureRoot, name), 'utf8'))
 }
 
+function normalizeReviewerResult(result) {
+  switch (typeof result === 'string' ? result.trim().toUpperCase() : '') {
+    case 'PASS':
+    case 'PASSED':
+      return 'PASS'
+    case 'PASS_WITH_NOTES':
+      return 'PASS_WITH_NOTES'
+    case 'NEEDS_HUMAN':
+      return 'NEEDS_HUMAN'
+    default:
+      return 'BLOCKED'
+  }
+}
+
 function aggregate(input) {
   if (input.conflicts.length || input.humanDecisionRequired) return 'NEEDS_HUMAN'
 
   const isFresh = evidence => evidence.snapshot === input.snapshot.id && !evidence.stale
   const selectedReviews = input.reviews.filter(review => review.selected !== false)
+  const selectedReviewResults = selectedReviews.map(review => normalizeReviewerResult(review.result))
+  const isPassingReview = review => ['PASS', 'PASS_WITH_NOTES'].includes(normalizeReviewerResult(review.result))
   const hasHumanRequiredClause = input.clauses.some(
     clause =>
       clause.applicable &&
@@ -59,20 +76,23 @@ function aggregate(input) {
   const reviewsMeetRequirements = input.reviewRequirements.every(requirement =>
     selectedReviews.some(review =>
       isFresh(review) &&
-      review.result === 'passed' &&
+      isPassingReview(review) &&
       Object.entries(requirement.exact).every(([key, value]) => review[key] === value),
     ),
   )
+  const hasHumanRequiredReview = selectedReviewResults.includes('NEEDS_HUMAN')
   const hasBlockingSelectedReview = selectedReviews.some(
-    review => !isFresh(review) || ['blocked', 'failed', 'nonconformant'].includes(review.result),
+    (review, index) => !isFresh(review) || selectedReviewResults[index] === 'BLOCKED',
   )
   const hasIndependentConformanceReview = selectedReviews.some(
     review =>
       isFresh(review) &&
       review.independentFromImplementation &&
       review.capability === 'contract-conformance' &&
-      review.result === 'passed',
+      isPassingReview(review),
   )
+
+  if (hasHumanRequiredReview) return 'NEEDS_HUMAN'
 
   if (
     hasBlockingClause ||
@@ -84,7 +104,7 @@ function aggregate(input) {
   ) {
     return 'BLOCKED'
   }
-  return input.notes.length ? 'PASS_WITH_NOTES' : 'PASS'
+  return input.notes.length || selectedReviewResults.includes('PASS_WITH_NOTES') ? 'PASS_WITH_NOTES' : 'PASS'
 }
 
 test('aggregation fixtures implement the documented deterministic precedence', async () => {
@@ -114,8 +134,28 @@ test('aggregation fixtures cover every required result and evidence condition', 
     'stale-clause-evidence',
     'human-required-clause',
     'selected-review-wrong-snapshot',
+    'selected-public-blocked-review',
+    'selected-public-needs-human-review',
+    'selected-public-pass-with-notes-review',
+    'selected-public-pending-review',
+    'exact-review-pass-with-notes',
   ]) {
     assert.ok(ids.has(id), `missing ${id}`)
+  }
+})
+
+test('selected public reviewer results have deterministic precedence', async () => {
+  const fixture = await readFixture('aggregation-cases.json')
+  const cases = new Map(fixture.cases.map(scenario => [scenario.id, scenario]))
+
+  for (const [id, expected] of [
+    ['selected-public-blocked-review', 'BLOCKED'],
+    ['selected-public-needs-human-review', 'NEEDS_HUMAN'],
+    ['selected-public-pass-with-notes-review', 'PASS_WITH_NOTES'],
+    ['selected-public-pending-review', 'BLOCKED'],
+    ['exact-review-pass-with-notes', 'PASS_WITH_NOTES'],
+  ]) {
+    assert.equal(aggregate(cases.get(id).input), expected, id)
   }
 })
 
