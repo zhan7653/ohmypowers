@@ -80,7 +80,9 @@ function aggregate(input) {
       Object.entries(requirement.exact).every(([key, value]) => review[key] === value),
     ),
   )
-  const hasHumanRequiredReview = selectedReviewResults.includes('NEEDS_HUMAN')
+  const hasHumanRequiredReview = selectedReviews.some(
+    review => isFresh(review) && normalizeReviewerResult(review.result) === 'NEEDS_HUMAN',
+  )
   const hasBlockingSelectedReview = selectedReviews.some(
     (review, index) => !isFresh(review) || selectedReviewResults[index] === 'BLOCKED',
   )
@@ -134,6 +136,8 @@ test('aggregation fixtures cover every required result and evidence condition', 
     'stale-clause-evidence',
     'human-required-clause',
     'selected-review-wrong-snapshot',
+    'selected-needs-human-review-stale',
+    'selected-needs-human-review-wrong-snapshot',
     'selected-public-blocked-review',
     'selected-public-needs-human-review',
     'selected-public-pass-with-notes-review',
@@ -151,6 +155,8 @@ test('selected public reviewer results have deterministic precedence', async () 
   for (const [id, expected] of [
     ['selected-public-blocked-review', 'BLOCKED'],
     ['selected-public-needs-human-review', 'NEEDS_HUMAN'],
+    ['selected-needs-human-review-stale', 'BLOCKED'],
+    ['selected-needs-human-review-wrong-snapshot', 'BLOCKED'],
     ['selected-public-pass-with-notes-review', 'PASS_WITH_NOTES'],
     ['selected-public-pending-review', 'BLOCKED'],
     ['exact-review-pass-with-notes', 'PASS_WITH_NOTES'],

@@ -153,6 +153,30 @@
       "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Provide the policy decision requested by the selected review." }
     },
     {
+      "id": "selected-needs-human-review-stale",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6f-stale", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": true },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected policy review against tree:catalog-v3." }
+    },
+    {
+      "id": "selected-needs-human-review-wrong-snapshot",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
+        "clauses": [{ "id": "issue:AC-6f-wrong-snapshot", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v4", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected policy review against tree:catalog-v4." }
+    },
+    {
       "id": "selected-public-pass-with-notes-review",
       "input": {
         "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
