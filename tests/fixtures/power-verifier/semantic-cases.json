@@ -1,0 +1,50 @@
+{
+  "schema": "power-verifier-semantic-cases/v1",
+  "evaluation": "manual-read-only-replay",
+  "packages": [
+    {
+      "id": "portable-python-library-compliance",
+      "project": { "name": "orbital-units", "portable": true, "repositoryConventions": "No ohmypowers paths, hosted PR, or prescribed test framework." },
+      "contract": { "issue": { "source": "contracts/issue.md", "clauses": [{ "id": "issue:units", "text": "Expose parse_unit for meters and seconds." }] }, "goal": { "source": "goals/final.txt", "clauses": [{ "id": "goal:test", "text": "Run pytest tests/unit." }] } },
+      "snapshot": { "id": "tree:4f3c", "repository": "local/orbital-units", "digest": "sha256:4f3c", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-10T15:00:00Z" },
+      "clauseEvidence": [{ "clauseId": "issue:units", "source": "src/units.py", "snapshot": "tree:4f3c", "status": "satisfied" }, { "clauseId": "goal:test", "source": "pytest output", "snapshot": "tree:4f3c", "status": "satisfied" }],
+      "reviewerProvenance": [{ "identity": "independent-library-reviewer", "independentFromImplementation": true, "capability": "contract-conformance", "scope": "Issue and Goal clauses", "readOnlyBoundary": "source and evidence only", "evidenceInspected": ["src/units.py", "pytest output"], "result": "passed", "snapshot": "tree:4f3c" }],
+      "validationReplay": { "command": "pytest tests/unit", "safetyClass": "safe", "isolationBoundary": "temporary virtualenv", "snapshot": "tree:4f3c", "result": "passed", "assessment": "Replay is safe and fresh." },
+      "expected": { "result": "PASS", "smallestNextAction": "None." },
+      "replayAssessment": "Manually confirm clause mapping, review independence, and replay output without judging the library design."
+    },
+    {
+      "id": "portable-go-service-nonconformance",
+      "project": { "name": "harbor-api", "portable": true, "repositoryConventions": "Self-hosted source with go test; no Codex profiles." },
+      "contract": { "issue": { "source": "local-contract.md", "clauses": [{ "id": "issue:health", "text": "GET /health returns JSON status." }] }, "goal": { "source": "goal.txt", "clauses": [{ "id": "goal:validation", "text": "Run go test ./..." }] } },
+      "snapshot": { "id": "commit:a18f", "repository": "ssh://code.example/harbor-api", "digest": "a18f", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-10T15:10:00Z" },
+      "clauseEvidence": [{ "clauseId": "issue:health", "source": "router.go", "snapshot": "commit:a18f", "status": "nonconformant", "notes": "Route returns plain text." }, { "clauseId": "goal:validation", "source": "go test output", "snapshot": "commit:a18f", "status": "satisfied" }],
+      "reviewerProvenance": [{ "identity": "outside-api-reviewer", "independentFromImplementation": true, "capability": "contract-conformance", "scope": "HTTP contract", "readOnlyBoundary": "read-only checkout", "evidenceInspected": ["router.go", "go test output"], "result": "blocked", "snapshot": "commit:a18f" }],
+      "validationReplay": { "command": "go test ./...", "safetyClass": "safe", "isolationBoundary": "temporary GOPATH", "snapshot": "commit:a18f", "result": "passed", "assessment": "Validation does not prove the response content clause." },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Return JSON from GET /health and replay the affected evidence." },
+      "replayAssessment": "Treat the demonstrated route mismatch as fixable nonconformance; do not invent authentication or deployment requirements."
+    },
+    {
+      "id": "exact-review-and-nonblocking-note",
+      "project": { "name": "ledger-migrator", "portable": true, "repositoryConventions": "Private repository; exact reviewer is specified by its local contract." },
+      "contract": { "issue": { "source": "migration-contract.md", "clauses": [{ "id": "issue:review", "text": "Release-auditor using audit-bot and review-model-2 must run release-checklist-v1." }] }, "goal": { "source": "execution-goal.txt", "clauses": [{ "id": "goal:replay", "text": "Replay npm test in an isolated directory." }] } },
+      "snapshot": { "id": "tree:ledger-7", "repository": "local/ledger-migrator", "digest": "sha256:ledger-7", "dirtyGeneratedBoundary": "generated report excluded", "capturedAt": "2026-07-10T15:20:00Z" },
+      "clauseEvidence": [{ "clauseId": "issue:review", "source": "release review record", "snapshot": "tree:ledger-7", "status": "satisfied" }, { "clauseId": "goal:replay", "source": "isolated npm test output", "snapshot": "tree:ledger-7", "status": "satisfied" }],
+      "reviewerProvenance": [{ "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1", "independentFromImplementation": true, "capability": "contract-conformance", "scope": "release contract", "readOnlyBoundary": "read-only snapshot", "evidenceInspected": ["migration diff", "npm test output"], "result": "passed", "snapshot": "tree:ledger-7", "notes": "A future schema label could be clearer; no contract clause requires it." }],
+      "validationReplay": { "command": "npm test", "safetyClass": "isolated-writable", "isolationBoundary": "/tmp/ledger-migrator-replay", "snapshot": "tree:ledger-7", "result": "passed", "assessment": "Temporary artifacts stayed outside the canonical snapshot." },
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the nonblocking note." },
+      "replayAssessment": "Verify every exact reviewer field and classify the preference as a note because it identifies no clause failure."
+    },
+    {
+      "id": "conflict-and-stale-snapshot",
+      "project": { "name": "archive-tool", "portable": true, "repositoryConventions": "Standalone CLI with a shell validation command." },
+      "contract": { "issue": { "source": "issue.txt", "clauses": [{ "id": "issue:retain", "text": "Keep archived source records." }] }, "goal": { "source": "goal.txt", "clauses": [{ "id": "goal:delete", "text": "Delete all archived source records." }] } },
+      "snapshot": { "id": "tree:archive-2", "repository": "local/archive-tool", "digest": "sha256:archive-2", "dirtyGeneratedBoundary": "clean after repair", "capturedAt": "2026-07-10T15:30:00Z" },
+      "clauseEvidence": [{ "clauseId": "issue:retain", "source": "prior review", "snapshot": "tree:archive-1", "status": "stale" }, { "clauseId": "goal:delete", "source": "prior validation", "snapshot": "tree:archive-1", "status": "stale" }],
+      "reviewerProvenance": [{ "identity": "outside-cli-reviewer", "independentFromImplementation": true, "capability": "contract-conformance", "scope": "archive clauses", "readOnlyBoundary": "read-only snapshot", "evidenceInspected": ["archive diff"], "result": "passed", "snapshot": "tree:archive-1", "stale": true }],
+      "validationReplay": { "command": "sh tests/archive.sh", "safetyClass": "safe", "isolationBoundary": "none", "snapshot": "tree:archive-1", "result": "passed", "assessment": "The replay is stale after the repair." },
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Resolve the Issue/Goal conflict before replaying stale evidence for tree:archive-2." },
+      "replayAssessment": "First cite both irreconcilable clauses and return NEEDS_HUMAN; do not select either clause or treat stale evidence as current."
+    }
+  ]
+}

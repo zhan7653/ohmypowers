@@ -11,7 +11,7 @@ power-grill
 -> confirmed Issue Patch
 -> ready-to-run Goal Prompt
 -> user manually runs /goal
--> separate Sol High code review and evidence verification
+-> snapshot-bound validation replay and independent contract-conformance review
 -> PR evidence and human review
 ```
 
@@ -179,7 +179,7 @@ A plausible initial routing is:
 - Terra Medium for the optimizer implementation and deterministic tests.
 - Terra High only if repository inspection shows cross-module complexity in advance.
 - Sol Medium only as an evidence-backed, one-time implementation escalation ceiling.
-- Sol High `power_code_reviewer` and Sol High `power_verifier` as separate read-only tracks.
+- An implementation-independent contract-conformance reviewer, plus any code, security, compatibility, migration, test, or domain capability justified by the final diff and risks. Contract-prescribed reviewers are honored exactly.
 
 Do not combine independently useful tasks merely to reduce agent count. Do not run write tasks concurrently when they own overlapping paths or unstable interfaces.
 
@@ -210,7 +210,7 @@ The user starts the returned prompt manually. The orchestrator should:
 4. Create or enter the one task-level branch/worktree.
 5. Dispatch tasks according to dependency waves and ownership.
 6. Run targeted and full validation.
-7. Run `power_code_reviewer` and `power_verifier` in parallel over the same stable implementation snapshot. Give the reviewer the relevant ACs, diff, interfaces, tests, and validation; give the verifier the full contract/plans, AC evidence, validation, scope manifest, PR evidence, risks, and non-goals.
+7. Capture the stable implementation snapshot, replay safe contract-required validation, and run the selected independent reviews over that snapshot. Give the contract-conformance reviewer the complete Issue/local contract, final Goal Prompt, clause evidence, validation replay, provenance, scope, risks, and non-goals; tailor additional reviewers to their capabilities.
 8. Repair fixable blockers within budget.
 9. Prepare draft PR/MR evidence.
 10. Produce the Dispatch Summary and loop decision.
@@ -252,7 +252,7 @@ Calculate Initial Assignment Accuracy as tasks completed without escalation divi
 - Missing custom agent -> pause; no silent parent-model fallback.
 - Permission, environment, dependency, validation-infrastructure, or interface-conflict failure -> no model escalation.
 - Evidence-backed capability mismatch -> at most one direct escalation, never above Sol Medium.
-- Missing either Sol High review track -> verifier cannot return `PASS` or `PASS_WITH_NOTES`.
+- Missing the implementation-independent contract-conformance review -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; additional review capabilities are required only when contract or risk justifies them.
 - Material repository drift -> stop for a new `power-loop` pass or confirmed plan revision.
 
 ## Minimal User Script
@@ -265,6 +265,6 @@ Calculate Initial Assignment Accuracy as tasks completed without escalation divi
 5. Confirm the exact patch.
 6. Receive the ready-to-run Goal Prompt.
 7. Manually start the Goal Prompt.
-8. Review the separate Sol High code-review and evidence-verification results.
+8. Review the independent contract-conformance result and any additional capability-specific review results.
 9. Review the draft PR/MR and Dispatch Summary. Do not merge until a human is satisfied.
 ```

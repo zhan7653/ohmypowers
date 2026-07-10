@@ -1,164 +1,73 @@
 ---
 name: power-verifier
-description: Read-only implementation verifier for Loop Engineering tasks. Use after a bounded Codex /goal has produced a diff, validation output, and PR evidence that must be checked against an issue contract.
+description: Verify a completed implementation read-only against its canonical contract and final Goal Prompt.
 ---
 
 # Power Verifier
 
-## Overview
+## Purpose
 
-Verify implementation evidence against a Loop Engineering task contract without changing files or project state.
+Verify whether an implementation, its execution, validation, and evidence conform to the verification contract without changing source, Git, or hosted state. The verifier is portable: it can assess an arbitrary code project and does not require a particular repository layout, Git host, profile, model, provider, test framework, or review count.
 
-`power-verifier` is the maker-checker counterpart to a bounded Codex implementation loop. The bundled `power_verifier` custom agent uses `gpt-5.6-sol` High in read-only mode to audit whether the implementation diff, validation output, acceptance-criteria evidence, PR/MR evidence package, code-review findings, and loop decision satisfy the canonical Task Contract and confirmed execution sections.
+The verification contract is exactly:
 
-It returns one verifier result:
+1. The complete canonical hosted Issue body, or an equivalent persisted local contract body.
+2. The final Goal Prompt used for execution.
+
+Read both sources in full. Treat comments, discussions, implementation summaries, PR/MR descriptions, and reviewer conclusions as supplementary evidence unless incorporated into a canonical source. Do not judge, rewrite, improve, complete, or add requirements to a consistent contract.
+
+Return exactly one result:
 
 - `PASS`
 - `PASS_WITH_NOTES`
 - `BLOCKED`
 - `NEEDS_HUMAN`
 
-## When To Use
+## Boundaries
 
-Use this skill after implementation work exists and before claiming PR/MR readiness.
+Stay read-only with respect to source content, Git state, Issue or PR/MR state, labels, comments, and merge state. Do not write patches, create branches or worktrees, approve, merge, close, or retarget records.
 
-Good inputs:
+You may inspect primary evidence and replay validation only when it is safe. Validation may create temporary or generated artifacts solely inside a disclosed isolated environment that does not mutate the canonical source snapshot or hosted state.
 
-- A hosted issue or local issue contract.
-- Its confirmed Execution Blueprint and Agent Dispatch Plan.
-- The implementation diff or PR/MR URL.
-- Validation commands and outputs.
-- Acceptance-criteria evidence.
-- PR/MR body or draft evidence package, including issue linkage and curation handoff evidence.
-- Risks, assumptions, out-of-scope notes, and loop decision.
-- Code-review output from `power_code_reviewer` using `gpt-5.6-sol` High in read-only mode.
+Do not use this workflow to evaluate contract quality or to clarify a vague contract. If compliance requires an interpretation, authorization, or contract change, preserve the ambiguity and return `NEEDS_HUMAN`.
 
-Do not use this skill to clarify vague requirements before implementation. Send unclear contracts back to `power-grill` or `power-loop`.
+## Required Evidence
 
-## Evidence Verifier And Code Review
+Collect or report unavailable:
 
-Run evidence verification and code review as separate read-only tracks:
+- the two complete contract sources;
+- the final implementation snapshot and diff or equivalent implementation evidence;
+- implementation, execution, validation, and review evidence available for that snapshot;
+- the affected interfaces, data, validation requirements, and material risks.
 
-1. Evidence verification: use the bundled `power_verifier` custom agent with `gpt-5.6-sol` High in read-only mode to audit the contract and implementation evidence.
-2. Code review: use the bundled `power_code_reviewer` custom agent with `gpt-5.6-sol` High in read-only mode to inspect implementation-diff risks.
+Do not accept an implementation-runner claim, a summary, or a passing command as sole proof of compliance. Inspect primary evidence directly where possible. Missing evidence is not an invented requirement; it is a verification gap only when needed to determine a contractual clause.
 
-When both tracks can inspect the same stable contract, diff, validation output, and PR/MR evidence package, start them in parallel. If the environment cannot run them in parallel, run them sequentially and record the reason.
+## Verification Workflow
 
-Do not make `power_verifier` wait for or consume `power_code_reviewer` output during the parallel pass. After both independent results exist, the invoking orchestrator or `power-verifier` workflow combines them into the final verifier result.
+1. Read the canonical contract and final Goal Prompt in full. Extract every applicable clause from both sources into a clause record with: clause ID, source, source location, obligation, applicability, evidence, status, and notes.
+2. Compare the extracted clauses for requirements that cannot be satisfied together. For an irreconcilable conflict, cite both clause records, choose neither requirement, and return `NEEDS_HUMAN`.
+3. Capture the implementation snapshot before accepting validation or review evidence. Record repository or ref, commit when available, diff or tree digest, dirty/generated-artifact boundary, and capture time.
+4. Map every applicable clause to implementation, execution, validation, or review evidence. Record the snapshot referenced by each evidence item.
+5. Honor any contract-specified reviewer, agent, model, provider, or review procedure exactly. Do not silently substitute an unavailable specified requirement. If it can be supplied within the contract, return `BLOCKED`; if substitution or authorization is required, return `NEEDS_HUMAN`.
+6. When the contract does not specify review topology, derive the minimum sufficient review capabilities from the clauses, final diff, affected interfaces and data, validation requirements, and security, compatibility, migration, permission, concurrency, test, and domain risks. Select only capabilities justified by that assessment; no count, identity, model, provider, or specialization is universal.
+7. Require at least one contract-conformance reviewer who did not participate in implementation before returning `PASS` or `PASS_WITH_NOTES`. A review plan may add code, test, security, compatibility, migration, data, or domain capabilities when the evidence justifies them. Record every reviewer’s identity or source, independence, capabilities, scope, read-only boundary, evidence inspected, result, and snapshot.
+8. Replay each contract-required validation against the captured snapshot when safe. For each replay, record the exact command, safety class, execution or isolation boundary, snapshot, result, and relevant evidence. Do not replay unsafe commands; disclose why. A writable validation may run only in a disclosed isolated environment.
+9. When a repair changes the snapshot, create a new snapshot record. Mark affected validation and review evidence from the prior snapshot stale, then replay or repeat the affected checks against the new snapshot.
+10. Aggregate only snapshot-fresh, clause-mapped evidence using the precedence below. Include risks, unresolved evidence, and the smallest next action.
 
-Do not substitute either track for the other. If either required custom agent is missing, return `BLOCKED` or `NEEDS_HUMAN` instead of inheriting the parent model or claiming `PASS` or `PASS_WITH_NOTES`. Use a different profile only after explicit approval names the substitute and confirms equivalent Sol High read-only behavior.
+Use [assets/implementation-verifier-checklist.md](assets/implementation-verifier-checklist.md) and [assets/verifier-result-template.md](assets/verifier-result-template.md) to record the workflow.
 
-Record a missing-profile reason when either required custom agent is unavailable. Missing-profile mode must not produce `PASS` or `PASS_WITH_NOTES`.
+## Result Aggregation
 
-The evidence verifier and code reviewer must inspect primary evidence directly. Parent-agent summaries, implementation-runner claims, PR descriptions, or pasted conclusions can orient the review, but they cannot be the sole evidence for completion.
+Apply these rules in order:
 
-## Code-Review Integration
+1. Return `NEEDS_HUMAN` for an irreconcilable contract conflict, or when compliance requires human interpretation, authorization, or a contract change.
+2. Otherwise return `BLOCKED` for implementation nonconformance, failed required validation, missing or stale required evidence, or a missing required review that can be supplied within the existing contract. State the smallest repair, replay, or evidence action.
+3. Otherwise return `PASS_WITH_NOTES` when all applicable clauses conform with fresh required evidence and remaining notes do not establish contract nonconformance.
+4. Otherwise return `PASS` when all applicable clauses conform with fresh required evidence and no nonblocking notes remain.
 
-Run `power_code_reviewer` before final verifier selection for every implementation diff, including documentation-only changes. The review focus may change by diff type, but the code-review track remains separate from evidence verification.
+A reviewer preference that does not demonstrate contract nonconformance is a nonblocking note, not a new requirement. Neither `PASS` nor `PASS_WITH_NOTES` is permitted without the required independent contract-conformance review.
 
-If the diff cannot receive the required Sol High read-only code-review pass, return `BLOCKED` when the missing review can be supplied within the current loop, or `NEEDS_HUMAN` when resolving the missing profile requires a human or tool decision. Do not return `PASS` or `PASS_WITH_NOTES` until both review tracks exist.
+## Output
 
-Handle code-review findings as follows:
-
-- Blocker or should-fix findings that affect correctness, contract satisfaction, tests, validation, security, compatibility, or disclosed risk prevent `PASS`.
-- Findings that are fixable within the current contract produce `BLOCKED` with the smallest next action. The implementation runner should repair within the bounded loop budget, rerun validation, and rerun the verifier.
-- Nice-to-have findings may allow `PASS_WITH_NOTES` when the contract is otherwise satisfied.
-- Use `NEEDS_HUMAN` only when the finding requires scope expansion, a contract change, a high-risk decision, or repeated repair failure beyond budget.
-
-## Hard Boundaries
-
-You must stay read-only:
-
-- Do not edit files.
-- Do not write patches.
-- Do not run implementation changes.
-- Do not create branches or worktrees.
-- Do not create, approve, merge, close, or retarget PRs/MRs.
-- Do not approve your own work.
-- Do not mutate hosted issues, labels, milestones, assignees, or comments unless the user explicitly asks.
-- Do not expand scope or decide product/security/business tradeoffs.
-
-You may inspect files, diffs, issue bodies, PR/MR bodies, validation output, and code-review output. You may run read-only commands that gather evidence, such as `git diff`, `git status`, `rg`, `find`, and test-result inspection commands.
-
-## Inputs
-
-Prefer inputs in this order:
-
-1. Contract source: hosted issue, local brief, or pasted contract.
-2. Implementation source: branch, worktree, diff, commit range, or PR/MR URL.
-3. Validation evidence: commands and output.
-4. Acceptance-criteria evidence.
-5. PR/MR evidence package with issue linkage, closing intent, follow-up handling, and curator mutation status.
-6. `power_code_reviewer` output.
-7. Risks, assumptions, out-of-scope notes, and loop decision.
-
-If required evidence is unavailable, return `BLOCKED` or `NEEDS_HUMAN` instead of guessing.
-
-## Verification Checklist
-
-Use [assets/implementation-verifier-checklist.md](assets/implementation-verifier-checklist.md).
-
-Check:
-
-- Contract reread and contradiction check.
-- Diff-to-contract mapping.
-- Objective satisfaction.
-- Scope adherence.
-- Non-goal preservation.
-- Acceptance criteria evidence.
-- Validation relevance, trustworthiness, and failure disclosure.
-- Test relevance to the acceptance criteria.
-- Issue linkage and curation handoff evidence, including closing intent and follow-up handling.
-- `power_code_reviewer` output.
-- Forbidden path or high-risk area violations.
-- Generated artifact handling.
-- Risks and assumptions disclosure.
-- PR/MR evidence completeness.
-- Loop decision justification.
-- Evidence verifier source, code-review source, parallel/sequential execution disclosure, and missing-profile disclosure.
-
-## Outcomes
-
-### PASS
-
-Use when the implementation satisfies the contract, required evidence is sufficient, validation is trustworthy, and no blocking or should-fix code-review findings remain.
-
-### PASS_WITH_NOTES
-
-Use when the implementation satisfies the contract and both required review tracks exist, but reviewers should notice minor limitations, sequential verifier/review execution, residual risks, or follow-up candidates that do not block the current contract.
-
-### BLOCKED
-
-Use when the implementation does not satisfy the contract, validation fails, required evidence is missing, scope/non-goal violations are present, or code-review findings identify fixable problems inside the current contract.
-
-When a blocker is fixable within the current contract, state the smallest next action so the implementation runner can repair within the bounded loop budget and rerun validation and verifier.
-
-### NEEDS_HUMAN
-
-Use when a human decision is required before verification can complete, such as approving scope expansion, resolving a contract contradiction, accepting a high-risk change, or deciding what to do after repeated repair failure beyond budget.
-
-## Output Format
-
-Use [assets/verifier-result-template.md](assets/verifier-result-template.md).
-
-Always include:
-
-- Verifier result.
-- Evidence Verifier Source.
-- Code-review source.
-- Parallel execution status.
-- Contract source.
-- Implementation source.
-- Validation evidence reviewed.
-- Review Findings Considered.
-- Issue linkage and curation handoff assessment.
-- Missing Profile Reason, if any.
-- Acceptance-criteria evidence table.
-- Scope and non-goal assessment.
-- Validation assessment.
-- Risks or assumptions.
-- Required human decisions, if any.
-- Reviewer notes.
-- Smallest Next Action for `BLOCKED` or `NEEDS_HUMAN`.
-
-If the result is `BLOCKED` or `NEEDS_HUMAN`, state the smallest next action that would unblock the loop.
+Use the result template. Always include the contract sources and conflict status, implementation snapshot and freshness, clause-by-clause evidence, dynamic review plan, reviewer provenance and independence, validation replay, risks and unresolved evidence, final result, and the smallest next action for `BLOCKED` or `NEEDS_HUMAN`.

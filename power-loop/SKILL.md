@@ -92,25 +92,27 @@ Plan one dedicated task-level implementation branch, optionally with one reposit
 
 Read and fill [assets/agent-dispatch-plan.md](assets/agent-dispatch-plan.md) after the Blueprint exists. The issue must contain exact task assignments, not the static routing table.
 
-Use these installed profiles when selecting the lowest capable initial tier:
+Use these installed profiles as available capabilities when they fit the confirmed task. A contract may require a different exact reviewer, agent, model, provider, or procedure; do not substitute it silently.
 
 - `power_luna_worker`: Luna Medium for mechanical, deterministic, low-risk work.
 - `power_terra_worker`: Terra Medium for normal implementation, tests, fixes, and bounded integration.
 - `power_terra_complex_worker`: Terra High for complexity known in advance.
 - `power_sol_escalation`: Sol Medium as the implementation ceiling after evidence-backed under-classification.
-- `power_code_reviewer`: Sol High, read-only code review.
-- `power_verifier`: Sol High, read-only evidence verification.
+- `power_code_reviewer`: optional Sol High, read-only code-review capability.
+- `power_verifier`: optional Sol High, read-only contract-conformance verification capability.
 
 Do not minimize agent count as a cost target. Preserve useful parallel work with independent deliverables and non-overlapping ownership. Serialize overlapping paths, unstable interfaces, and unresolved dependencies. Keep the main agent as orchestrator rather than a normal implementation writer.
 
 Allow at most one direct model escalation per implementation task, choose the lowest sufficient allowed target, and never exceed Sol Medium. Do not escalate for permission, environment, dependency, validation-infrastructure, or ownership failures.
 
-Always plan two independent Sol High review tasks over the same stable implementation snapshot, using tailored evidence packets:
+Plan review only after the final implementation diff, affected interfaces/data, validation requirements, and material risks are known. Preserve this review-plan record with the stable snapshot:
 
-- Code-review packet: relevant Task Contract and AC excerpts, stable diff, interface changes, tests, and validation output.
-- Evidence-verification packet: full Task Contract and confirmed plans, AC evidence, validation results, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals. Provide diff access only for scope and contract mapping.
+- If the contract names reviewers, agents, models, providers, or procedures, assign and verify those requirements exactly. Record an unavailable prescribed capability as a blocker or `NEEDS_HUMAN` decision; do not substitute it silently.
+- Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Do not require a particular count, profile, model, or provider.
+- Require at least one reviewer independent from implementation to check contract conformance before a `PASS` or `PASS_WITH_NOTES` result. Add a separate code-review capability only when the contract or final-diff risk justifies it.
+- For every selected reviewer, record identity/source, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity. Tailor packets to that scope; give the contract-conformance reviewer the complete canonical Issue/local body, final Goal Prompt, clause evidence, snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals.
 
-Run both tracks in parallel when possible. Neither track consumes or substitutes for the other.
+Run independent selected reviews in parallel over the same stable snapshot when possible. They may cover different capabilities but do not substitute for any contract-prescribed review.
 
 ### 5. Generate, Confirm, And Apply The Issue Patch
 
@@ -135,7 +137,7 @@ Read [assets/codex-loop-goal.txt](assets/codex-loop-goal.txt) only after success
 
 Check custom-agent availability when the host exposes it. If a required profile is known missing, stop for installation or explicit approval of a named alternative. Otherwise keep the mandatory check in Goal preflight.
 
-Fill the Goal Prompt by reference to the persisted contract and confirmed sections. Preserve baseline drift checks, delegated implementation, exact task ownership, bounded escalation, validation, the two tailored Sol High review tracks, PR/MR evidence, Dispatch Summary, loop decisions, and manual execution. Do not copy the full contract or plans into the Goal Prompt.
+Fill the Goal Prompt by reference to the persisted contract and confirmed sections. Preserve baseline drift checks, delegated implementation, exact task ownership, bounded escalation, dynamic verifier handoff, review-plan selection after the final diff, snapshot freshness, safe validation replay, PR/MR evidence, Dispatch Summary, loop decisions, and manual execution. Do not copy the full contract or plans into the Goal Prompt.
 
 Use [assets/pr-evidence-template.md](assets/pr-evidence-template.md) for the implementation evidence package. Never merge.
 

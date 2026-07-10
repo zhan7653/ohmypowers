@@ -43,7 +43,7 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
 - Final Goal Prompt only after the confirmed patch is applied and verified; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
-- Separate Sol High `power_code_reviewer` and Sol High `power_verifier` read-only tracks.
+- Contract-prescribed reviews or a minimum sufficient capability-based review plan, including an implementation-independent contract-conformance review.
 - Final Dispatch Summary with model assignments, escalation evidence, parallelism, ownership conflicts, pause reasons, and Initial Assignment Accuracy.
 - PR/MR evidence requirements and loop decision rules.
 
@@ -56,13 +56,13 @@ For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
-- Mandatory evidence audit through the Sol High read-only `power_verifier` custom agent.
-- Mandatory separate code review through the Sol High read-only `power_code_reviewer` custom agent.
-- Parallel evidence verification and code review over the same stable implementation snapshot, using a contract/evidence-focused verifier packet and a smaller diff/code-focused reviewer packet.
+- Contract and Goal clause coverage, conflict handling, and evidence freshness against a stable implementation snapshot.
+- Independent validation replay when safe, with reviewer provenance and capability/risk-based review selection.
 - Loop decision justification.
 - One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
 
 It is read-only and does not edit files, create branches, mutate issues, approve work, merge, or close PRs/MRs.
+Repository installer, profile, and fixture checks described below validate this repository's distribution; they are not requirements imposed on target projects using the portable verifier.
 
 `power-curator` manually curates Loop Engineering issue and PR lifecycle state:
 
@@ -87,7 +87,7 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
 
-For implementation evidence correctness, use `power_verifier`. For code-diff correctness, use the separate `power_code_reviewer`. Both are explicitly pinned to `gpt-5.6-sol` High and read-only mode.
+For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. The bundled `power_code_reviewer` is an optional code-review capability, not a universal requirement.
 
 Use them by phase:
 
@@ -112,9 +112,9 @@ The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed
 
 The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
 
-The worker profiles pin Luna Medium, Terra Medium, Terra High, and the Sol Medium implementation escalation ceiling. The reviewer profiles pin separate Sol High read-only code-review and evidence-verification tracks. The critic custom-agent installation remains independent from implementation review.
+The worker profiles pin Luna Medium, Terra Medium, Terra High, and the Sol Medium implementation escalation ceiling. The bundled reviewer profiles provide optional Sol High read-only code-review and evidence-verification capabilities. The verifier does not require a fixed profile count, agent name, model, provider, or review topology unless the contract specifies one. The critic custom-agent installation remains independent from implementation review.
 
-When checking implementation evidence, run `power_verifier` and `power_code_reviewer` as separate read-only Sol High tracks over tailored packets from the same stable snapshot. Start them in parallel; if either required profile is missing, pause instead of substituting the parent model.
+When checking implementation evidence, provide the complete canonical Issue or local contract and final Goal Prompt, capture a stable implementation snapshot, replay safe validation, and record review provenance. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
 
 Restart Codex after installing or updating skills or custom agents.
 

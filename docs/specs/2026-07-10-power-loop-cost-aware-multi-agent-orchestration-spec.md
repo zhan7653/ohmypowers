@@ -13,7 +13,7 @@ The desired workflow makes `power-grill` responsible for a lighter but complete 
 - Luna for simple, deterministic implementation work.
 - Terra for normal or complex implementation work.
 - Sol Medium only as the implementation escalation ceiling.
-- Sol High for independent code review and evidence verification.
+- Independent contract-conformance review, with additional code, security, compatibility, migration, test, data, permission, concurrency, or domain review selected by capability and risk.
 
 The primary cost objective is correct initial model assignment, fewer unnecessary model escalations, less high-capability-model implementation work, and less conflict-driven rework. Reducing the number of agents is not a goal. Meaningful parallelism is desirable when tasks have independent deliverables and non-overlapping write ownership.
 
@@ -40,7 +40,7 @@ The primary cost objective is correct initial model assignment, fewer unnecessar
   - `gpt-5.6-terra` with Medium reasoning for normal implementation, tests, and fixes.
   - `gpt-5.6-terra` with High reasoning for work known in advance to require complex reasoning or cross-module implementation.
   - `gpt-5.6-sol` with Medium reasoning only as the maximum implementation escalation target.
-  - `gpt-5.6-sol` with High reasoning for independent code review and evidence verification.
+  - Read-only review capabilities must be selected by contract and implementation risk; no reviewer model, provider, identity, specialization, or count is universal. The bundled Sol High profiles are available capabilities when selected or explicitly required by the contract.
 - FR-16: `power-loop` must optimize initial task classification and model assignment rather than relying on a multi-step escalation ladder.
 - FR-17: A task may receive at most one model escalation during execution.
 - FR-18: Model escalation is allowed only when evidence shows that the original model assignment underestimated capability or reasoning requirements.
@@ -76,8 +76,8 @@ The primary cost objective is correct initial model assignment, fewer unnecessar
 - FR-48: `power-loop` must output the final Goal Prompt for the user to run manually. It must not automatically invoke or execute `/goal`.
 - FR-49: Missing or undiscoverable custom-agent configurations must not silently fall back to the parent model when that would violate the confirmed routing plan.
 - FR-50: If a required Luna, Terra, or Sol agent configuration is unavailable, execution must pause and report the missing configuration or request explicit approval for an alternative.
-- FR-51: Code review and evidence verification must remain separate read-only tracks over stable evidence.
-- FR-52: The code reviewer and evidence verifier must use Sol High and must not substitute for one another.
+- FR-51: Review must be read-only, independent from implementation, and run against stable evidence. The verifier must require at least one implementation-independent contract-conformance review before `PASS` or `PASS_WITH_NOTES`.
+- FR-52: When the contract does not prescribe review topology, `power-loop` must select the minimum sufficient capabilities from contractual obligations, the final diff, affected interfaces/data, validation, and material risks. Contract-prescribed reviewers, agents, models, providers, and procedures must be honored exactly.
 - FR-53: The final Goal Prompt must require a Dispatch Summary at completion or stop.
 - FR-54: The Dispatch Summary must record planned and actual task counts, each task's initial and final model, escalation status and reason, parallel or sequential execution, ownership conflicts, incomplete tasks, pause reasons, and Initial Assignment Accuracy.
 - FR-55: Initial Assignment Accuracy must be calculated as the number of tasks completed without model escalation divided by the total number of completed or attempted implementation tasks for which an initial assignment was made.
@@ -170,8 +170,8 @@ The fixed Markdown structure must contain a routing-policy summary and one row o
 | Normal implementation, tests, fixes | `gpt-5.6-terra` | Medium | Default worker |
 | Known complex or cross-module implementation | `gpt-5.6-terra` | High | Assign initially when the blueprint already shows higher complexity |
 | Implementation escalation ceiling | `gpt-5.6-sol` | Medium | Fallback only; not the normal initial worker |
-| Code review | `gpt-5.6-sol` | High | Read-only, independent context |
-| Evidence verification | `gpt-5.6-sol` | High | Read-only, separate from code review |
+| Contract conformance | Selected capability | Contract-defined or risk-based | Read-only, implementation-independent |
+| Additional review | Selected capability | Justified by final diff and risks | Read-only, scoped to capability |
 
 Each task may escalate at most once. The orchestrator must diagnose whether the failure is a capability mismatch before escalating. Non-capability failures must be handled without model escalation.
 
@@ -211,7 +211,7 @@ No final Goal Prompt may be generated before the confirmed patch is applied succ
 - Allowing implementation workers to escalate beyond Sol Medium.
 - Changing the runtime model policy of `power-think`, `power-grill`, `power-curator`, `power-work-report`, or `power-critic` as part of this feature.
 - Allowing `power-loop` to decide unresolved public API, schema, product, business, security, permission, or migration contracts.
-- Replacing the separate evidence-verifier and code-review tracks.
+- Replacing a universal fixed review topology with contract-prescribed or capability-based independent review.
 
 ## Acceptance Criteria
 
@@ -294,7 +294,7 @@ Then `power-loop` asks the user to create a hosted issue or save a local brief b
 
 Given `power-loop` classifies implementation tasks
 When it assigns initial models
-Then it uses Luna Medium for simple deterministic work, Terra Medium for normal implementation, Terra High for work known to be complex, Sol Medium only as the implementation escalation ceiling, and Sol High for code review and evidence verification.
+Then it uses Luna Medium for simple deterministic work, Terra Medium for normal implementation, Terra High for work known to be complex, Sol Medium only as the implementation escalation ceiling, and contract-prescribed or risk-justified read-only review capabilities.
 
 ### AC-13: Model Escalation Is Limited
 
@@ -356,11 +356,11 @@ Given the final Goal Prompt has been generated
 When `power-loop` completes
 Then it returns the ready-to-run prompt and does not invoke `/goal` automatically.
 
-### AC-20: Review Tracks Remain Independent And High Capability
+### AC-20: Review Is Independent And Capability-Appropriate
 
 Given implementation and validation are complete
 When the verifier gate runs
-Then code review and evidence verification use separate read-only contexts with Sol High and neither track substitutes for the other.
+Then at least one implementation-independent reviewer checks contract conformance in a read-only context, and any additional review capabilities are selected from the contract and material implementation risks. No fixed reviewer count, model, provider, or named profile is imposed unless contractually required.
 
 ### AC-21: Dispatch Results Are Reported
 
@@ -380,7 +380,7 @@ Then the summary records planned and actual task counts, initial and final model
 - Where does the stable dispatch plan live? -> In the issue or local brief. The final Goal Prompt references it and contains only operational execution instructions.
 - Is reducing agent count a cost objective? -> No. Meaningful parallelism is desirable; avoid only fragmentation without independent value.
 - What is the implementation model ceiling? -> Sol Medium, after at most one justified escalation.
-- What models perform review? -> Separate Sol High code-review and evidence-verification agents.
+- What reviews perform verification? -> Contract-prescribed reviews when specified; otherwise the minimum sufficient independent capability plan derived from the contract, final diff, validation, and material risks.
 - How are worktrees handled? -> One task-level branch or worktree, with explicit shared-worktree ownership; no default worktree per subagent.
 - How is issue mutation scoped? -> `power-loop` may update only the confirmed execution-planning sections and metadata.
 

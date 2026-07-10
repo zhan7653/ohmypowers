@@ -32,39 +32,61 @@ Curator mutation status:
 
 - `<path>`: <why it changed>
 
-# Acceptance criteria evidence
+# Contract and acceptance-criteria evidence
 
-| AC | Evidence | Validation | Files | Status |
-|---|---|---|---|---|
-| AC-1 |  |  |  |  |
+Contract sources:
+
+- Canonical Issue/local body: `<immutable URL/path and version>`
+- Final Goal Prompt: `<immutable text/reference>`
+
+Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decision>`
+
+| Clause / AC | Source reference | Obligation | Evidence | Validation / review | Files | Status / notes |
+|---|---|---|---|---|---|---|
+| AC-1 |  |  |  |  |  |  |
+
+# Stable implementation snapshot
+
+- Repository/ref: `<repository and ref>`
+- Commit: `<full SHA, or not applicable>`
+- Diff or tree digest: `<digest>`
+- Dirty/generated boundary: `<status and excluded/generated artifacts>`
+- Captured at: `<ISO-8601 timestamp with timezone>`
+- Evidence freshness: `<all evidence references this snapshot, or stale evidence and required reruns>`
 
 # Validation results
 
 - `<command>`: <pass/fail and relevant output summary>
 
+## Independent validation replay
+
+| Required command | Safety class | Isolated temporary-artifact boundary | Snapshot | Result | Relevant evidence / reason not replayed |
+|---|---|---|---|---|---|
+|  |  |  |  |  |  |
+
+# Review plan and provenance
+
+Contract-prescribed reviews: `<exact reviewers, agents, models, providers, and procedures, or None>`
+
+Selection basis when no topology is prescribed: `<contract obligations, final diff, affected interfaces/data, validation, and material risks>`
+
+Minimum sufficient capability coverage: `<capabilities selected and why>`
+
+| Reviewer identity/source | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
+|---|---|---|---|---|---|---|---|
+|  |  |  |  |  |  |  |  |
+
 # Verifier result
 
 Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
-Evidence verifier source:
-
-- <power_verifier on gpt-5.6-sol High, or missing>
-
-Code-review source:
-
-- <power_code_reviewer on gpt-5.6-sol High, or missing>
-
-Parallel execution status:
-
-- <parallel, sequential with reason, or not applicable>
+Aggregation basis: `<conflict/human-decision, blocking nonconformance or missing/stale evidence, nonblocking notes, or complete compliance>`
 
 Notes:
 
 - <verifier note>
 
-Verifier source:
-
-- <power_verifier custom-agent result>
+Smallest next action: `<required for BLOCKED or NEEDS_HUMAN, or None>`
 
 # Dispatch Summary
 

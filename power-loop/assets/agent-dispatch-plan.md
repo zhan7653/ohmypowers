@@ -71,12 +71,21 @@ Agent count is not a cost metric. Keep independently useful work split when safe
 
 Narrow main-agent implementation exception: `<None, or exact paths and reason explicitly approved by the user>`
 
-## Review tracks
+## Verification and review plan
 
-- Stable snapshot: `<contract version, commit/diff, and validation evidence shared by both tracks>`
-- Code-review packet: `<relevant Task Contract and AC excerpts, stable diff, interface changes, tests, and validation output>`
-- Evidence-verification packet: `<full Task Contract and confirmed plans, AC evidence, validation results, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals; diff access only for scope mapping>`
-- Run `power_code_reviewer` and `power_verifier` in parallel on Sol High read-only. They do not consume or substitute for one another.
+- Verification contract: `<complete canonical Issue/local body and final Goal Prompt; comments, discussions, and runner summaries are supplementary unless incorporated into the contract>`
+- Stable snapshot: `<repository/ref, commit, diff or tree digest, dirty/generated boundary, capture time, and validation evidence>`
+- Contract-prescribed reviews: `<exact reviewers, agents, models, providers, and procedures, or None>`
+- Selection basis when no review topology is prescribed: `<contract obligations; final diff; affected interfaces/data; validation; and security, compatibility, migration, data, permission, concurrency, and domain risks>`
+- Minimum sufficient capabilities: `<one or more independent read-only capabilities, including contract-conformance review>`
+- Independent contract-conformance reviewer: `<identity/source and implementation-independence evidence; required for PASS or PASS_WITH_NOTES>`
+- Additional review capabilities: `<code, test, security, compatibility, migration, data, or domain review only when justified, or None>`
+- Reviewer records: `<for each: identity/source, independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity>`
+- Validation replay: `<exact command, safety class, isolated temporary-artifact boundary when applicable, result, evidence, and snapshot identity>`
+- Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
+- Contract-conformance packet: `<complete canonical Issue/local body, final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
+- Other review packets: `<tailored to each selected capability and scope>`
+- Execution: `<run independent selected reviews in parallel over the same snapshot when possible; contract-prescribed reviews do not substitute for one another>`
 
 ## Dispatch Summary requirements
 
