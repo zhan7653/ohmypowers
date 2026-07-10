@@ -97,7 +97,7 @@ Use them by phase:
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop plan and Issue Patch -> user confirmation -> manual Codex /goal -> Sol High code review + evidence verification -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
+- Recommended Loop Engineering flow: `power-grill -> power-loop plan and Issue Patch -> user confirmation -> manual Codex /goal -> contract-prescribed or minimum-sufficient capability/risk-based independent review -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install

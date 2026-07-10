@@ -211,7 +211,7 @@ No final Goal Prompt may be generated before the confirmed patch is applied succ
 - Allowing implementation workers to escalate beyond Sol Medium.
 - Changing the runtime model policy of `power-think`, `power-grill`, `power-curator`, `power-work-report`, or `power-critic` as part of this feature.
 - Allowing `power-loop` to decide unresolved public API, schema, product, business, security, permission, or migration contracts.
-- Replacing a universal fixed review topology with contract-prescribed or capability-based independent review.
+- Reintroducing or imposing a universal fixed review topology, or an equivalent fixed reviewer requirement, over contract-prescribed or capability-based independent review.
 
 ## Acceptance Criteria
 

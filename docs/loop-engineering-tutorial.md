@@ -193,7 +193,7 @@ Check that:
 - dependencies and integration order are credible;
 - each initial model is the lowest capable tier;
 - implementation escalation is limited to one transition and capped at Sol Medium;
-- code review and evidence verification are separate Sol High tasks;
+- independent review capabilities are selected from the contract and implementation risks, with contract-prescribed reviewers honored exactly;
 - the main agent remains the orchestrator rather than the normal implementation worker.
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
@@ -228,7 +228,7 @@ The PR/MR evidence should map every acceptance criterion:
 | AC-2 | Learned parameters are within tolerance. | `<exact command>` | `<test file>` | Pass |
 | AC-3 | Fixed-seed runs match. | `<exact command>` | `<test file>` | Pass |
 | AC-4 | Unsafe rate reports non-success. | `<exact command>` | `<implementation/test files>` | Pass |
-| AC-5 | Usage and evidence are documented. | Sol High review | `<README path>` | Pass |
+| AC-5 | Usage and evidence are documented. | Contract-prescribed or risk-justified independent review | `<README path>` | Pass |
 ```
 
 The Dispatch Summary should record:
