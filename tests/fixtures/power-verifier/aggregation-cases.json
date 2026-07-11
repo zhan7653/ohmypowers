@@ -1,0 +1,211 @@
+{
+  "schema": "power-verifier-aggregation-cases/v1",
+  "cases": [
+    {
+      "id": "full-compliance",
+      "input": {
+        "conflicts": [],
+        "humanDecisionRequired": false,
+        "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-1", "applicable": true, "status": "satisfied" }],
+        "requiredEvidence": [{ "id": "implementation", "present": true, "snapshot": "tree:catalog-v3", "stale": false }],
+        "validationReplays": [{ "required": true, "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }],
+        "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }],
+        "notes": []
+      },
+      "expected": { "result": "PASS", "smallestNextAction": "None." }
+    },
+    {
+      "id": "fixable-implementation-nonconformance",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "goal:1", "applicable": true, "status": "nonconformant" }],
+        "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Implement goal:1, then rerun its validation and review." }
+    },
+    {
+      "id": "missing-required-evidence",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-2", "applicable": true, "status": "satisfied" }],
+        "requiredEvidence": [{ "id": "migration-output", "present": false, "snapshot": "tree:catalog-v3", "stale": false }], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Supply migration-output for tree:catalog-v3." }
+    },
+    {
+      "id": "missing-independent-review",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-3", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "implementer", "independentFromImplementation": false, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Obtain an independent contract-conformance review for tree:catalog-v3." }
+    },
+    {
+      "id": "issue-goal-conflict",
+      "input": {
+        "conflicts": [{ "clauses": ["issue:retention", "goal:delete"], "reason": "The same record must both remain and be deleted." }], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [], "reviews": [], "notes": []
+      },
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Resolve the cited Issue/Goal conflict without choosing either clause." }
+    },
+    {
+      "id": "nonblocking-reviewer-notes",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-4", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }],
+        "notes": [{ "source": "external-auditor", "text": "A different label would be clearer, but no clause requires it." }]
+      },
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; preserve the nonblocking note." }
+    },
+    {
+      "id": "stale-evidence-after-snapshot-change",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
+        "clauses": [{ "id": "issue:AC-5", "applicable": true, "status": "satisfied" }],
+        "requiredEvidence": [{ "id": "test-output", "present": true, "snapshot": "tree:catalog-v3", "stale": true }],
+        "validationReplays": [{ "required": true, "result": "passed", "snapshot": "tree:catalog-v3", "stale": true }], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": true }], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Replay validation and independent review against tree:catalog-v4." }
+    },
+    {
+      "id": "exact-named-review-requirement",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [],
+        "reviewRequirements": [{ "id": "release-audit", "exact": { "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1" } }],
+        "reviews": [{ "identity": "external-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Obtain the exact release-auditor/audit-bot/review-model-2 release-checklist-v1 review." }
+    },
+    {
+      "id": "failed-exact-required-review",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6a", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [],
+        "reviewRequirements": [{ "id": "security-audit", "exact": { "identity": "security-auditor", "agent": "security-bot", "model": "review-model-2", "procedure": "threat-check-v1" } }],
+        "reviews": [
+          { "identity": "security-auditor", "agent": "security-bot", "model": "review-model-2", "procedure": "threat-check-v1", "independentFromImplementation": true, "capability": "security", "result": "blocked", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Resolve the security-auditor finding and rerun the exact threat-check-v1 review." }
+    },
+    {
+      "id": "stale-clause-evidence",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
+        "clauses": [{ "id": "issue:AC-6b", "applicable": true, "status": "satisfied", "snapshot": "tree:catalog-v3", "stale": true }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v4", "stale": false }], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Refresh evidence for issue:AC-6b against tree:catalog-v4." }
+    },
+    {
+      "id": "human-required-clause",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6c", "applicable": true, "status": "satisfied", "requiresHumanInterpretation": true }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+      },
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Provide the required interpretation for issue:AC-6c." }
+    },
+    {
+      "id": "selected-review-wrong-snapshot",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
+        "clauses": [{ "id": "issue:AC-6d", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v4", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected security review against tree:catalog-v4." }
+    },
+    {
+      "id": "selected-public-blocked-review",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6e", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "BLOCKED", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Resolve the selected security finding and rerun that review." }
+    },
+    {
+      "id": "selected-public-needs-human-review",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6f", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "BLOCKED", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Provide the policy decision requested by the selected review." }
+    },
+    {
+      "id": "selected-needs-human-review-stale",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6f-stale", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": true },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected policy review against tree:catalog-v3." }
+    },
+    {
+      "id": "selected-needs-human-review-wrong-snapshot",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
+        "clauses": [{ "id": "issue:AC-6f-wrong-snapshot", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v4", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected policy review against tree:catalog-v4." }
+    },
+    {
+      "id": "selected-public-pass-with-notes-review",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6g", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "snapshot": "tree:catalog-v3", "stale": false, "notes": "Clarify the example in a future change." }], "notes": []
+      },
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the selected reviewer note." }
+    },
+    {
+      "id": "selected-public-pending-review",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6h", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [
+          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "pending", "snapshot": "tree:catalog-v3", "stale": false },
+          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
+        ], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Complete the selected security review." }
+    },
+    {
+      "id": "exact-review-pass-with-notes",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "clauses": [{ "id": "issue:AC-6i", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [],
+        "reviewRequirements": [{ "id": "release-audit", "exact": { "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1" } }],
+        "reviews": [{ "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "snapshot": "tree:catalog-v3", "stale": false, "notes": "Optional follow-up retained." }], "notes": []
+      },
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the exact-review note." }
+    }
+  ]
+}

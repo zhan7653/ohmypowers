@@ -65,7 +65,7 @@ Pause-and-ask conditions:
 - Execution decision: `ALLOW_GOAL`
 - Exact files and validation commands: discovered from the repository and added to the Execution Blueprint
 - Execution Blueprint: `proposed`
-- Agent Dispatch Plan: `proposed`, likely one Luna implementation task plus separate Sol High review and verification tasks with tailored code-review and evidence-verification packets; no repeated static routing table
+- Agent Dispatch Plan: `proposed`, likely one Luna Max implementation task plus a review plan selected from the final diff, contract requirements, and material risks; at least one independent contract-conformance review is required, using Terra High only for an explicitly simple review, Sol Medium by default, or Sol High for the most complex or high-risk review, with additional capabilities only when justified
 - Issue Patch: displayed in full
 - Goal Prompt: withheld until the exact patch is confirmed, applied, and verified
 

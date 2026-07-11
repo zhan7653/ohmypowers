@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Verifier"
-  short_description: "Verify loop evidence with two Sol reviews"
-  default_prompt: "Use $power-verifier to combine the Sol High evidence-verification and code-review tracks for this contract, diff, validation, and PR evidence."
+  short_description: "Verify implementation evidence against an Issue and Goal contract"
+  default_prompt: "Use $power-verifier for a read-only, snapshot-bound contract-conformance review of this Issue/local contract, final Goal Prompt, implementation evidence, validation replay, and review provenance."

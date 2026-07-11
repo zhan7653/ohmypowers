@@ -1,0 +1,70 @@
+{
+  "schema": "power-loop-model-routing-cases/v1",
+  "cases": [
+    {
+      "id": "simple-through-lower-medium-implementation",
+      "type": "implementation",
+      "implementationClass": "lower-medium-or-below",
+      "expected": {
+        "profile": "power_luna_worker",
+        "model": "gpt-5.6-luna",
+        "reasoningEffort": "max"
+      }
+    },
+    {
+      "id": "slightly-complex-implementation",
+      "type": "implementation",
+      "implementationClass": "slightly-complex-or-above",
+      "expected": {
+        "profile": "power_sol_worker",
+        "model": "gpt-5.6-sol",
+        "reasoningEffort": "medium"
+      }
+    },
+    {
+      "id": "underclassified-luna-replacement",
+      "type": "implementation-replacement",
+      "fromProfile": "power_luna_worker",
+      "failureClass": "capability-underclassification",
+      "expected": {
+        "profile": "power_sol_worker",
+        "model": "gpt-5.6-sol",
+        "reasoningEffort": "medium",
+        "transitions": 1
+      }
+    },
+    {
+      "id": "simple-contract-check",
+      "type": "review",
+      "capability": "contract-conformance",
+      "reviewClass": "explicitly-simple",
+      "expected": {
+        "profile": "power_terra_reviewer",
+        "model": "gpt-5.6-terra",
+        "reasoningEffort": "high"
+      }
+    },
+    {
+      "id": "ordinary-code-review",
+      "type": "review",
+      "capability": "code",
+      "reviewClass": "ordinary",
+      "expected": {
+        "profile": "power_sol_reviewer",
+        "model": "gpt-5.6-sol",
+        "reasoningEffort": "medium"
+      }
+    },
+    {
+      "id": "high-risk-security-review",
+      "type": "review",
+      "capability": "security",
+      "reviewClass": "high-risk-or-complex",
+      "expected": {
+        "profile": "power_sol_high_reviewer",
+        "model": "gpt-5.6-sol",
+        "reasoningEffort": "high"
+      }
+    }
+  ]
+}

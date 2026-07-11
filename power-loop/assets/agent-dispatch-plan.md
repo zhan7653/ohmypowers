@@ -11,21 +11,21 @@ Generated at: `<ISO-8601 timestamp with timezone>`
 
 ## Assignment policy
 
-Initial assignment rationale: `<why every task starts with the lowest capable installed profile without relying on later escalation>`
+Initial assignment rationale: `<why each implementation is within the Luna Max boundary or needs Sol Medium initially, and why each reviewer uses Terra High, Sol Medium, or Sol High>`
 
 Required custom-agent availability: `<verified, unverified until Goal preflight, or missing profiles>`
 
 ## Task graph
 
-Repeat this section for every implementation, integration, validation, code-review, and evidence-verification task.
+Repeat this section for every implementation, integration, validation, and selected review-capability task.
 
 ### `<TASK-ID>`: `<short task name>`
 
 - Objective: `<one independently useful objective>`
-- Role: `<implementation | tests | integration | validation | code review | evidence verification>`
+- Role: `<implementation | tests | integration | validation | selected review capability>`
 - Custom agent: `<exact installed agent name>`
 - Initial model: `<exact model slug>`
-- Reasoning effort: `<Medium | High>`
+- Reasoning effort: `<Medium | High | Max>`
 - Sandbox or permission mode: `<workspace-write | read-only, plus approval constraints when relevant>`
 - Allowed write paths: `<exact paths/modules, or None for read-only tasks>`
 - Interface responsibility: `<owned interface, or None>`
@@ -33,7 +33,7 @@ Repeat this section for every implementation, integration, validation, code-revi
 - Expected deliverable: `<diff, tests, evidence, or report>`
 - Validation responsibility: `<validation IDs, checks, or review responsibility>`
 - Parallelization conditions: `<when this may run concurrently and what must remain stable>`
-- Allowed direct escalation targets: `<one or more named worker profiles chosen by diagnosis, or None>`
+- Allowed direct escalation targets: `<power_sol_worker for a Luna implementation task, or None>`
 - Escalation ceiling: `<target model/effort or No escalation for read-only review tasks>`
 
 ## Dependency waves and parallelism
@@ -57,9 +57,9 @@ Agent count is not a cost metric. Keep independently useful work split when safe
 - Permit at most one model escalation per implementation task.
 - Escalate only for evidence-backed capability or reasoning under-classification.
 - Do not escalate for permission, environment, dependency, validation-infrastructure, or interface-conflict failures.
-- Reclassify directly to the appropriate target without traversing every tier.
-- Choose the lowest sufficient allowed target: Terra Medium or High before Sol Medium when the evidence does not require Sol.
-- Cap implementation at `power_sol_escalation` using `gpt-5.6-sol` Medium.
+- Reclassify only from `power_luna_worker` on Luna Max directly to `power_sol_worker` on Sol Medium; there is no implementation model ladder.
+- Assign Sol Medium initially when repository inspection already shows work above the Luna boundary.
+- Cap implementation at `power_sol_worker` using `gpt-5.6-sol` Medium.
 - Stop and report the blocker if Sol Medium cannot complete the task.
 - Give the replacement worker prior findings, failure evidence, relevant artifacts, and current state.
 
@@ -71,12 +71,22 @@ Agent count is not a cost metric. Keep independently useful work split when safe
 
 Narrow main-agent implementation exception: `<None, or exact paths and reason explicitly approved by the user>`
 
-## Review tracks
+## Verification and review plan
 
-- Stable snapshot: `<contract version, commit/diff, and validation evidence shared by both tracks>`
-- Code-review packet: `<relevant Task Contract and AC excerpts, stable diff, interface changes, tests, and validation output>`
-- Evidence-verification packet: `<full Task Contract and confirmed plans, AC evidence, validation results, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals; diff access only for scope mapping>`
-- Run `power_code_reviewer` and `power_verifier` in parallel on Sol High read-only. They do not consume or substitute for one another.
+- Verification contract: `<complete canonical Issue/local body and final Goal Prompt; comments, discussions, and runner summaries are supplementary unless incorporated into the contract>`
+- Stable snapshot: `<repository/ref, commit, diff or tree digest, dirty/generated boundary, capture time, and validation evidence>`
+- Contract-prescribed reviews: `<exact reviewers, agents, models, providers, and procedures, or None>`
+- Selection basis when no review topology is prescribed: `<contract obligations; final diff; affected interfaces/data; validation; and security, compatibility, migration, data, permission, concurrency, and domain risks>`
+- Minimum sufficient capabilities: `<one or more independent read-only capabilities, including contract-conformance review>`
+- Reviewer tier selection: `<Terra High only for explicitly simple structured checks; Sol Medium by default; Sol High for high-risk or semantically complex review, with rationale>`
+- Independent contract-conformance reviewer: `<identity/source and implementation-independence evidence; required for PASS or PASS_WITH_NOTES>`
+- Additional review capabilities: `<code, test, security, compatibility, migration, data, or domain review only when justified, or None>`
+- Reviewer records: `<for each: identity/source, model, reasoning effort, selection rationale, independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity>`
+- Validation replay: `<exact command, safety class, isolated temporary-artifact boundary when applicable, result, evidence, and snapshot identity>`
+- Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
+- Contract-conformance packet: `<complete canonical Issue/local body, final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
+- Other review packets: `<tailored to each selected capability and scope>`
+- Execution: `<run independent selected reviews in parallel over the same snapshot when possible; contract-prescribed reviews do not substitute for one another>`
 
 ## Dispatch Summary requirements
 

@@ -2,59 +2,53 @@
 
 Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
-# Verifier Independence
+## Contract Sources And Conflict Status
 
-- Evidence Verifier Source: `<power_verifier on gpt-5.6-sol High, or missing>`
-- Code-review source: `<power_code_reviewer on gpt-5.6-sol High, or missing>`
-- Parallel execution status: `<parallel, sequential with reason, or not applicable>`
-- Missing Profile Reason: `<none, missing power_verifier, missing power_code_reviewer, or approved substitute details>`
+- Canonical Issue or local contract: `<source and identity>`
+- Final Goal Prompt: `<source and identity>`
+- Supplementary evidence considered: `<comments, discussions, summaries, or none>`
+- Conflict status: `<none | conflict requiring NEEDS_HUMAN>`
+- Conflicting clause IDs and rationale: `<none or cited clause records>`
 
-# Sources Reviewed
+## Implementation Snapshot
 
-- Contract source: `<issue, local brief, or pasted contract>`
-- Implementation source: `<branch, diff, commit range, PR/MR URL, or pasted diff>`
-- Validation evidence: `<commands and outputs reviewed>`
-- PR/MR evidence package: `<PR/MR body, draft body, or pasted evidence>`
+- Repository/ref: `<identity>`
+- Commit: `<commit or unavailable>`
+- Diff or tree digest: `<identity>`
+- Dirty/generated-artifact boundary: `<none or disclosed boundary>`
+- Captured at: `<time>`
+- Freshness assessment: `<fresh | stale evidence identified>`
 
-# Acceptance Criteria Evidence
+## Clause Evidence
 
-| AC | Evidence Reviewed | Validation | Status | Notes |
-|---|---|---|---|---|
-| AC-1 |  |  | Pass/Fail/Needs human |  |
+| Clause ID | Source | Source location | Obligation | Applicable | Evidence and snapshot | Status | Notes |
+|---|---|---|---|---|---|---|---|
+|  |  |  |  | Yes/No |  | Conforms/Nonconforming/Missing/Stale/Needs human |  |
 
-# Scope And Non-Goals
+## Dynamic Review Plan And Provenance
 
-- Scope assessment: `<within scope | scope issue>`
-- Non-goal assessment: `<preserved | violated>`
-- Forbidden paths/high-risk areas: `<none | list>`
+- Contract-specified review requirements: `<none or exact requirements and status>`
+- Capability and risk assessment: `<obligations, diff, interfaces/data, validation, and material risks>`
+- Minimum sufficient planned capabilities: `<capabilities and justification>`
 
-# Validation Assessment
+| Reviewer identity/source | Model / reasoning | Selection rationale | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
+|---|---|---|---|---|---|---|---|---|---|
+|  |  |  | Yes/No |  |  |  |  |  |  |
 
-- `<command or evidence>`: `<sufficient, insufficient, failed, or not run>`
+## Validation Replay
 
-# Review Findings Considered
+| Required validation | Exact command | Safety class | Execution/isolation boundary | Snapshot | Result | Relevant evidence |
+|---|---|---|---|---|---|---|
+|  |  | Safe read-only/Isolated writable/Unsafe-not-run |  |  | Passed/Failed/Not run |  |
 
-- `<finding, impact, disposition, or none>`
+## Risks And Unresolved Evidence
 
-# Issue Linkage And Curation Handoff
+- `<risk, assumption, stale or unavailable evidence, or none>`
 
-- Linked contract assessment: `<present, missing, or issue>`
-- Closing intent assessment: `<present, missing, not applicable, or issue>`
-- Follow-up handling assessment: `<present, missing, not applicable, or issue>`
-- Curator mutation assessment: `<not executed, confirmed and applied, missing, or issue>`
+## Reviewer Notes
 
-# Risks And Assumptions
+- `<nonblocking note, or none>`
 
-- `<risk, assumption, or none>`
-
-# Required Human Decisions
-
-- `<decision or none>`
-
-# Reviewer Notes
-
-- `<note>`
-
-# Smallest Next Action
+## Smallest Next Action
 
 `<None for PASS/PASS_WITH_NOTES, or the smallest action needed to unblock BLOCKED/NEEDS_HUMAN.>`

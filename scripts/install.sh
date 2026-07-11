@@ -31,13 +31,24 @@ done
 
 agent_sources=(
   power-loop/agents/power-luna-worker.toml
-  power-loop/agents/power-terra-worker.toml
-  power-loop/agents/power-terra-complex-worker.toml
-  power-loop/agents/power-sol-escalation.toml
-  power-loop/agents/power-code-reviewer.toml
-  power-verifier/agents/power-verifier.toml
+  power-loop/agents/power-sol-worker.toml
+  power-loop/agents/power-terra-reviewer.toml
+  power-loop/agents/power-sol-reviewer.toml
+  power-loop/agents/power-sol-high-reviewer.toml
   power-critic/agents/power-critic.toml
 )
+
+retired_agent_profiles=(
+  power-terra-worker.toml
+  power-terra-complex-worker.toml
+  power-sol-escalation.toml
+  power-code-reviewer.toml
+  power-verifier.toml
+)
+
+for profile in "${retired_agent_profiles[@]}"; do
+  rm -f "${agents_dir}/${profile}"
+done
 
 for source in "${agent_sources[@]}"; do
   rsync -a "${repo_root}/${source}" "${agents_dir}/$(basename "${source}")"

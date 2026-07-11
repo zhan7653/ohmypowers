@@ -10,10 +10,10 @@ The current `power-loop` is already described as an orchestrator, but it primari
 
 The desired workflow makes `power-grill` responsible for a lighter but complete requirements contract and makes `power-loop` responsible for deriving the concrete implementation and dispatch design. The resulting execution should use each GPT-5.6 model according to the work it is best suited for:
 
-- Luna for simple, deterministic implementation work.
-- Terra for normal or complex implementation work.
-- Sol Medium only as the implementation escalation ceiling.
-- Sol High for independent code review and evidence verification.
+- Luna Max for most simple through lower-medium implementation work.
+- Sol Medium for implementation work that is even slightly complex or above, and as the only replacement for an underestimated Luna task.
+- No Terra implementation tier.
+- Independent contract-conformance review, with additional code, security, compatibility, migration, test, data, permission, concurrency, or domain review selected dynamically by capability and risk. Terra High is reserved for explicitly simple reviews, Sol Medium is the default review tier, and Sol High is reserved for the most complex or high-risk reviews.
 
 The primary cost objective is correct initial model assignment, fewer unnecessary model escalations, less high-capability-model implementation work, and less conflict-driven rework. Reducing the number of agents is not a goal. Meaningful parallelism is desirable when tasks have independent deliverables and non-overlapping write ownership.
 
@@ -36,16 +36,18 @@ The primary cost objective is correct initial model assignment, fewer unnecessar
 - FR-13: The Agent Dispatch Plan must use a fixed Markdown structure.
 - FR-14: Every dispatched task must include a Task ID, objective, role, initial model, reasoning effort, sandbox or permission mode, allowed write paths, dependencies, expected deliverable, validation responsibility, parallelization conditions, and escalation ceiling.
 - FR-15: The default model-routing policy must be:
-  - `gpt-5.6-luna` with Medium reasoning for mechanical, deterministic, low-risk work.
-  - `gpt-5.6-terra` with Medium reasoning for normal implementation, tests, and fixes.
-  - `gpt-5.6-terra` with High reasoning for work known in advance to require complex reasoning or cross-module implementation.
-  - `gpt-5.6-sol` with Medium reasoning only as the maximum implementation escalation target.
-  - `gpt-5.6-sol` with High reasoning for independent code review and evidence verification.
+  - `gpt-5.6-luna` with Max reasoning for most simple through lower-medium implementation work.
+  - `gpt-5.6-sol` with Medium reasoning for implementation work that is even slightly complex or above, and as the only direct replacement for an underestimated Luna task.
+  - Terra must not be assigned implementation work.
+  - Read-only review capabilities must be selected by contract and implementation risk; no reviewer identity, specialization, or count is universal.
+  - `gpt-5.6-terra` with High reasoning may be selected only for explicitly simple review work.
+  - `gpt-5.6-sol` with Medium reasoning is the default review tier.
+  - `gpt-5.6-sol` with High reasoning is reserved for the most complex or high-risk review work.
 - FR-16: `power-loop` must optimize initial task classification and model assignment rather than relying on a multi-step escalation ladder.
 - FR-17: A task may receive at most one model escalation during execution.
 - FR-18: Model escalation is allowed only when evidence shows that the original model assignment underestimated capability or reasoning requirements.
 - FR-19: Permission failures, environment failures, dependency failures, unavailable validation, interface conflicts, or other non-capability failures must not trigger a model escalation.
-- FR-20: When escalation is justified, the main orchestrator must reclassify the task and select the appropriate target directly, without stepping through every intermediate model tier.
+- FR-20: When a Luna assignment is proven insufficient, the main orchestrator must replace it directly with Sol Medium, without an intermediate tier.
 - FR-21: Implementation escalation must never exceed Sol Medium. Failure at Sol Medium must pause the task and report the blocker.
 - FR-22: A replacement worker must receive the prior worker's useful findings, failure evidence, relevant artifacts, and current state so that escalation does not repeat completed exploration.
 - FR-23: The root or main agent executing the Goal Prompt must act as the orchestrator: it owns task decomposition, interface decisions, dependency coordination, conflict resolution, escalation decisions, and result consolidation.
@@ -75,9 +77,9 @@ The primary cost objective is correct initial model assignment, fewer unnecessar
 - FR-47: The final Goal Prompt must require a baseline consistency check before implementation starts. Material drift must stop execution and require a new `power-loop` pass or a confirmed plan revision.
 - FR-48: `power-loop` must output the final Goal Prompt for the user to run manually. It must not automatically invoke or execute `/goal`.
 - FR-49: Missing or undiscoverable custom-agent configurations must not silently fall back to the parent model when that would violate the confirmed routing plan.
-- FR-50: If a required Luna, Terra, or Sol agent configuration is unavailable, execution must pause and report the missing configuration or request explicit approval for an alternative.
-- FR-51: Code review and evidence verification must remain separate read-only tracks over stable evidence.
-- FR-52: The code reviewer and evidence verifier must use Sol High and must not substitute for one another.
+- FR-50: If a required Luna Max or Sol Medium implementation configuration, or a selected Terra High, Sol Medium, or Sol High reviewer configuration, is unavailable, execution must pause and report the missing configuration or request explicit approval for an alternative.
+- FR-51: Review must be read-only, independent from implementation, and run against stable evidence. The verifier must require at least one implementation-independent contract-conformance review before `PASS` or `PASS_WITH_NOTES`.
+- FR-52: When the contract does not prescribe review topology, `power-loop` must select the minimum sufficient capabilities from contractual obligations, the final diff, affected interfaces/data, validation, and material risks, then assign Terra High only to explicitly simple review, Sol Medium by default, or Sol High to the most complex or high-risk review. Reviewer provenance must record model, reasoning effort, and selection rationale. Contract-prescribed reviewers, agents, models, providers, and procedures must be honored exactly.
 - FR-53: The final Goal Prompt must require a Dispatch Summary at completion or stop.
 - FR-54: The Dispatch Summary must record planned and actual task counts, each task's initial and final model, escalation status and reason, parallel or sequential execution, ownership conflicts, incomplete tasks, pause reasons, and Initial Assignment Accuracy.
 - FR-55: Initial Assignment Accuracy must be calculated as the number of tasks completed without model escalation divided by the total number of completed or attempted implementation tasks for which an initial assignment was made.
@@ -166,14 +168,13 @@ The fixed Markdown structure must contain a routing-policy summary and one row o
 
 | Work class | Initial model | Reasoning | Notes |
 |---|---|---|---|
-| Mechanical, deterministic, low risk | `gpt-5.6-luna` | Medium | Documentation, fixed transformations, narrow repeatable changes |
-| Normal implementation, tests, fixes | `gpt-5.6-terra` | Medium | Default worker |
-| Known complex or cross-module implementation | `gpt-5.6-terra` | High | Assign initially when the blueprint already shows higher complexity |
-| Implementation escalation ceiling | `gpt-5.6-sol` | Medium | Fallback only; not the normal initial worker |
-| Code review | `gpt-5.6-sol` | High | Read-only, independent context |
-| Evidence verification | `gpt-5.6-sol` | High | Read-only, separate from code review |
+| Simple through lower-medium implementation | `gpt-5.6-luna` | Max | Default for most bounded implementation, tests, docs, and fixes |
+| Slightly complex or harder implementation | `gpt-5.6-sol` | Medium | Assign initially when the task is above Luna; also the implementation ceiling |
+| Explicitly simple review | `gpt-5.6-terra` | High | Read-only and selected sparingly |
+| Ordinary review | `gpt-5.6-sol` | Medium | Default read-only reviewer tier |
+| Most complex or high-risk review | `gpt-5.6-sol` | High | Read-only and justified by contract or material risk |
 
-Each task may escalate at most once. The orchestrator must diagnose whether the failure is a capability mismatch before escalating. Non-capability failures must be handled without model escalation.
+Each Luna task may be replaced at most once, directly by Sol Medium. The orchestrator must diagnose whether the failure is a capability mismatch before replacing it. Non-capability failures must be handled without model replacement.
 
 ### Parallelism And Ownership Policy
 
@@ -211,7 +212,7 @@ No final Goal Prompt may be generated before the confirmed patch is applied succ
 - Allowing implementation workers to escalate beyond Sol Medium.
 - Changing the runtime model policy of `power-think`, `power-grill`, `power-curator`, `power-work-report`, or `power-critic` as part of this feature.
 - Allowing `power-loop` to decide unresolved public API, schema, product, business, security, permission, or migration contracts.
-- Replacing the separate evidence-verifier and code-review tracks.
+- Reintroducing or imposing a universal fixed review topology, or an equivalent fixed reviewer requirement, over contract-prescribed or capability-based independent review.
 
 ## Acceptance Criteria
 
@@ -294,13 +295,17 @@ Then `power-loop` asks the user to create a hosted issue or save a local brief b
 
 Given `power-loop` classifies implementation tasks
 When it assigns initial models
-Then it uses Luna Medium for simple deterministic work, Terra Medium for normal implementation, Terra High for work known to be complex, Sol Medium only as the implementation escalation ceiling, and Sol High for code review and evidence verification.
+Then it uses Luna Max for most simple through lower-medium work, Sol Medium for anything even slightly complex or above, and no Terra implementation tier.
+
+Given `power-loop` selects read-only review work
+When the contract does not prescribe the reviewer model and reasoning effort
+Then it uses Terra High only for an explicitly simple review, Sol Medium by default, or Sol High for the most complex or high-risk review, while selecting the actual review capabilities dynamically.
 
 ### AC-13: Model Escalation Is Limited
 
 Given a worker fails because the initial assignment underestimated capability or reasoning complexity
 When the main orchestrator approves escalation
-Then the task escalates at most once and never beyond Sol Medium, and the replacement worker receives the prior worker's useful findings, failure evidence, relevant artifacts, and current state.
+Then a Luna task is replaced directly by Sol Medium at most once, and the replacement worker receives the prior worker's useful findings, failure evidence, relevant artifacts, and current state.
 
 Given the failure comes from permissions, environment, dependencies, validation infrastructure, or interface conflicts
 When the orchestrator diagnoses the failure
@@ -312,7 +317,7 @@ Then the task stops and reports the blocker.
 
 ### AC-14: Model Substitution Is Not Silent
 
-Given a required Luna, Terra, or Sol agent configuration is unavailable
+Given a required Luna Max or Sol Medium implementation configuration, or a selected Terra High, Sol Medium, or Sol High reviewer configuration, is unavailable
 When the Goal is prepared or executed
 Then the workflow does not silently inherit the parent Sol Ultra configuration and instead pauses with the missing configuration or asks for an explicitly approved substitute.
 
@@ -356,11 +361,11 @@ Given the final Goal Prompt has been generated
 When `power-loop` completes
 Then it returns the ready-to-run prompt and does not invoke `/goal` automatically.
 
-### AC-20: Review Tracks Remain Independent And High Capability
+### AC-20: Review Is Independent And Capability-Appropriate
 
 Given implementation and validation are complete
 When the verifier gate runs
-Then code review and evidence verification use separate read-only contexts with Sol High and neither track substitutes for the other.
+Then at least one implementation-independent reviewer checks contract conformance in a read-only context, and any additional review capabilities are selected from the contract and material implementation risks. No fixed reviewer count, identity, specialization, or named profile is imposed unless contractually required; when the model is not prescribed, the reviewer tier follows the Terra High, Sol Medium, and Sol High policy and its provenance records model, reasoning effort, and selection rationale.
 
 ### AC-21: Dispatch Results Are Reported
 
@@ -379,8 +384,8 @@ Then the summary records planned and actual task counts, initial and final model
 - Should `power-loop` automatically execute the Goal? -> No. The user starts it manually.
 - Where does the stable dispatch plan live? -> In the issue or local brief. The final Goal Prompt references it and contains only operational execution instructions.
 - Is reducing agent count a cost objective? -> No. Meaningful parallelism is desirable; avoid only fragmentation without independent value.
-- What is the implementation model ceiling? -> Sol Medium, after at most one justified escalation.
-- What models perform review? -> Separate Sol High code-review and evidence-verification agents.
+- How are implementation models selected? -> Luna Max for most simple through lower-medium tasks; Sol Medium for anything even slightly complex or above. An underestimated Luna task may be replaced directly by Sol Medium at most once.
+- What reviews perform verification? -> Contract-prescribed reviews when specified; otherwise the minimum sufficient independent capability plan derived from the contract, final diff, validation, and material risks, using Terra High only for explicitly simple review, Sol Medium by default, and Sol High for the most complex or high-risk review.
 - How are worktrees handled? -> One task-level branch or worktree, with explicit shared-worktree ownership; no default worktree per subagent.
 - How is issue mutation scoped? -> `power-loop` may update only the confirmed execution-planning sections and metadata.
 
@@ -392,6 +397,6 @@ Then the summary records planned and actual task counts, initial and final model
 - The final Goal Prompt is an operational launcher, not a second canonical plan.
 - Correct initial routing and clear ownership save more cost than an arbitrary reduction in agent count.
 - Useful parallelism is beneficial when ownership and interfaces prevent conflict-driven rework.
-- Model escalation should be exceptional, evidence-based, bounded to one transition, and capped at Sol Medium for implementation.
-- High-capability independent review remains necessary even when lower-cost workers perform most implementation work.
+- Model replacement should be exceptional, evidence-based, bounded to a direct Luna Max-to-Sol Medium transition, and capped at Sol Medium for implementation.
+- Independent review remains necessary even when lower-cost workers perform most implementation work; its capability and reviewer tier should match the contract and material risk.
 - Exact monetary savings cannot be guaranteed without authoritative usage and pricing telemetry.
