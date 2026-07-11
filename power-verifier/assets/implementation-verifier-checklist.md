@@ -24,7 +24,7 @@ Use this checklist for a read-only contract-conformance pass.
 - If topology is not prescribed, derive the minimum sufficient capabilities from obligations, final diff, interfaces, data, validation, and security, compatibility, migration, permission, concurrency, test, and domain risks.
 - Do not require a fixed reviewer count, identity, model, provider, or specialization.
 - Require at least one reviewer independent from implementation who checked contract conformance before `PASS` or `PASS_WITH_NOTES`.
-- For every reviewer, record identity/source, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot.
+- For every reviewer, record identity/source, model and reasoning effort when exposed, model-selection rationale when available, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot.
 - Treat reviewer preferences without demonstrated contract nonconformance as notes, not blockers.
 
 ## Validation Replay

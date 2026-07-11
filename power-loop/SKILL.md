@@ -94,23 +94,26 @@ Read and fill [assets/agent-dispatch-plan.md](assets/agent-dispatch-plan.md) aft
 
 Use these installed profiles as available capabilities when they fit the confirmed task. A contract may require a different exact reviewer, agent, model, provider, or procedure; do not substitute it silently.
 
-- `power_luna_worker`: Luna Medium for mechanical, deterministic, low-risk work.
-- `power_terra_worker`: Terra Medium for normal implementation, tests, fixes, and bounded integration.
-- `power_terra_complex_worker`: Terra High for complexity known in advance.
-- `power_sol_escalation`: Sol Medium as the implementation ceiling after evidence-backed under-classification.
-- `power_code_reviewer`: optional Sol High, read-only code-review capability.
-- `power_verifier`: optional Sol High, read-only contract-conformance verification capability.
+- `power_luna_worker`: Luna Max for simple through lower-medium implementation with stable boundaries and clear validation.
+- `power_sol_worker`: Sol Medium for implementation above the Luna boundary and as the only direct replacement for an under-classified Luna task.
+- `power_terra_reviewer`: Terra High for explicitly simple, low-risk, highly structured read-only verification.
+- `power_sol_reviewer`: Sol Medium as the default read-only reviewer for ordinary selected capabilities.
+- `power_sol_high_reviewer`: Sol High for high-risk or semantically complex read-only verification.
 
 Do not minimize agent count as a cost target. Preserve useful parallel work with independent deliverables and non-overlapping ownership. Serialize overlapping paths, unstable interfaces, and unresolved dependencies. Keep the main agent as orchestrator rather than a normal implementation writer.
 
-Allow at most one direct model escalation per implementation task, choose the lowest sufficient allowed target, and never exceed Sol Medium. Do not escalate for permission, environment, dependency, validation-infrastructure, or ownership failures.
+Classify implementation directly into the two supported tiers. Use Luna Max when the task has clear requirements, stable interfaces, bounded ownership, deterministic validation, and no unresolved architecture, security, permission, migration, compatibility, concurrency, or complex-state decision. Use Sol Medium initially when any of those conditions are absent or the task needs complex diagnosis or cross-module design.
+
+Allow at most one direct implementation replacement: `power_luna_worker` to `power_sol_worker`, backed by concrete capability or reasoning mismatch evidence. Do not use a model ladder or escalate for permission, environment, dependency, validation-infrastructure, or ownership failures. Sol Medium is the implementation ceiling.
 
 Plan review only after the final implementation diff, affected interfaces/data, validation requirements, and material risks are known. Preserve this review-plan record with the stable snapshot:
 
 - If the contract names reviewers, agents, models, providers, or procedures, assign and verify those requirements exactly. Record an unavailable prescribed capability as a blocker or `NEEDS_HUMAN` decision; do not substitute it silently.
-- Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Do not require a particular count, profile, model, or provider.
+- Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Capability names and reviewer count remain dynamic; apply the reviewer tier policy below instead of imposing a fixed identity or specialization.
 - Require at least one reviewer independent from implementation to check contract conformance before a `PASS` or `PASS_WITH_NOTES` result. Add a separate code-review capability only when the contract or final-diff risk justifies it.
-- For every selected reviewer, record identity/source, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity. Tailor packets to that scope; give the contract-conformance reviewer the complete canonical Issue/local body, final Goal Prompt, clause evidence, snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals.
+- Select `power_sol_reviewer` by default. Use `power_terra_reviewer` only when the review is demonstrably small, low risk, highly structured, and does not require deep cross-source reasoning or security, permission, migration, compatibility, concurrency, or complex lifecycle analysis. Use `power_sol_high_reviewer` for those high-risk areas, large cross-module diffs, conflicting evidence, or other semantically complex verification.
+- For every selected reviewer, record identity/source, model, reasoning effort, model-selection rationale, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity. Tailor packets to that scope; give the contract-conformance reviewer the complete canonical Issue/local body, final Goal Prompt, clause evidence, snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals.
+- A reviewer that cannot produce a reliable conclusion within its assigned tier must return `BLOCKED` with reclassification evidence. The orchestrator may select a higher appropriate reviewer directly; do not silently walk every tier.
 
 Run independent selected reviews in parallel over the same stable snapshot when possible. They may cover different capabilities but do not substitute for any contract-prescribed review.
 

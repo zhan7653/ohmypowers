@@ -26,7 +26,6 @@ const fixedTopologyPatterns = [
   /fixed dual/i,
   /Sol High code review \+ evidence verification/i,
   /separate Sol High tasks/i,
-  /Sol High review/i,
 ]
 
 async function readFixture(name) {
@@ -202,6 +201,11 @@ test('semantic packages are replay-ready evidence, not deterministic LLM asserti
     assert.ok(item.snapshot.id)
     assert.ok(item.clauseEvidence.length)
     assert.ok(item.reviewerProvenance.length)
+    for (const review of item.reviewerProvenance) {
+      assert.ok(review.model, `${item.id} reviewer exposes model provenance`)
+      assert.ok(review.reasoningEffort, `${item.id} reviewer exposes reasoning provenance`)
+      assert.ok(review.selectionRationale, `${item.id} reviewer explains tier selection`)
+    }
     assert.ok(item.validationReplay.assessment)
     assert.ok(item.replayAssessment)
   }

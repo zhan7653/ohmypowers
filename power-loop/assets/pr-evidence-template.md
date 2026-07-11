@@ -72,9 +72,11 @@ Selection basis when no topology is prescribed: `<contract obligations, final di
 
 Minimum sufficient capability coverage: `<capabilities selected and why>`
 
-| Reviewer identity/source | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
-|---|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |  |
+Reviewer tier policy: `<Terra High only for simple structured checks; Sol Medium by default; Sol High for high-risk or semantically complex review>`
+
+| Reviewer identity/source | Model / reasoning | Selection rationale | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
+|---|---|---|---|---|---|---|---|---|---|
+|  |  |  |  |  |  |  |  |  |  |
 
 # Verifier result
 

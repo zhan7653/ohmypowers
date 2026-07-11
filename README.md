@@ -39,7 +39,7 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Risk level and execution decision.
 - Repository inspection with source branch and commit baseline.
 - Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, isolation, test seams, validation commands, and staleness rules.
-- Fixed-shape Agent Dispatch Plan with exact per-task Luna/Terra/Sol assignments, useful parallelism, allowed write paths, dependency waves, and one bounded implementation escalation; the issue does not repeat the static routing table.
+- Fixed-shape Agent Dispatch Plan with exact per-task Luna Max or Sol Medium implementation assignments, useful parallelism, allowed write paths, dependency waves, one bounded Luna-to-Sol replacement, and risk-based Terra/Sol review tiers; the issue does not repeat the static routing table.
 - Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
 - Final Goal Prompt only after the confirmed patch is applied and verified; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
@@ -87,7 +87,7 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
 
-For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. The bundled `power_code_reviewer` is an optional code-review capability, not a universal requirement.
+For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. Generic Terra High, Sol Medium, and Sol High reviewer profiles provide cost/risk tiers for those dynamically selected capabilities; they do not impose a universal reviewer identity or topology.
 
 Use them by phase:
 
@@ -108,11 +108,11 @@ Run the idempotent installer from the repository root:
 ./scripts/install.sh
 ```
 
-The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed skill directories without creating nested copies, and updates only the custom-agent files owned by this repository. It requires `rsync` and preserves unrelated personal agents.
+The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed skill directories without creating nested copies, updates the custom-agent files owned by this repository, and removes only explicitly retired owned profile names. It requires `rsync` and preserves unrelated personal agents.
 
 The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
 
-The worker profiles pin Luna Medium, Terra Medium, Terra High, and the Sol Medium implementation escalation ceiling. The bundled reviewer profiles provide optional Sol High read-only code-review and evidence-verification capabilities. The verifier does not require a fixed profile count, agent name, model, provider, or review topology unless the contract specifies one. The critic custom-agent installation remains independent from implementation review.
+The implementation profiles pin Luna Max for simple through lower-medium work and Sol Medium for anything more complex; a Luna task may be replaced directly by Sol Medium at most once. Terra is excluded from implementation. The generic read-only reviewer profiles pin Terra High for explicitly simple checks, Sol Medium as the default, and Sol High for the most complex or high-risk reviews. Review capabilities remain contract- and risk-driven, so the verifier does not require a fixed profile count, identity, specialization, or topology unless the contract specifies one. The critic custom-agent installation remains independent from implementation review.
 
 When checking implementation evidence, provide the complete canonical Issue or local contract and final Goal Prompt, capture a stable implementation snapshot, replay safe validation, and record review provenance. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
 
@@ -183,10 +183,10 @@ power-loop/
   agents/
     openai.yaml
     power-luna-worker.toml
-    power-terra-worker.toml
-    power-terra-complex-worker.toml
-    power-sol-escalation.toml
-    power-code-reviewer.toml
+    power-sol-worker.toml
+    power-terra-reviewer.toml
+    power-sol-reviewer.toml
+    power-sol-high-reviewer.toml
   assets/
     execution-blueprint.md
     agent-dispatch-plan.md
@@ -198,7 +198,6 @@ power-verifier/
   SKILL.md
   agents/
     openai.yaml
-    power-verifier.toml
   assets/
     implementation-verifier-checklist.md
     verifier-result-template.md

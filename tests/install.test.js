@@ -19,13 +19,19 @@ const managedSkills = [
   'power-critic',
 ]
 const managedProfiles = [
-  ['power-loop/agents/power-luna-worker.toml', 'power_luna_worker'],
-  ['power-loop/agents/power-terra-worker.toml', 'power_terra_worker'],
-  ['power-loop/agents/power-terra-complex-worker.toml', 'power_terra_complex_worker'],
-  ['power-loop/agents/power-sol-escalation.toml', 'power_sol_escalation'],
-  ['power-loop/agents/power-code-reviewer.toml', 'power_code_reviewer'],
-  ['power-verifier/agents/power-verifier.toml', 'power_verifier'],
-  ['power-critic/agents/power-critic.toml', 'power_critic'],
+  ['power-loop/agents/power-luna-worker.toml', 'power_luna_worker', 'gpt-5.6-luna', 'max', 'workspace-write'],
+  ['power-loop/agents/power-sol-worker.toml', 'power_sol_worker', 'gpt-5.6-sol', 'medium', 'workspace-write'],
+  ['power-loop/agents/power-terra-reviewer.toml', 'power_terra_reviewer', 'gpt-5.6-terra', 'high', 'read-only'],
+  ['power-loop/agents/power-sol-reviewer.toml', 'power_sol_reviewer', 'gpt-5.6-sol', 'medium', 'read-only'],
+  ['power-loop/agents/power-sol-high-reviewer.toml', 'power_sol_high_reviewer', 'gpt-5.6-sol', 'high', 'read-only'],
+  ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
+]
+const retiredProfiles = [
+  'power-terra-worker.toml',
+  'power-terra-complex-worker.toml',
+  'power-sol-escalation.toml',
+  'power-code-reviewer.toml',
+  'power-verifier.toml',
 ]
 
 test('installer installs the complete managed inventory idempotently without changing unrelated agents', async t => {
@@ -36,6 +42,7 @@ test('installer installs the complete managed inventory idempotently without cha
   const personalAgentContents = 'name = "personal_agent"\ncustom = true\n'
   await fs.mkdir(agentsDir, { recursive: true })
   await fs.writeFile(personalAgent, personalAgentContents, 'utf8')
+  for (const retired of retiredProfiles) await fs.writeFile(path.join(agentsDir, retired), 'stale = true\n', 'utf8')
 
   await install(tmp)
   const firstInstall = await installedInventory(tmp)
@@ -44,6 +51,7 @@ test('installer installs the complete managed inventory idempotently without cha
 
   assert.deepEqual(secondInstall, firstInstall)
   assert.equal(await fs.readFile(personalAgent, 'utf8'), personalAgentContents)
+  for (const retired of retiredProfiles) assert.equal(await exists(path.join(agentsDir, retired)), false)
   assert.deepEqual([...managedSkills].sort(), await declaredSkills())
   assert.deepEqual(
     managedProfiles.map(([source]) => source).sort(),
@@ -54,11 +62,11 @@ test('installer installs the complete managed inventory idempotently without cha
     await assertDirectoriesMatch(path.join(root, skill), path.join(tmp, 'skills', skill))
   }
 
-  for (const [source, expectedName] of managedProfiles) {
+  for (const [source, expectedName, model, effort, sandbox] of managedProfiles) {
     const installed = path.join(agentsDir, path.basename(source))
     assert.deepEqual(await fs.readFile(installed), await fs.readFile(path.join(root, source)))
-    assertProfile(await parseToml(path.join(root, source)), expectedName)
-    assertProfile(await parseToml(installed), expectedName)
+    assertProfile(await parseToml(path.join(root, source)), expectedName, model, effort, sandbox)
+    assertProfile(await parseToml(installed), expectedName, model, effort, sandbox)
   }
 })
 
@@ -178,9 +186,10 @@ async function parseToml(filePath) {
   return JSON.parse(stdout)
 }
 
-function assertProfile(profile, expectedName) {
+function assertProfile(profile, expectedName, model, effort, sandbox) {
   assert.equal(profile.name, expectedName)
-  assert.equal(typeof profile.model_reasoning_effort, 'string')
-  assert.equal(typeof profile.sandbox_mode, 'string')
+  if (model) assert.equal(profile.model, model)
+  assert.equal(profile.model_reasoning_effort, effort)
+  assert.equal(profile.sandbox_mode, sandbox)
   assert.equal(typeof profile.developer_instructions, 'string')
 }

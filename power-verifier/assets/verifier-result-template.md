@@ -31,9 +31,9 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Capability and risk assessment: `<obligations, diff, interfaces/data, validation, and material risks>`
 - Minimum sufficient planned capabilities: `<capabilities and justification>`
 
-| Reviewer identity/source | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
-|---|---|---|---|---|---|---|---|
-|  | Yes/No |  |  |  |  |  |  |
+| Reviewer identity/source | Model / reasoning | Selection rationale | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
+|---|---|---|---|---|---|---|---|---|---|
+|  |  |  | Yes/No |  |  |  |  |  |  |
 
 ## Validation Replay
 

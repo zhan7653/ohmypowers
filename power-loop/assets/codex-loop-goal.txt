@@ -38,9 +38,9 @@ Model escalation:
 - Allow at most one model escalation per implementation task.
 - Escalate only when failure evidence shows that the initial model assignment underestimated capability or reasoning needs.
 - Do not escalate for permission, environment, dependency, unavailable validation, interface-conflict, or other non-capability failures.
-- Reclassify directly to the lowest sufficient target allowed by the confirmed task entry; do not step through every tier.
-- Use Terra Medium or Terra High when sufficient. Sol Medium is the ceiling, not the default escalation target.
-- Never exceed `power_sol_escalation` on `gpt-5.6-sol` Medium for implementation.
+- Reclassify only an under-classified Luna Max task directly to `power_sol_worker` on `gpt-5.6-sol` Medium; there is no implementation model ladder.
+- Use Sol Medium initially when the confirmed plan already places the task above the Luna boundary.
+- Never exceed `power_sol_worker` on `gpt-5.6-sol` Medium for implementation.
 - Give the replacement worker the prior worker's useful findings, failure evidence, artifacts, and current state.
 - If Sol Medium cannot complete the task, stop and report the blocker.
 
@@ -61,9 +61,11 @@ Budget:
 Verifier gate:
 - After the final diff, validation output, acceptance-criteria evidence, and draft PR/MR evidence package are stable, build the review plan against the captured snapshot. The evidence package may remain local until review finishes.
 - If the contract names exact reviewers, agents, models, providers, or procedures, run and verify them exactly. Do not silently substitute unavailable requirements.
-- Otherwise, select the minimum sufficient independent, read-only capabilities from the contractual obligations, final diff, affected interfaces/data, validation requirements, and material security, compatibility, migration, data, permission, concurrency, and domain risks. Do not impose a fixed review count, profile, model, provider, or specialization.
+- Otherwise, select the minimum sufficient independent, read-only capabilities from the contractual obligations, final diff, affected interfaces/data, validation requirements, and material security, compatibility, migration, data, permission, concurrency, and domain risks. Capability names and reviewer count remain dynamic; apply the reviewer tier policy below instead of imposing a fixed identity or specialization.
 - Require at least one reviewer independent from implementation to perform contract-conformance review before `PASS` or `PASS_WITH_NOTES`. Add code, test, security, compatibility, migration, data, or domain review only when the contract or identified risk justifies it.
-- For every reviewer, record identity/source, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity. Give the contract-conformance reviewer the complete canonical Issue/local body and final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals; tailor other packets to their capabilities.
+- Use `power_sol_reviewer` on Sol Medium by default. Use `power_terra_reviewer` on Terra High only for demonstrably simple, low-risk, highly structured checks. Use `power_sol_high_reviewer` on Sol High for security, permissions, authentication, sensitive data, migration, compatibility, concurrency, irreversible changes, large cross-module diffs, conflicting evidence, or other semantically complex review.
+- For every reviewer, record identity/source, model, reasoning effort, model-selection rationale, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity. Give the contract-conformance reviewer the complete canonical Issue/local body and final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals; tailor other packets to their capabilities.
+- If a selected reviewer cannot reach a reliable conclusion within its assigned tier, treat that result as `BLOCKED` and reclassify directly to an appropriate higher reviewer instead of silently traversing every tier.
 - Run independent selected reviews in parallel over the same snapshot when possible. Contract-prescribed reviews do not consume or substitute for one another.
 - Route fixable `BLOCKED` findings back to the owning implementation task within the remaining budget. A repair creates a new snapshot, invalidates affected validation and review evidence, and requires the relevant replay and reviews again.
 - Use `NEEDS_HUMAN` for scope changes, contract conflicts, required human interpretation or authorization, unavailable contract-prescribed capabilities requiring approval, or repeated repair failure beyond budget.
