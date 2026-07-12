@@ -133,7 +133,7 @@
           "date": "2026-07-12",
           "project": "/workspace/beta",
           "sourceType": "session",
-          "sourceRef": "today-session",
+          "sourceRef": "beta-session",
           "summary": "Beta used the same focused-test rule."
         }
       ],

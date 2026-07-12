@@ -179,6 +179,87 @@ test('forbidden English and Chinese instruction content is removed before displa
   assert.deepEqual(insights.automationCandidates.map(item => item.id), ['automation-control'])
 })
 
+test('fabricated evidence is rejected when no authoritative sources exist', () => {
+  const rawSummary = summary()
+  rawSummary.sessions = []
+  rawSummary.projects = []
+  rawSummary.context.finalizedReports = []
+  const insights = normalizeReusableInsights({
+    skillCandidates: [automaticCandidate('fake-session', 'skill', [
+      evidence('session', 'invented-session', '2026-07-12', '/workspace/fake'),
+      evidence('session', 'another-invented-session', '2026-07-12', '/workspace/fake'),
+    ])],
+    automationCandidates: [],
+    globalInstructionCandidates: [automaticCandidate('fake-report', 'global_instruction', [
+      evidence('report', '/invented/final/report.json', '2026-07-11', '/workspace/alpha'),
+      evidence('report', '/another/final/report.json', '2026-07-10', '/workspace/beta'),
+    ])],
+    projectInstructionCandidates: [{
+      ...automaticCandidate('fake-memo', 'project_instruction', [
+        evidence('user_memo', 'user-memo:2026-07-12', '2026-07-12', '/workspace/fake'),
+      ]),
+      provenance: 'user_nominated',
+    }],
+    warnings: [],
+  }, { rawSummary })
+
+  assert.deepEqual(insights.skillCandidates, [])
+  assert.deepEqual(insights.globalInstructionCandidates, [])
+  assert.deepEqual(insights.projectInstructionCandidates, [])
+})
+
+test('session aliases and invented metadata cannot create repeated or cross-project evidence', () => {
+  const rawSummary = summary()
+  rawSummary.sessions = [rawSummary.sessions[0]]
+  rawSummary.projects = [{ project: '/workspace/alpha' }]
+  rawSummary.context.finalizedReports = []
+  const repeatedAlias = automaticCandidate('alias-global', 'global_instruction', [
+    evidence('session', 'today-session', '2026-07-12', '/workspace/alpha'),
+    evidence('session', '/codex/sessions/today-session.jsonl', '2026-07-12', '/workspace/alpha'),
+    evidence('session', 'today-session', '2099-01-01', '/workspace/beta'),
+  ])
+  const insights = normalizeReusableInsights({
+    skillCandidates: [],
+    automationCandidates: [],
+    globalInstructionCandidates: [repeatedAlias],
+    projectInstructionCandidates: [],
+    warnings: [],
+  }, { rawSummary })
+
+  assert.deepEqual(insights.globalInstructionCandidates, [])
+  assert.deepEqual(insights.projectInstructionCandidates, [])
+})
+
+test('report evidence is canonicalized from its body and mismatched metadata is rejected', () => {
+  const rawSummary = summary()
+  rawSummary.sessions = [rawSummary.sessions[0]]
+  rawSummary.projects = [{ project: '/workspace/alpha' }]
+  const valid = automaticCandidate('canonical-report', 'skill', [
+    evidence('report', '/reports/2026-07-11/final/report.json', '', ''),
+    evidence('session', 'today-session', '2026-07-12', '/workspace/alpha'),
+  ])
+  const mismatched = automaticCandidate('mismatched-report', 'skill', [
+    evidence('report', '/reports/2026-07-11/final/report.json', '2099-01-01', '/workspace/beta'),
+    evidence('session', 'today-session', '2026-07-12', '/workspace/alpha'),
+  ])
+  const insights = normalizeReusableInsights({
+    skillCandidates: [valid, mismatched],
+    automationCandidates: [],
+    globalInstructionCandidates: [],
+    projectInstructionCandidates: [],
+    warnings: [],
+  }, { rawSummary })
+
+  assert.deepEqual(insights.skillCandidates.map(item => item.id), ['canonical-report'])
+  assert.deepEqual(insights.skillCandidates[0].evidence[0], {
+    date: '2026-07-11',
+    project: '/workspace/alpha',
+    sourceType: 'report',
+    sourceRef: '/reports/2026-07-11/final/report.json',
+    summary: 'Evidence summary.',
+  })
+})
+
 test('draft normalization adds the frozen report fields and keeps missing-history warnings', async () => {
   const fixture = JSON.parse(await fs.readFile(path.join(fixtureDir, 'candidates.json'), 'utf8'))
   const rawSummary = summary()
@@ -239,15 +320,39 @@ test('report schema requires the additive reflection and insight contract', asyn
 function summary() {
   return {
     date: '2026-07-12',
-    projects: [],
+    projects: [
+      {
+        project: '/workspace/alpha',
+        sessionIds: ['today-session'],
+        sessionCount: 1,
+        todos: [],
+        ideas: [],
+        filesModified: [],
+      },
+      {
+        project: '/workspace/beta',
+        sessionIds: ['beta-session'],
+        sessionCount: 1,
+        todos: [],
+        ideas: [],
+        filesModified: [],
+      },
+    ],
     sessions: [
       {
         id: 'today-session',
         filePath: '/codex/sessions/today-session.jsonl',
+        cwd: '/workspace/alpha',
+        malformedLines: 0,
+      },
+      {
+        id: 'beta-session',
+        filePath: '/codex/sessions/beta-session.jsonl',
+        cwd: '/workspace/beta',
         malformedLines: 0,
       },
     ],
-    sessionCount: 1,
+    sessionCount: 2,
     skippedEvents: {
       malformedLines: 0,
       missingTimestamp: 0,
@@ -261,7 +366,11 @@ function summary() {
         {
           date: '2026-07-11',
           sourceRef: '/reports/2026-07-11/final/report.json',
-          body: { status: 'finalized', date: '2026-07-11' },
+          body: {
+            status: 'finalized',
+            date: '2026-07-11',
+            projectSections: [{ project: 'alpha', path: '/workspace/alpha' }],
+          },
         },
       ],
       warnings: ['Missing finalized report 2026-07-10.'],
@@ -286,7 +395,7 @@ function candidateForFixture(item) {
         date: '2026-07-12',
         project: global ? '/workspace/beta' : '/workspace/alpha',
         sourceType: 'session',
-        sourceRef: 'today-session',
+        sourceRef: global ? 'beta-session' : 'today-session',
         summary: 'Current evidence.',
       },
     ],
@@ -304,4 +413,24 @@ function groupForFixtureType(type) {
     global_instruction: 'globalInstructionCandidates',
     project_instruction: 'projectInstructionCandidates',
   }[type]
+}
+
+function automaticCandidate(id, type, candidateEvidence) {
+  return {
+    id,
+    type,
+    recommendation: type.includes('instruction')
+      ? 'Always run authoritative validation before handoff.'
+      : 'Package the authoritative validation workflow.',
+    scope: type === 'global_instruction' ? 'global' : '/workspace/alpha',
+    evidence: candidateEvidence,
+    rationale: 'Repeated authoritative evidence.',
+    expectedBenefit: 'Reliable future work.',
+    provenance: 'automatic',
+    confirmationStatus: 'unconfirmed',
+  }
+}
+
+function evidence(sourceType, sourceRef, date, project) {
+  return { sourceType, sourceRef, date, project, summary: 'Evidence summary.' }
 }
