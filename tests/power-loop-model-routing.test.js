@@ -80,31 +80,32 @@ test('reviewer profile fixtures preserve the three read-only reviewer tiers', as
   }
 })
 
-test('Issue patch and thin Goal pin only the Blueprint before implementation', async () => {
-  const [patchTemplate, goal, blueprint] = await Promise.all([
+test('Issue patch makes the confirmed Issue directly executable without a launcher asset', async () => {
+  const [patchTemplate, blueprint] = await Promise.all([
     readFile(path.join(assetsDir, 'issue-patch.md'), 'utf8'),
-    readFile(path.join(assetsDir, 'codex-loop-goal.txt'), 'utf8'),
     readFile(path.join(assetsDir, 'execution-blueprint.md'), 'utf8'),
   ])
 
   assert.match(patchTemplate, /Replacement block: Execution Blueprint reference/)
+  assert.match(patchTemplate, /Task Contract digest: `sha256:/)
+  assert.match(patchTemplate, /Execution entry: `This confirmed persisted Issue/)
+  assert.match(patchTemplate, /ready for direct execution/i)
   assert.doesNotMatch(patchTemplate, /Agent Dispatch Plan|Final Review Plan reference/)
-  assert.match(goal, /Required confirmed reference:/)
-  assert.doesNotMatch(goal, /Agent Dispatch Plan artifact/)
-  assert.match(goal, /After the final tree is frozen and V2\/V3 evidence exists/)
+  assert.equal((await readdir(assetsDir)).some(name => /goal/i.test(name)), false, 'no launcher asset remains')
   assert.match(blueprint, /Reviewer capability, routing, count, and waiting are intentionally absent/)
+  assert.match(blueprint, /main-agent implementation -> V0 -> V1/)
 })
 
-test('Final Review Plan is supplementary and the Goal remains a thin launcher', async () => {
-  const [finalPlan, goal] = await Promise.all([
+test('Final Review Plan stays supplementary while direct-execution preflight lives in power-loop', async () => {
+  const [finalPlan, skill] = await Promise.all([
     readFile(path.join(assetsDir, 'final-review-plan.md'), 'utf8'),
-    readFile(path.join(assetsDir, 'codex-loop-goal.txt'), 'utf8'),
+    readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8'),
   ])
   assert.match(finalPlan, /Task Contract is the sole normative contract/)
   assert.match(finalPlan, /supplementary evidence/)
-  assert.match(goal, /treat only its Task Contract byte range as normative/i)
-  assert.match(goal, /The user must start this Goal manually/)
-  assert.doesNotMatch(goal, /^Budget:|^Dispatch Summary:|^Verifier gate:/m)
+  assert.match(skill, /Hand Off The Confirmed Issue For Direct Execution/)
+  assert.match(skill, /recompute the Task Contract digest/)
+  assert.match(skill, /Do not generate a launcher prompt/)
 })
 
 async function parseToml(filePath) {

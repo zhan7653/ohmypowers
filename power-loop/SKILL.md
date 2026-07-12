@@ -1,6 +1,6 @@
 ---
 name: power-loop
-description: Convert a requirements-ready hosted issue, local brief, or pasted Task Contract into a repository-aware Execution Blueprint, a compact confirmable reference patch, and, only after verification, a bounded ready-to-run Codex /goal. Final reviewer routing is planned at runtime after the implementation tree is frozen.
+description: Convert a requirements-ready hosted issue, local brief, or pasted Task Contract into a repository-aware Execution Blueprint and a compact confirmable reference patch so the confirmed Issue can be executed directly. Final reviewer routing is planned at runtime after the implementation tree is frozen.
 ---
 
 # Power Loop
@@ -17,8 +17,7 @@ Task Contract
 -> compact exact Issue reference patch
 -> explicit user confirmation
 -> apply and verify the patch
--> thin Goal Prompt
--> user manually starts /goal
+-> user asks the model to execute the confirmed Issue
 -> main-agent implementation and validation
 -> freeze final tree and run V2/V3
 -> runtime Final Review Plan
@@ -37,7 +36,7 @@ Use this precedence:
 3. Execution Blueprint: confirmed, non-normative implementation guidance.
 4. Runtime Final Review Plan: supplementary frozen-tree review evidence.
 
-The Goal is a pinned launcher. It may identify the Task Contract and Blueprint, perform identity and repository drift checks, and describe the runtime sequence. It cannot add requirements.
+The confirmed persisted Issue is the execution entry point. Its compact Blueprint reference pins the Task Contract and Blueprint digests needed for preflight; no separate launcher prompt is generated.
 
 Do not:
 
@@ -46,14 +45,13 @@ Do not:
 - mutate requirements or `Curation status`;
 - generate or confirm reviewer routing before the final tree exists;
 - update a hosted issue or local brief before exact patch confirmation;
-- invoke `/goal` automatically;
 - create, approve, merge, or close PRs/MRs.
 
 ## Inputs And Identity
 
-Prefer a hosted issue, then a persisted local brief, then a pasted Task Contract. Persist pasted-only contracts before producing a target-specific patch or Goal.
+Prefer a hosted issue, then a persisted local brief, then a pasted Task Contract. Persist pasted-only contracts before producing a target-specific patch or declaring the work ready for direct execution.
 
-Treat only the Task Contract byte range as normative. Comments, the Blueprint, runtime review plan, Goal, session summaries, PR/MR bodies, runner output, and reviewer conclusions are supplementary evidence.
+Treat only the Task Contract byte range as normative. Comments, the Blueprint, runtime review plan, execution session summaries, PR/MR bodies, runner output, and reviewer conclusions are supplementary evidence.
 
 Use exact bytes without normalization:
 
@@ -84,8 +82,8 @@ Return `NEEDS_GRILL` when an independently valuable `LIGHT` or `STANDARD` outcom
 
 Classify residual risk as `LOW`, `MEDIUM`, or `HIGH` and select:
 
-- `ALLOW_GOAL`: `LOW` and `LOOP_READY`.
-- `GOAL_WITH_STRICT_GATE`: `MEDIUM` or fully specified `HIGH` and `LOOP_READY`.
+- `ALLOW_EXECUTION`: `LOW` and `LOOP_READY`.
+- `EXECUTION_WITH_STRICT_GATE`: `MEDIUM` or fully specified `HIGH` and `LOOP_READY`.
 - `HUMAN_ONLY`: unresolved high-risk decisions, unavailable authority, or unauthorized irreversible action.
 
 For a blocked result, return only the decision, blockers, and smallest next action.
@@ -115,15 +113,22 @@ For a persisted target:
 3. Ask the user to confirm the summary and exact patch.
 4. Immediately before application, re-read the target and require the authoritative complete-body and Task Contract digests to match.
 5. Apply only the marked Blueprint reference block.
-6. Re-read the target, verify the exact block and unchanged Task Contract digest, then compute the new complete-body digest.
+6. Re-read the target, verify the exact block, its pinned Task Contract digest, and the unchanged Task Contract bytes, then capture the new canonical complete-body digest and host revision provenance.
 
 Do not place a Final Review Plan or reviewer capability decision in the Issue. A revised patch requires fresh confirmation.
 
-### 5. Generate The Thin Goal
+### 5. Hand Off The Confirmed Issue For Direct Execution
 
-Read [assets/codex-loop-goal.txt](assets/codex-loop-goal.txt).
+After the Blueprint and compact reference patch are confirmed, persisted, applied, and verified, report that the canonical Issue is ready for direct execution. Do not generate a launcher prompt or restate the contract as another execution artifact.
 
-Generate the Goal only after the Blueprint and compact reference patch are confirmed, persisted, applied, and verified. Pin the canonical Issue identity, Task Contract digest, Blueprint source/digest, repository baseline, and drift stops. The user starts the Goal manually.
+At execution start, the implementing model must:
+
+1. read the complete current persisted Issue and capture its source, host revision provenance, and exact complete-body digest as the execution identity;
+2. treat only the Task Contract byte range as normative;
+3. recompute the Task Contract digest and require it to match the digest in the confirmed Blueprint reference;
+4. load the referenced Blueprint and require its exact digest to match;
+5. inspect the current repository baseline and stop on material Task Contract, Blueprint, source-access, or repository drift;
+6. follow the confirmed Blueprint without adding requirements.
 
 ## Runtime Implementation And Validation
 
@@ -170,6 +175,7 @@ The final handoff includes:
 
 - canonical Issue and Task Contract identity;
 - confirmed Blueprint source and digest;
+- direct-execution preflight result;
 - final Git tree digest;
 - V2/V3 results;
 - Final Review Plan and reviewer results;

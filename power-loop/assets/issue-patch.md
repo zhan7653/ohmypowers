@@ -33,9 +33,13 @@ Artifact: `<persisted path or durable source>`
 
 Artifact digest: `sha256:<exact UTF-8 bytes>`
 
+Task Contract digest: `sha256:<exact normative Task Contract bytes>`
+
 Delivery lane: `<LIGHT | STANDARD | HIGH>`
 
 Generated at: `<ISO-8601 timestamp with timezone>`
+
+Execution entry: `This confirmed persisted Issue. Before implementation, recompute the Task Contract digest, verify the referenced artifact digest, and stop on material drift.`
 
 This artifact is confirmed operational guidance, not a normative contract source. Requirement-level changes must update the Task Contract.
 <!-- power-loop:execution-blueprint:end -->
@@ -48,11 +52,11 @@ This artifact is confirmed operational guidance, not a normative contract source
 - Do not edit, reformat, reorder, or normalize Task Contract or Curation status content.
 - Immediately before application, require the complete-body and Task Contract digests to match.
 - Re-read the Blueprint and require its displayed digest to match.
-- After application, verify the exact replacement block and unchanged Task Contract digest, then compute the new complete-body digest for the Goal.
+- After application, verify the exact replacement block, its pinned Task Contract digest, and the unchanged Task Contract bytes, then capture the new complete-body digest and host revision provenance as execution evidence.
 - A revised patch requires fresh explicit confirmation.
 
 Confirmation request:
 
 ```text
-Please confirm the decision summary and whether I should apply this exact compact Execution Blueprint reference patch to <target>. I will not generate the final Goal Prompt until the Blueprint and patch are persisted and verified.
+Please confirm the decision summary and whether I should apply this exact compact Execution Blueprint reference patch to <target>. After the Blueprint and patch are persisted and verified, the confirmed Issue will be ready for direct execution.
 ```

@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Verifier"
-  short_description: "Verify implementation evidence against an Issue and Goal contract"
-  default_prompt: "Use $power-verifier for a read-only, snapshot-bound conformance review against the pinned Task Contract byte range, treating planning artifacts and the Goal as supplementary evidence."
+  short_description: "Verify implementation evidence against a canonical Issue contract"
+  default_prompt: "Use $power-verifier for a read-only, snapshot-bound conformance review against the canonical Task Contract byte range, treating planning and execution artifacts as supplementary evidence."

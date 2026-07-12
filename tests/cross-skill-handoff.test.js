@@ -60,11 +60,10 @@ function classifyHandoff(scenario, fixture) {
   return 'unresolved'
 }
 
-function goalDecision(scenario) {
-  if (!scenario.observedIssue) return scenario.goal.addedObligations.length ? 'stop' : 'ready'
-  return scenario.pinnedIssue.source === scenario.observedIssue.source &&
-    scenario.pinnedIssue.fullBodySha256 === scenario.observedIssue.fullBodySha256 &&
-    scenario.pinnedIssue.taskContractSha256 === scenario.observedIssue.taskContractSha256
+function directExecutionDecision(scenario) {
+  return scenario.issue.blueprintReference.planningStatus === 'confirmed' &&
+    scenario.issue.taskContractSha256 === scenario.issue.blueprintReference.taskContractSha256 &&
+    sha256Pattern.test(scenario.issue.blueprintReference.artifactSha256)
     ? 'ready'
     : 'stop'
 }
@@ -106,22 +105,19 @@ test('same-tree reuse, final-tree revalidation, waiver, route-back, and legacy h
   assert.equal(classifyHandoff(cases.get('legacy-missing-identity'), fixture), 'unresolved')
 })
 
-test('thin Goal adds no obligations and authoritative Issue identity drift stops execution', async () => {
+test('confirmed Issue is the direct execution entry and Task Contract drift stops execution', async () => {
   const fixture = await readFixture()
-  const goals = fixture.cases.filter(scenario => scenario.kind === 'goal')
+  const executions = fixture.cases.filter(scenario => scenario.kind === 'execution-entry')
 
-  for (const scenario of goals) {
-    assert.equal(scenario.goal.evidenceRole, 'supplementary-launcher')
-    assert.deepEqual(scenario.goal.addedObligations, [])
-    assert.equal(scenario.goal.driftBehavior, 'stop')
-    assert.equal(goalDecision(scenario), scenario.expected.startDecision, scenario.id)
+  for (const scenario of executions) {
+    assert.equal(scenario.issue.executionEntry, 'canonical-persisted-issue')
+    assert.equal(scenario.issue.blueprintReference.evidenceRole, 'supplementary-plan')
+    assert.equal(directExecutionDecision(scenario), scenario.expected.startDecision, scenario.id)
   }
 
-  const drift = goals.find(scenario => scenario.id === 'identity-drift-stop')
-  assert.notEqual(drift.pinnedIssue.hostRevision, drift.observedIssue.hostRevision)
-  assert.notEqual(drift.pinnedIssue.fullBodySha256, drift.observedIssue.fullBodySha256)
-  assert.equal(drift.pinnedIssue.taskContractSha256, drift.observedIssue.taskContractSha256)
-  assert.equal(drift.expected.reason, 'authoritative-full-body-digest-mismatch')
+  const drift = executions.find(scenario => scenario.id === 'task-contract-drift-stop')
+  assert.notEqual(drift.issue.taskContractSha256, drift.issue.blueprintReference.taskContractSha256)
+  assert.equal(drift.expected.reason, 'task-contract-digest-mismatch')
 })
 
 test('lifecycle mappings persist only canonical states and keep labels non-normative', async () => {
@@ -151,7 +147,7 @@ test('artifact lint keeps identity, snapshot, waiver, freshness, and lifecycle v
   const files = await Promise.all(
     [
       'power-loop/SKILL.md',
-      'power-loop/assets/codex-loop-goal.txt',
+      'power-loop/assets/issue-patch.md',
       'power-verifier/SKILL.md',
       'power-verifier/assets/verifier-result-template.md',
       'power-curator/SKILL.md',

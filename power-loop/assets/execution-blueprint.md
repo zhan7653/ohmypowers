@@ -78,6 +78,7 @@ High-risk failure matrix: `<applicable authorization, tampering, drift, concurre
 
 ## Runtime bounds and delivery policy
 
+- Execution sequence: `main-agent implementation -> V0 -> V1 -> optional HIGH failure-matrix review and one repair -> freeze tree -> V2 -> V3 when applicable -> runtime Final Review Plan -> concurrent independent reviewers -> verifier -> compact PR/MR evidence`
 - Candidate snapshot ceiling: `3`
 - Concentrated repair rounds: `<0 or 1>`
 - Final certification waves: `<planned 1; maximum 2 after one blocker repair>`

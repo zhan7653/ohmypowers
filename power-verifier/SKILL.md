@@ -1,6 +1,6 @@
 ---
 name: power-verifier
-description: Verify a completed implementation read-only against its pinned canonical Issue revision.
+description: Verify a completed implementation read-only against its canonical persisted Issue and Task Contract.
 ---
 
 # Power Verifier
@@ -9,9 +9,9 @@ description: Verify a completed implementation read-only against its pinned cano
 
 Verify whether an implementation, its execution, validation, and evidence conform to the verification contract without changing source, Git, or hosted state. The verifier is portable: it can assess an arbitrary code project and does not require a particular repository layout, Git host, profile, model, provider, test framework, or review count.
 
-The sole normative verification contract is the Task Contract byte range inside the canonical hosted Issue body, or an equivalent persisted local contract, at the exact revision pinned for execution. Identify the persisted container with its source, host revision metadata when available, and SHA-256 digest of the exact full UTF-8 body with no whitespace or newline normalization. Identify the normative contract separately with the exact Task Contract SHA-256. The full-body digest is the authoritative container identity; the Task Contract digest controls normative clauses.
+The sole normative verification contract is the Task Contract byte range inside the canonical hosted Issue body, or an equivalent persisted local contract, used for execution. Identify the persisted container with its source, host revision metadata when available, and SHA-256 digest of the exact full UTF-8 body with no whitespace or newline normalization. Identify the normative contract separately with the exact Task Contract SHA-256. The full-body digest is the authoritative container identity; the Task Contract digest controls normative clauses.
 
-Read the pinned body in full for identity and lifecycle context, but extract normative clauses only from the Task Contract. Treat embedded or separate planning artifacts, the final Goal Prompt, execution session, comments, discussions, implementation summaries, PR/MR descriptions, runner summaries, and reviewer conclusions as supplementary evidence only. They may show what ran or identify drift, but they cannot add, override, or conflict with Task Contract obligations. Do not judge, rewrite, improve, complete, or add requirements to a consistent Task Contract.
+Read the execution Issue body in full for identity and lifecycle context, but extract normative clauses only from the Task Contract. Treat embedded or separate planning artifacts, execution sessions, comments, discussions, implementation summaries, PR/MR descriptions, runner summaries, and reviewer conclusions as supplementary evidence only. They may show what ran or identify drift, but they cannot add, override, or conflict with Task Contract obligations. Do not judge, rewrite, improve, complete, or add requirements to a consistent Task Contract.
 
 Return exactly one result:
 
@@ -33,7 +33,7 @@ Do not use this workflow to evaluate contract quality or to clarify a vague cont
 Collect or report unavailable:
 
 - the complete canonical Issue body, source, pinned revision metadata, exact full-body SHA-256 digest, exact Task Contract byte boundary, and Task Contract SHA-256 digest;
-- the final Goal Prompt used for execution as supplementary evidence, including its Issue identity reference when available;
+- the confirmed Blueprint reference and exact Blueprint artifact used for execution as supplementary evidence;
 - runtime reviewer routing provenance: selected supported fields or inherited parent configuration;
 - reviewer capability evidence and any unavailable exact Task Contract requirement;
 - the final implementation snapshot and diff or equivalent implementation evidence;
@@ -45,8 +45,8 @@ Do not accept an implementation-runner claim, a summary, or a passing command as
 
 ## Verification Workflow
 
-1. Read the complete canonical Issue body at the pinned identity. Verify its source and exact full-body digest, compare host revision metadata when available, locate the exact Task Contract byte boundary, and verify its digest before extracting every applicable Task Contract clause into a clause record with: clause ID, source location, obligation, applicability, evidence, status, and notes. A source, full-body, Task Contract boundary, or Task Contract digest mismatch is stale evidence and returns `BLOCKED` with the smallest re-read or replan action. A host revision metadata difference with identical body and Task Contract digests is recorded as provenance, not treated as content drift.
-2. Read referenced planning artifacts, the final Goal Prompt, and other execution artifacts as supplementary evidence. Verify their Issue and Task Contract references when present, but do not extract normative clauses from them. Report any apparent added obligation as non-normative planning or execution drift; never turn it into a verifier requirement or an Issue-versus-plan conflict.
+1. Read the complete canonical Issue body used for execution. Verify its source and exact full-body digest, compare host revision metadata when available, locate the exact Task Contract byte boundary, and verify its digest before extracting every applicable Task Contract clause into a clause record with: clause ID, source location, obligation, applicability, evidence, status, and notes. Require the confirmed Blueprint reference to pin the same Task Contract digest. A source, full-body, Task Contract boundary, Task Contract digest, or Blueprint-reference mismatch is stale evidence and returns `BLOCKED` with the smallest re-read or replan action. A host revision metadata difference with identical body and Task Contract digests is recorded as provenance, not treated as content drift.
+2. Read referenced planning artifacts and other execution artifacts as supplementary evidence. Verify their Issue and Task Contract references when present, but do not extract normative clauses from them. Report any apparent added obligation as non-normative planning or execution drift; never turn it into a verifier requirement or an Issue-versus-plan conflict.
 3. Identify irreconcilable conflicts only within the Task Contract. Cite the conflicting Task Contract clauses, choose neither requirement, and return `NEEDS_HUMAN`.
 4. Capture the implementation snapshot before accepting validation or review evidence. Record repository/ref, commit or explicitly `unavailable`, Git tree digest, dirty/generated-artifact boundary, and capture time. The Git tree digest, not commit identity or a generic snapshot label, controls freshness.
 5. Validate runtime reviewer-routing evidence. Accept selected model/profile/reasoning/sandbox fields only when each field is directly evidenced. Otherwise require inherited configuration provenance and no independently selected claims. Pre-implementation routing confirmation is neither required nor proof of runtime capability.

@@ -80,7 +80,7 @@ Return only the JSON object required by the configured output schema. Do not inc
 Language: ${lang}
 Date: ${rawSummary.date}
 
-Set schemaVersion to 2, status to draft, lang and date to the values above, metadata.projectCount to ${rawSummary.projects.length}, and metadata.sessionCount to ${rawSummary.sessionCount}. Use an ISO-8601 generatedAt value and metadata.routeSteps ["Issue Contract", "Bounded /goal", "Verifier Evidence", "Markdown-first Report"].
+Set schemaVersion to 2, status to draft, lang and date to the values above, metadata.projectCount to ${rawSummary.projects.length}, and metadata.sessionCount to ${rawSummary.sessionCount}. Use an ISO-8601 generatedAt value and metadata.routeSteps ["Issue Contract", "Direct Issue Execution", "Verifier Evidence", "Markdown-first Report"].
 
 Use the raw summary as evidence. Preserve local paths when useful. Keep Markdown order compatible with:
 今日概览, 关键成果, 关键决策, 明日优先, 后续待办, 项目进展, 风险与阻塞, 想法与灵感, 附录：证据索引.

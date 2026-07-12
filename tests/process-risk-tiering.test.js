@@ -69,12 +69,11 @@ test('grill and loop require explicit split and safety decisions instead of sile
 })
 
 test('Task Contract is normative while Blueprint and runtime review evidence stay supplementary', async () => {
-  const [issueTemplate, blueprint, finalReview, patch, goal, verifier] = await Promise.all([
+  const [issueTemplate, blueprint, finalReview, patch, verifier] = await Promise.all([
     readFile(path.join(root, 'power-grill', 'assets', 'issue-body.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'execution-blueprint.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'final-review-plan.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'issue-patch.md'), 'utf8'),
-    readFile(path.join(root, 'power-loop', 'assets', 'codex-loop-goal.txt'), 'utf8'),
     readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8'),
   ])
 
@@ -87,7 +86,7 @@ test('Task Contract is normative while Blueprint and runtime review evidence sta
   assert.match(patch, /Compact Planning Reference Patch/)
   assert.match(patch, /Decision summary/)
   assert.match(patch, /Artifact digest: `sha256:/)
+  assert.match(patch, /Task Contract digest: `sha256:/)
   assert.doesNotMatch(patch, /<all remaining filled Execution Blueprint fields and sections>/)
-  assert.match(goal, /treat only its Task Contract byte range as normative/i)
   assert.match(verifier, /extract normative clauses only from the Task Contract/)
 })

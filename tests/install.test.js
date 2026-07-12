@@ -40,8 +40,11 @@ test('installer installs the complete managed inventory idempotently without cha
   const agentsDir = path.join(tmp, 'agents')
   const personalAgent = path.join(agentsDir, 'personal-agent.toml')
   const personalAgentContents = 'name = "personal_agent"\ncustom = true\n'
+  const retiredLoopAsset = path.join(tmp, 'skills', 'power-loop', 'assets', 'legacy-launcher.txt')
   await fs.mkdir(agentsDir, { recursive: true })
+  await fs.mkdir(path.dirname(retiredLoopAsset), { recursive: true })
   await fs.writeFile(personalAgent, personalAgentContents, 'utf8')
+  await fs.writeFile(retiredLoopAsset, 'stale launcher\n', 'utf8')
   for (const retired of retiredProfiles) await fs.writeFile(path.join(agentsDir, retired), 'stale = true\n', 'utf8')
 
   await install(tmp)
@@ -51,6 +54,7 @@ test('installer installs the complete managed inventory idempotently without cha
 
   assert.deepEqual(secondInstall, firstInstall)
   assert.equal(await fs.readFile(personalAgent, 'utf8'), personalAgentContents)
+  assert.equal(await exists(retiredLoopAsset), false)
   for (const retired of retiredProfiles) assert.equal(await exists(path.join(agentsDir, retired)), false)
   assert.deepEqual([...managedSkills].sort(), await declaredSkills())
   assert.deepEqual(

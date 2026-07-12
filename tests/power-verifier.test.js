@@ -12,7 +12,6 @@ const fixedTopologyPaths = [
   'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
   'power-loop/SKILL.md',
   'power-loop/assets/final-review-plan.md',
-  'power-loop/assets/codex-loop-goal.txt',
   'power-loop/assets/execution-blueprint.md',
   'power-loop/assets/issue-patch.md',
   'power-loop/assets/loop-readiness-checklist.md',
@@ -239,8 +238,8 @@ test('semantic packages are replay-ready evidence, not deterministic LLM asserti
     assert.ok(item.contract.issue.source)
     assert.ok(item.contract.issue.revision)
     assert.ok(item.contract.issue.fullBodyDigest)
-    assert.equal(item.contract.goal.evidenceRole, 'supplementary')
-    assert.equal('clauses' in item.contract.goal, false, `${item.id} Goal is not a normative clause source`)
+    assert.equal(item.contract.blueprint.evidenceRole, 'supplementary')
+    assert.equal('clauses' in item.contract.blueprint, false, `${item.id} Blueprint is not a normative clause source`)
     assert.ok(item.snapshot.repositoryRef)
     assert.ok(item.snapshot.commit)
     assert.ok(item.snapshot.gitTreeDigest)
@@ -379,5 +378,4 @@ test('verifier artifacts define the Task Contract as normative, preserve Issue i
   assert.match(skill, /planning artifacts.*supplementary evidence/i)
   assert.match(skill, /Different commits with the same Git tree digest are tree-equivalent/)
   assert.match(skill, /do not fabricate/i)
-  assert.doesNotMatch(skill, /verification contract is exactly:[\s\S]*Final Goal Prompt/)
 })

@@ -11,7 +11,7 @@ Produce a requirements-ready issue contract before implementation starts. The Ta
 
 Leave exact files, private interfaces, internal flow, test seams, concrete commands, implementation order, ownership, and subagent routing to `power-loop`.
 
-The output is a clarified summary, a related-issue recommendation, an issue draft, and—after explicit confirmation—a hosted issue or persisted local brief. Do not implement code, generate or start `/goal`, create PRs/MRs, or create/update hosted issues by default.
+The output is a clarified summary, a related-issue recommendation, an issue draft, and—after explicit confirmation—a hosted issue or persisted local brief. Do not implement code, start execution, create PRs/MRs, or create/update hosted issues by default.
 
 ## Inputs
 
@@ -123,7 +123,7 @@ Treat comments as supplementary evidence. Put durable requirement changes in the
 
 The Task Contract identity is SHA-256 over the exact persisted UTF-8 bytes from the document start to the byte immediately before `<!-- power-loop:execution-blueprint:start -->`, with no whitespace or newline normalization. Preserve the marked planning boundaries so `power-loop` can verify this digest before and after patching.
 
-Ask the user to confirm the complete issue draft and related-issue recommendation. Do not generate `/goal`.
+Ask the user to confirm the complete issue draft and related-issue recommendation. Do not start implementation.
 
 ### 5. Persist Only After Confirmation
 
@@ -135,7 +135,7 @@ After explicit confirmation, create, update, or save the contract:
 
 Before hosted mutation, inspect project host guidance and remotes. For GitHub read [references/github-issue-creation.md](references/github-issue-creation.md); for GitLab read [references/gitlab-issue-creation.md](references/gitlab-issue-creation.md). Preserve any project-required full GitLab repository URL. Stop if the canonical host or target is unclear.
 
-Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for final Goal generation because the compact confirmed planning references need a canonical home and the complete persisted body needs a stable identity.
+Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for direct execution because the compact confirmed planning reference needs a canonical home and the complete persisted body needs a stable identity.
 
 ### 6. Hand Off To power-loop
 
@@ -145,10 +145,10 @@ Stop after persistence. Return:
 2. the readiness summary;
 3. the next step: run `power-loop` on that persisted source.
 
-Do not include internal interfaces, exact implementation paths, worktree choices, Agent/model assignments, iteration budgets, verifier prompts, a PR/MR body, or a complete `/goal`.
+Do not include internal interfaces, exact implementation paths, worktree choices, Agent/model assignments, iteration budgets, verifier prompts, or a PR/MR body.
 
 ## Output
 
 Before persistence, output the clarified summary, complete issue draft, related-issue recommendation, and confirmation request.
 
-After persistence, output the canonical reference, readiness summary, confirmed delivery lane or split decision, and the instruction to run `power-loop` for separate planning artifacts, a compact confirmable reference patch, and the final manual Goal Prompt.
+After persistence, output the canonical reference, readiness summary, confirmed delivery lane or split decision, and the instruction to run `power-loop` for the separate planning artifact and compact confirmable reference patch that make the Issue directly executable.

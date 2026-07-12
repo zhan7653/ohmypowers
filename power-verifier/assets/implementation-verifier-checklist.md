@@ -8,8 +8,8 @@ Use this checklist for a read-only contract-conformance pass.
 - Locate the exact Task Contract byte range and verify its SHA-256; extract normative clauses only from that range.
 - Treat the Blueprint, runtime Final Review Plan, and any legacy Dispatch artifact as supplementary operational evidence, not clause sources.
 - Record its source, host revision metadata when available, and SHA-256 of the exact full persisted UTF-8 body without normalization; the full-body digest is the authoritative container identity, and the observed identity must match the pin.
-- Keep the Goal Prompt, session, comments, discussions, summaries, PR/MR text, and runner output supplementary. They cannot add or override obligations.
-- Extract every applicable Task Contract clause into a record containing clause ID, source location, obligation, applicability, evidence, status, and notes. Do not extract planning-artifact or Goal clauses.
+- Keep planning artifacts, sessions, comments, discussions, summaries, PR/MR text, and runner output supplementary. They cannot add or override obligations.
+- Extract every applicable Task Contract clause into a record containing clause ID, source location, obligation, applicability, evidence, status, and notes. Do not extract planning-artifact clauses.
 - Treat a consistent contract as authoritative; do not criticize, rewrite, complete, or add requirements.
 - Identify Task Contract clauses that cannot be satisfied together. Cite both records and select `NEEDS_HUMAN` without choosing either clause.
 - Treat a source or authoritative full-body digest mismatch as stale evidence and `BLOCKED`, not as a second-contract conflict. Record a host revision metadata difference with an identical digest as provenance rather than content drift.

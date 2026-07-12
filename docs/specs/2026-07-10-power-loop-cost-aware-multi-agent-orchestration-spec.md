@@ -22,19 +22,18 @@ Task Contract
 -> Execution Blueprint
 -> compact Blueprint reference patch
 -> user confirmation and exact application
--> thin Goal
+-> directly executable Issue
 ```
 
-The Issue stores one compact Blueprint reference and digest. It does not store a reviewer plan, capability classification, routing decision, or reviewer count.
+The Issue stores one compact Blueprint reference, Task Contract digest, and Blueprint digest. It does not store a reviewer plan, capability classification, routing decision, or reviewer count.
 
-The Goal pins:
+At execution start, the implementing model reads the Issue directly and checks:
 
-- canonical Issue identity;
-- Task Contract digest;
-- Blueprint reference and digest;
-- repository baseline and drift stops.
+- the current Task Contract digest against the compact reference;
+- the referenced Blueprint digest;
+- the Blueprint repository baseline and drift stops.
 
-It does not require reviewer capability or routing confirmation before implementation.
+No separate launcher prompt is generated. Reviewer capability or routing confirmation is not required before implementation.
 
 ## Runtime Validation Protocol
 
@@ -112,7 +111,7 @@ PR evidence references the Blueprint, Final Review Plan, reviewer results, and v
 
 1. Readiness and Blueprint generation require no reviewer capability preflight or routing confirmation.
 2. The Issue contains no Agent Dispatch Plan reference.
-3. The Goal pins only Task Contract, Issue, Blueprint, and repository identity before implementation.
+3. The confirmed Issue directly supplies the Task Contract and Blueprint identities needed before implementation; no launcher prompt exists.
 4. Exactly one Final Review Plan template exists.
 5. Reviewer routing is selected at runtime after the final tree and V2/V3 evidence exist.
 6. Independent contract-conformance and code-review results are required for PASS/PASS_WITH_NOTES.

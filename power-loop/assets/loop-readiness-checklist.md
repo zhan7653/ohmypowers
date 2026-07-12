@@ -43,7 +43,7 @@ Required output:
 - readiness result, delivery lane/split decision, residual risk, and execution decision;
 - proposed Execution Blueprint path and digest;
 - decision summary and compact Blueprint-reference patch;
-- Goal withheld pending confirmed patch application.
+- direct execution withheld pending confirmed patch application.
 
 ### NEEDS_GRILL
 

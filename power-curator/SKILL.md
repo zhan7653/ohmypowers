@@ -172,7 +172,7 @@ Use `Change history` for contract changes. Use `Curation status` for lifecycle t
 
 Persist only these Issue states: `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, and `follow-up-needed`.
 
-- Goal/runtime decisions such as `plan-ready`, `blocked`, or `needs-human`, verifier results such as `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`, and curator freshness classifications are evidence or gates, never persisted completion states.
+- Runtime decisions such as `plan-ready`, `blocked`, or `needs-human`, verifier results such as `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`, and curator freshness classifications are evidence or gates, never persisted completion states.
 - Lifecycle assessments map as follows: `active` to `open` or `in-progress`; `implemented-but-open` to `pr-ready` or `merged` according to hosted evidence; `needs-follow-up` to `follow-up-needed`; `superseded` to `superseded`; `duplicate-or-related` and `unclear` require a human decision and do not imply a state mutation.
 - Allowed forward transitions are `open` to `in-progress` or `superseded`; `in-progress` to `pr-ready`, `follow-up-needed`, or `superseded`; `pr-ready` to `in-progress`, `merged`, `follow-up-needed`, or `superseded`; `merged` to `done` or `follow-up-needed`; and `follow-up-needed` to `done` once the current contract's closure record and follow-up linkage are confirmed. `done` and `superseded` are terminal for this curation pass.
 - `tree-equivalent`, `reverified`, and complete `human-waived` classifications can satisfy only the freshness gate. `contract-changing` and `unresolved` block closure. All other closure requirements and explicit user confirmation still apply.

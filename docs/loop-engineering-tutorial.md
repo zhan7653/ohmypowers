@@ -9,8 +9,7 @@ power-grill
 -> power-loop repository inspection
 -> separate Execution Blueprint artifact
 -> confirmed compact Blueprint-reference patch
--> ready-to-run Goal Prompt
--> user manually runs /goal
+-> user asks the model to execute the confirmed Issue
 -> runtime Final Review Plan after V2/V3
 -> snapshot-bound validation replay plus independent contract-conformance and code review
 -> PR evidence and human review
@@ -159,7 +158,11 @@ Artifact: `None`
 
 Artifact digest: `None`
 
+Task Contract digest: `None`
+
 Delivery lane: `LIGHT`
+
+Execution entry: `Not ready until power-loop confirms and applies this reference.`
 <!-- power-loop:execution-blueprint:end -->
 
 # Curation status
@@ -167,7 +170,7 @@ Delivery lane: `LIGHT`
 State: open
 ```
 
-The issue or local brief must exist before final Goal generation. Its exact full persisted body digest is the authoritative container identity, while the Task Contract byte range is the sole normative contract. Record host revision metadata as provenance. The Task Contract identity is the SHA-256 of exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`. Embedded planning references, separate planning artifacts, comments, and lifecycle text do not add requirements.
+The issue or local brief must exist before repository-aware planning and direct execution. Its exact full persisted body digest is the authoritative container identity, while the Task Contract byte range is the sole normative contract. Record host revision metadata as provenance. The Task Contract identity is the SHA-256 of exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`. Embedded planning references, separate planning artifacts, comments, and lifecycle text do not add requirements.
 
 ## Step 3: Run power-loop
 
@@ -177,11 +180,11 @@ Use $power-loop on <issue-url-or-local-brief>.
 
 `power-loop` should:
 
-1. Run readiness, delivery-lane, split, and residual-risk gating; for this example, confirm `LIGHT`, no split needed, `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
+1. Run readiness, delivery-lane, split, and residual-risk gating; for this example, confirm `LIGHT`, no split needed, `LOOP_READY`, risk `LOW`, and `ALLOW_EXECUTION`.
 2. Inspect the repository and record its source branch and commit.
 3. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, and implementation order in a separately persisted, non-normative Execution Blueprint.
 4. Display a short decision summary and exact compact Blueprint-reference patch.
-5. Withhold the Goal Prompt and ask for confirmation of the decision summary and exact patch.
+5. Withhold direct execution and ask for confirmation of the decision summary and exact patch.
 
 Reviewer routing is deliberately absent from pre-implementation planning. Keep exploration, implementation, tests, integration, validation, and repair on the main agent. After V2/V3 and the final diff exist, inspect runtime reviewer capability and create one Final Review Plan.
 
@@ -202,22 +205,23 @@ Check that:
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
 
-After confirmation, `power-loop` verifies the Blueprint, applies only its compact marked reference block, re-reads the issue/local brief, verifies the Task Contract byte boundary, and only then computes the authoritative full-body SHA-256 and generates the final Goal Prompt.
+After confirmation, `power-loop` verifies the Blueprint, applies only its compact marked reference block, re-reads the issue/local brief, and verifies the Task Contract byte boundary plus the Task Contract and Blueprint digests. The persisted Issue is then ready for direct execution.
 
-## Step 5: Manually Run The Goal Prompt
+## Step 5: Execute The Confirmed Issue Directly
 
-The user starts the returned prompt manually. The orchestrator should:
+The user asks the model to execute the confirmed Issue URL or local brief. The implementing model should:
 
-1. Re-read the confirmed issue/local brief and require its authoritative full-body SHA-256 to match the Goal pin. Host revision drift with identical bytes is provenance; a digest mismatch stops execution.
-2. Check for material drift from the recorded branch and commit.
-3. Create or enter the one task-level branch/worktree.
-4. Execute implementation, tests, integration, and validation in the main agent.
-5. Run V0 focused checks and V1 integration checks.
-6. For high-risk work, run one main-agent failure-matrix self-review and at most one concentrated repair.
-7. Freeze a certification candidate and run V2, then V3 once when applicable.
-8. Inspect the runtime spawn contract and create a Final Review Plan. Use selected reviewer fields only when independently exposed; otherwise record inherited configuration provenance.
-9. Launch contract-conformance, code, and independently justified risk reviewers concurrently over the same tree and evidence package.
-10. Run the verifier and prepare compact PR/MR evidence.
+1. Re-read the complete confirmed issue/local brief and treat only its Task Contract byte range as normative.
+2. Recompute the Task Contract digest, match it to the confirmed Blueprint reference, and verify the referenced Blueprint digest.
+3. Check for material drift from the Blueprint's recorded branch and commit.
+4. Create or enter the one task-level branch/worktree.
+5. Execute implementation, tests, integration, and validation in the main agent.
+6. Run V0 focused checks and V1 integration checks.
+7. For high-risk work, run one main-agent failure-matrix self-review and at most one concentrated repair.
+8. Freeze a certification candidate and run V2, then V3 once when applicable.
+9. Inspect the runtime spawn contract and create a Final Review Plan. Use selected reviewer fields only when independently exposed; otherwise record inherited configuration provenance.
+10. Launch contract-conformance, code, and independently justified risk reviewers concurrently over the same tree and evidence package.
+11. Run the verifier and prepare compact PR/MR evidence.
 
 Pause only when an exact Task Contract reviewer/model/profile/provider/reasoning/sandbox/isolation requirement cannot be satisfied.
 
@@ -253,7 +257,7 @@ Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, 
 - Missing requirement-level behavior or acceptance criteria -> `NEEDS_GRILL`.
 - Missing exact files or commands that repository inspection can safely discover -> derive them; do not grill again solely for that reason.
 - Unresolved public API, schema, security, permission, migration, compatibility, or business decision -> `NEEDS_GRILL` or `NEEDS_HUMAN`.
-- Patch not confirmed, rejected, changed, or not applied -> no Goal Prompt.
+- Patch not confirmed, rejected, changed, or not applied -> Issue is not ready for direct execution.
 - Exact reviewer model, profile, provider, reasoning, sandbox, or isolation constraint unavailable at final review -> pause for a human decision; do not substitute a weaker reviewer.
 - Missing either the independent contract-conformance or code-review result -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; add other review capabilities when contract or risk justifies them.
 - Material repository drift -> stop for a new `power-loop` pass or confirmed plan revision.
@@ -268,7 +272,7 @@ Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, 
 3. Use $power-loop on that persisted source.
 4. Review the Blueprint, decision summary, and exact compact reference patch.
 5. Confirm the decision summary and exact compact patch.
-6. Receive and manually start the ready-to-run Goal Prompt.
+6. Ask the model to execute the confirmed Issue directly.
 7. After V2/V3, review the runtime Final Review Plan and snapshot-bound reviewer results.
 8. Review the compact PR/MR evidence and verifier result.
 9. Use $power-curator to compare the verified and final Git trees, then confirm the exact lifecycle or waiver record. Do not merge or close until a human is satisfied.

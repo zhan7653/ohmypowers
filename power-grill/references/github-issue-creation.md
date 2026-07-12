@@ -26,6 +26,6 @@ Recommended flow:
 
 7. If optional labels are missing, retry without labels or ask the user.
 8. Return the issue number and URL.
-9. Tell the user to run `power-loop` on the issue URL when they want a bounded Codex `/goal`.
+9. Tell the user to run `power-loop` on the issue URL when they want to add the confirmed repository-aware plan and make the Issue directly executable.
 
 Do not create a PR during the issue-contract phase unless the user explicitly asks and there is already an implementation branch to publish.

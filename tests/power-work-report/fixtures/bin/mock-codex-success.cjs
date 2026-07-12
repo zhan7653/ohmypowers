@@ -13,7 +13,7 @@ const report = {
     sessionCount: 2,
     title: 'Codex 工作日报 · 2026-07-01',
     lead: '今天推进了 Alpha 和 Beta 两个项目，重点收敛日报结构与 fallback 行为。',
-    routeSteps: ['Issue Contract', 'Bounded /goal', 'Verifier Evidence', 'Markdown-first Report'],
+    routeSteps: ['Issue Contract', 'Direct Issue Execution', 'Verifier Evidence', 'Markdown-first Report'],
   },
   overview: {
     overview: '今天推进了 Alpha 和 Beta 两个项目，完成日报草稿、fallback 报告和 memory 去重验证。',

@@ -296,53 +296,44 @@
       }
     },
     {
-      "id": "thin-goal-no-added-obligations",
-      "kind": "goal",
-      "pinnedIssue": {
+      "id": "confirmed-issue-direct-execution",
+      "kind": "execution-entry",
+      "issue": {
         "source": "https://github.com/example/project/issues/14",
         "hostRevision": "updatedAt=2026-07-11T06:00:00Z",
         "fullBodySha256": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
-        "taskContractSha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      },
-      "goal": {
-        "evidenceRole": "supplementary-launcher",
-        "requiredSections": ["Task Contract", "Execution Blueprint"],
-        "preflightChecks": ["issue-identity", "planning-status", "repository-baseline", "capability"],
-        "driftBehavior": "stop",
-        "manualStart": true,
-        "addedObligations": []
+        "taskContractSha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "executionEntry": "canonical-persisted-issue",
+        "blueprintReference": {
+          "planningStatus": "confirmed",
+          "evidenceRole": "supplementary-plan",
+          "taskContractSha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "artifactSha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
       },
       "expected": {
-        "startDecision": "ready",
-        "goalAddsObligations": false
+        "startDecision": "ready"
       }
     },
     {
-      "id": "identity-drift-stop",
-      "kind": "goal",
-      "pinnedIssue": {
-        "source": "https://github.com/example/project/issues/15",
-        "hostRevision": "updatedAt=2026-07-11T07:00:00Z",
-        "fullBodySha256": "sha256:1515151515151515151515151515151515151515151515151515151515151515",
-        "taskContractSha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-      },
-      "observedIssue": {
+      "id": "task-contract-drift-stop",
+      "kind": "execution-entry",
+      "issue": {
         "source": "https://github.com/example/project/issues/15",
         "hostRevision": "updatedAt=2026-07-11T07:05:00Z",
         "fullBodySha256": "sha256:1616161616161616161616161616161616161616161616161616161616161616",
-        "taskContractSha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-      },
-      "goal": {
-        "evidenceRole": "supplementary-launcher",
-        "requiredSections": ["Task Contract", "Execution Blueprint"],
-        "preflightChecks": ["issue-identity", "planning-status", "repository-baseline", "capability"],
-        "driftBehavior": "stop",
-        "manualStart": true,
-        "addedObligations": []
+        "taskContractSha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "executionEntry": "canonical-persisted-issue",
+        "blueprintReference": {
+          "planningStatus": "confirmed",
+          "evidenceRole": "supplementary-plan",
+          "taskContractSha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "artifactSha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
       },
       "expected": {
         "startDecision": "stop",
-        "reason": "authoritative-full-body-digest-mismatch"
+        "reason": "task-contract-digest-mismatch"
       }
     },
     {

@@ -33,7 +33,7 @@ It does not write implementation code or implementation plans.
 - A reserved compact `Execution Blueprint` reference section for later planning.
 - Requirements-ready handoff guidance for running `power-loop` on the persisted contract.
 
-It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
+It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, start execution, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
 
 `power-loop` converts a requirements-ready persisted contract into a confirmed Codex implementation loop:
 
@@ -48,19 +48,19 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Patient `wait_agent` coordination: allow a three-minute reviewer grace period, use three-minute waits when interaction policy permits, tolerate two consecutive no-information timeouts, and stop after the third when no concrete progress is observable.
 - Four validation layers (`V0` focused, `V1` integration, `V2` final deterministic, `V3` external), one batched adversarial review, at most one concentrated repair, a three-candidate ceiling, and one external run after V2 on the frozen tree immediately before final review.
 - Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
-- Final Goal Prompt only after the confirmed planning artifacts and compact reference patch are applied and verified. It is a thin launcher that pins the Issue and Task Contract identities plus planning-artifact digests, performs preflight/drift checks, and adds no requirement; the user starts it manually.
+- Direct Issue execution after the confirmed Blueprint reference patch is applied and verified. The Issue pins the Task Contract and Blueprint digests needed for preflight, so no separate launcher prompt is generated or manually started.
 - One task-level branch/worktree rather than one worktree per subagent.
 - Contract-prescribed reviews plus baseline independent contract-conformance and code-review capabilities, with additional risk-specific reviewers when justified.
 - One runtime Final Review Plan generated after V2/V3 from the final diff and visible reviewer-spawn capability. Selected fields require direct evidence; otherwise configuration is recorded as inherited.
 - PR/MR evidence requirements and loop decision rules.
 
-Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement during planning, mutate requirements, or automatically run `/goal`. Reviewer routing is selected only after the final tree is frozen. Human input is required only when an exact Task Contract reviewer or configuration requirement is unavailable.
+Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement during planning, mutate requirements, or automatically start implementation. Reviewer routing is selected only after the final tree is frozen. Human input is required only when an exact Task Contract reviewer or configuration requirement is unavailable.
 
-For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, manual Goal execution, validation, dispatch reporting, and review.
+For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, direct Issue execution, validation, dispatch reporting, and review.
 
 `power-verifier` checks implementation evidence after a bounded loop has run:
 
-- The exact pinned Task Contract byte range as the sole normative contract. The complete Issue identifies the persisted container and lifecycle state; planning artifacts, Goal, session, PR/MR text, comments, and runner summaries remain supplementary evidence.
+- The exact Task Contract byte range used for execution as the sole normative contract. The complete Issue identifies the persisted container and lifecycle state; planning artifacts, execution sessions, PR/MR text, comments, and runner summaries remain supplementary evidence.
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
@@ -103,11 +103,11 @@ Use them by phase:
 
 - `power-think`: vague idea -> reviewed spec.
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: requirements-ready Issue/local brief -> delivery/split gate -> Execution Blueprint -> confirmed compact reference patch -> ready-to-run `/goal` -> runtime Final Review Plan.
+- `power-loop`: requirements-ready Issue/local brief -> delivery/split gate -> Execution Blueprint -> confirmed compact reference patch -> directly executable Issue -> runtime Final Review Plan.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill delivery/split decision -> power-loop Blueprint and compact patch -> thin manual Codex /goal -> main-agent implementation -> frozen-tree Final Review Plan -> snapshot-bound verifier -> compact PR evidence -> power-curator reconciliation`.
+- Recommended Loop Engineering flow: `power-grill delivery/split decision -> power-loop Blueprint and compact patch -> direct Issue execution -> main-agent implementation -> frozen-tree Final Review Plan -> snapshot-bound verifier -> compact PR evidence -> power-curator reconciliation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -124,7 +124,7 @@ The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$po
 
 At final review time, use reviewer model/profile/reasoning/sandbox fields only when each is directly exposed by the runtime spawn contract. Otherwise launch generic fresh-context reviewers and record inherited configuration provenance. Installed TOML files do not prove runtime selectability, and instruction-level no-write boundaries are not host-enforced isolation.
 
-When checking implementation evidence, provide the complete canonical Issue identity and body, exact Task Contract digest and boundary, referenced planning-artifact digests, and thin Goal as supplementary evidence. Extract normative clauses only from the Task Contract. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use Task-Contract-prescribed reviewers exactly, require independent contract-conformance and code-review evidence, and add security, compatibility, migration, test, data, or domain review when justified by implementation risk.
+When checking implementation evidence, provide the complete canonical Issue identity and body, exact Task Contract digest and boundary, and referenced planning-artifact digests as supplementary evidence. Extract normative clauses only from the Task Contract. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use Task-Contract-prescribed reviewers exactly, require independent contract-conformance and code-review evidence, and add security, compatibility, migration, test, data, or domain review when justified by implementation risk.
 
 Restart Codex after installing or updating skills or custom agents.
 
@@ -145,7 +145,7 @@ Use $power-grill to grill this feature and draft an issue contract.
 Ask for repository-aware execution planning from an existing persisted task contract:
 
 ```text
-Use $power-loop on this issue to confirm the delivery lane and split decision, generate one Execution Blueprint, and show the decision summary plus compact Blueprint-reference patch before generating the Goal Prompt.
+Use $power-loop on this issue to confirm the delivery lane and split decision, generate one Execution Blueprint, and show the decision summary plus compact Blueprint-reference patch that makes the confirmed Issue directly executable.
 ```
 
 Ask for independent critique:
@@ -199,7 +199,6 @@ power-loop/
     execution-blueprint.md
     final-review-plan.md
     issue-patch.md
-    codex-loop-goal.txt
     loop-readiness-checklist.md
     pr-evidence-template.md
 power-verifier/

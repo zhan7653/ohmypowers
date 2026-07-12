@@ -77,7 +77,11 @@ Artifact: `None`
 
 Artifact digest: `None`
 
+Task Contract digest: `None`
+
 Delivery lane: `<copied from the confirmed Task Contract>`
+
+Execution entry: `Not ready until power-loop confirms and applies this reference.`
 
 This compact block may later reference a separately persisted, non-normative repository-aware plan after explicit user confirmation. The plan may evolve without changing the Task Contract unless it exposes a new requirement-level decision.
 <!-- power-loop:execution-blueprint:end -->
@@ -90,7 +94,7 @@ Linked PRs:
 - None yet.
 
 Latest canonical context:
-The Task Contract is the sole normative contract. The complete persisted body supplies source identity and lifecycle context. Planning references, planning artifacts, comments, Goal/session/PR evidence, and runner summaries are supplementary and cannot add obligations. Execution planning is not generated yet.
+The Task Contract is the sole normative contract. The complete persisted body supplies source identity and lifecycle context. Planning references, planning artifacts, comments, execution-session/PR evidence, and runner summaries are supplementary and cannot add obligations. Execution planning is not generated yet.
 
 Decisions since contract:
 - None.

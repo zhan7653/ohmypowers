@@ -41,7 +41,7 @@ export function buildFallbackDraft(rawSummary, options = {}) {
       sessionCount: rawSummary.sessionCount,
       title: lang === 'zh-CN' ? `Codex 工作日报 · ${rawSummary.date}` : `Codex Work Report · ${rawSummary.date}`,
       lead: overviewText,
-      routeSteps: ['Issue Contract', 'Bounded /goal', 'Verifier Evidence', 'Markdown-first Report'],
+      routeSteps: ['Issue Contract', 'Direct Issue Execution', 'Verifier Evidence', 'Markdown-first Report'],
     },
     overview: {
       overview: overviewText,
@@ -240,7 +240,7 @@ export function renderHtml(report) {
   const metadata = normalizedMetadata(report)
   const routeSteps = metadata.routeSteps.length
     ? metadata.routeSteps
-    : ['Issue Contract', 'Bounded /goal', 'Verifier Evidence', 'Markdown-first Report']
+    : ['Issue Contract', 'Direct Issue Execution', 'Verifier Evidence', 'Markdown-first Report']
   const nav = [
     ['overview', '概览'],
     ['outcomes', '成果'],

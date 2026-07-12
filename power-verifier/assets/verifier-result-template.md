@@ -13,7 +13,7 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Observed exact full-body SHA-256: `<sha256:... or unavailable>`
 - Observed exact Task Contract SHA-256: `<sha256:... or unavailable>`
 - Identity status: `<matched | matched body with differing host revision metadata | mismatched source/body | insufficient historical identity>`
-- Supplementary evidence considered: `<Goal Prompt, session, PR/MR, runner summary, comments, or none>`
+- Supplementary evidence considered: `<Blueprint, execution session, PR/MR, runner summary, comments, or none>`
 - Supplementary Issue references: `<matching references, drift, missing references, or none>`
 - Task-Contract-internal conflict status: `<none | conflict requiring NEEDS_HUMAN>`
 - Conflicting Task Contract clause IDs and rationale: `<none or cited clause records>`
