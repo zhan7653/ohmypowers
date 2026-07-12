@@ -4,6 +4,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promises as fs } from 'node:fs'
 import { normalizeReportShape } from './render.js'
+import {
+  emptyReusableInsights,
+  normalizeMemoInput,
+  normalizePersonalReflection,
+  normalizeReusableInsights,
+} from './insights.js'
 
 const DEFAULT_MODEL = 'gpt-5.6-luna'
 const DEFAULT_REASONING_EFFORT = 'medium'
@@ -14,16 +20,17 @@ export async function generateDraftWithCodex(rawSummary, options = {}) {
   const model = options.model || process.env.POWER_WORK_REPORT_MODEL || DEFAULT_MODEL
   const reasoningEffort =
     options.reasoningEffort || process.env.POWER_WORK_REPORT_REASONING_EFFORT || DEFAULT_REASONING_EFFORT
-  const prompt = buildPrompt(rawSummary, options.lang || 'zh-CN')
+  const personalReflection = normalizeMemoInput(options.memo)
+  const prompt = buildPrompt(rawSummary, options.lang || 'zh-CN', personalReflection)
   const result = await runCodex(codexBin, prompt, {
     ...options,
     model,
     reasoningEffort,
   })
-  return parseDraftJson(result.stdout, rawSummary, options.lang || 'zh-CN')
+  return parseDraftJson(result.stdout, rawSummary, options.lang || 'zh-CN', { personalReflection })
 }
 
-export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
+export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN', options = {}) {
   const candidates = []
   for (const line of String(stdout || '').split('\n')) {
     const trimmed = line.trim()
@@ -43,10 +50,10 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
     try {
       const parsed = JSON.parse(candidate)
       if (parsed?.type === 'item.completed' && parsed.item?.type === 'agent_message') {
-        return normalizeDraft(JSON.parse(parsed.item.text), rawSummary, lang)
+        return normalizeDraft(JSON.parse(parsed.item.text), rawSummary, lang, options)
       }
       if (parsed?.schemaVersion || parsed?.metadata || parsed?.overview) {
-        return normalizeDraft(parsed, rawSummary, lang)
+        return normalizeDraft(parsed, rawSummary, lang, options)
       }
     } catch {
       const jsonText = extractFirstJsonObject(candidate)
@@ -54,10 +61,10 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
       try {
         const parsed = JSON.parse(jsonText)
         if (parsed?.type === 'item.completed' && parsed.item?.type === 'agent_message') {
-          return normalizeDraft(JSON.parse(parsed.item.text), rawSummary, lang)
+          return normalizeDraft(JSON.parse(parsed.item.text), rawSummary, lang, options)
         }
         if (parsed?.schemaVersion || parsed?.metadata || parsed?.overview) {
-          return normalizeDraft(parsed, rawSummary, lang)
+          return normalizeDraft(parsed, rawSummary, lang, options)
         }
       } catch {
         // Try the next candidate.
@@ -68,11 +75,24 @@ export function parseDraftJson(stdout, rawSummary, lang = 'zh-CN') {
   throw new Error('Codex returned no parseable report JSON.')
 }
 
-export function normalizeDraft(value, rawSummary, lang = 'zh-CN') {
-  return normalizeReportShape(value, rawSummary, lang)
+export function normalizeDraft(value, rawSummary, lang = 'zh-CN', options = {}) {
+  const report = normalizeReportShape(value, rawSummary, lang)
+  const memoReflection = options.personalReflection || normalizeMemoInput(options.memo)
+  const personalReflection = normalizePersonalReflection(value.personalReflection, memoReflection)
+  const reusableInsights =
+    report.status === 'codex_failed'
+      ? emptyReusableInsights(['Codex fallback output is not valid reusable-insight evidence.'])
+      : normalizeReusableInsights(value.reusableInsights, {
+          rawSummary,
+          personalReflection,
+        })
+  reusableInsights.warnings = Array.from(
+    new Set([...(rawSummary.context?.warnings || []), ...reusableInsights.warnings]),
+  ).sort()
+  return { ...report, personalReflection, reusableInsights }
 }
 
-function buildPrompt(rawSummary, lang) {
+function buildPrompt(rawSummary, lang, personalReflection) {
   return `You are generating a local Codex daily work report.
 
 Return only the JSON object required by the configured output schema. Do not include Markdown fences.
@@ -89,6 +109,13 @@ rawSummary.sessions/projects are today's event-derived data after timezone date 
 rawSummary.context is historical background only. Use it for continuity, but do not count it as today's completed work, today's sessions, or today's files.
 tasks.tomorrowPriority and tasks.backlog are top-level human attention surfaces. Include only project-level or cross-project priorities there.
 Keep local-file, one-off operational, or narrow implementation details out of top-level tasks. If still useful, place them under the relevant projectSections[].pending item instead.
+
+Set personalReflection to the supplied normalized memo state. When it is provided, write a concise reviewable summary rather than inventing or expanding private details. When it is skipped or not provided, keep its summary empty and provenance none.
+Set reusableInsights with all four candidate arrays and warnings. Compare today's evidence only with rawSummary.context.finalizedReports; each entry contains a parsed finalized report.json body, while rawSummary.context.recentReports is compatibility metadata only. Historical context is never today's work. Cite only session IDs/file paths from rawSummary.sessions, report sourceRef values from readable finalized context reports, or user-memo:${rawSummary.date} when the memo is provided.
+Automatic candidates require at least two distinct valid evidence items. An automatic global_instruction candidate additionally requires evidence from at least two projects. A user-nominated candidate may use one user_memo evidence item, but must remain unconfirmed. Never use codex_failed, fallback, unfinalized draft, missing, or unreadable history as evidence. Do not turn temporary state, ordinary todos, Issue/PR progress, guesses, or purely historical descriptions into instruction candidates. Skill and automation entries are recommendations only.
+
+Normalized personal memo state:
+${JSON.stringify(personalReflection, null, 2)}
 
 Raw summary:
 ${JSON.stringify(rawSummary, null, 2)}`

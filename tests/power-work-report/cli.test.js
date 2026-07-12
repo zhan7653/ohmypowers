@@ -525,6 +525,79 @@ test('run writes codex draft reports and proposed memory update', async t => {
   assert.deepEqual(proposal.todoUpdates, [])
   assert.ok(proposal.review)
   assert.ok(proposal.review.newTodos.length >= 2)
+  assert.equal(report.personalReflection.status, 'not_provided')
+  assert.equal(report.reusableInsights.skillCandidates[0].id, 'review-workflow-skill')
+  assert.equal(report.reusableInsights.automationCandidates[0].id, 'report-check-automation')
+  assert.equal(report.reusableInsights.globalInstructionCandidates[0].id, 'focused-tests-before-handoff')
+  assert.ok(review.includes('## 个人补充与反思'))
+  assert.ok(review.includes('## 复用洞察'))
+  assert.ok(markdown.includes('## 个人补充与反思'))
+  assert.ok(markdown.includes('## 复用洞察'))
+})
+
+test('memo regeneration accepts reviewed JSON or text and rejects unsafe input without replacing the draft', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memo-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const baseArgs = [
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ]
+  await run(baseArgs)
+  const reportPath = path.join(tmp, '2026-07-01', 'draft', 'report.json')
+  const original = await fs.readFile(reportPath, 'utf8')
+
+  await assert.rejects(() => runCli([...baseArgs, '--memo-file', path.join(tmp, 'missing.json')]), /Memo file is missing or unreadable/)
+  assert.equal(await fs.readFile(reportPath, 'utf8'), original)
+
+  const invalid = path.join(tmp, 'invalid.json')
+  await fs.writeFile(invalid, '{bad')
+  await assert.rejects(() => runCli([...baseArgs, '--memo-file', invalid]), /Memo JSON is invalid/)
+  assert.equal(await fs.readFile(reportPath, 'utf8'), original)
+
+  const large = path.join(tmp, 'large.txt')
+  await fs.writeFile(large, 'x'.repeat(4001))
+  await assert.rejects(() => runCli([...baseArgs, '--memo-file', large]), /Memo summary is too large/)
+  assert.equal(await fs.readFile(reportPath, 'utf8'), original)
+
+  const memoFile = path.join(tmp, 'reviewed-memo.json')
+  await fs.writeFile(memoFile, `${JSON.stringify({ status: 'provided', summary: '复盘后确认：交付前固定运行仓库 smoke test。', provenance: 'user_memo' })}\n`)
+  const memoRun = await captureCli([...baseArgs, '--memo-file', memoFile])
+  const report = await readJson(reportPath)
+  const memoArtifact = await readJson(path.join(tmp, '2026-07-01', 'draft', 'personal-memo.json'))
+  const review = await fs.readFile(path.join(tmp, '2026-07-01', 'draft', 'review.md'), 'utf8')
+  assert.deepEqual(report.personalReflection, memoArtifact)
+  assert.equal(report.personalReflection.status, 'provided')
+  assert.equal(JSON.parse(memoRun).memoPath, path.join(tmp, '2026-07-01', 'draft', 'personal-memo.json'))
+  assert.ok(review.includes(report.personalReflection.summary))
+  assert.equal(report.reusableInsights.projectInstructionCandidates[0].id, 'memo-project-validation')
+
+  const textMemo = path.join(tmp, 'memo.txt')
+  await fs.writeFile(textMemo, '纯文本备忘也会被规范化。\n')
+  await run([...baseArgs, '--memo-file', textMemo])
+  assert.deepEqual(await readJson(path.join(tmp, '2026-07-01', 'draft', 'personal-memo.json')), {
+    status: 'provided',
+    summary: '纯文本备忘也会被规范化。',
+    provenance: 'user_memo',
+  })
+})
+
+test('explicit memo skip and ordinary no-memo draft remain non-blocking', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memo-skip-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const skipFile = path.join(tmp, 'skip.json')
+  await fs.writeFile(skipFile, `${JSON.stringify({ status: 'skipped' })}\n`)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex, '--memo-file', skipFile,
+  ])
+  assert.equal((await readJson(path.join(tmp, '2026-07-01', 'draft', 'report.json'))).personalReflection.status, 'skipped')
+
+  const ordinary = path.join(tmp, 'ordinary')
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', ordinary,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  assert.equal((await readJson(path.join(ordinary, '2026-07-01', 'draft', 'report.json'))).personalReflection.status, 'not_provided')
 })
 
 test('run includes historical open todos and advisory completion candidates in review', async t => {
@@ -642,6 +715,124 @@ test('finalize writes final reports and deduplicates memory by normalized text a
     1,
   )
   assert.equal(memory.reports.length, 1)
+  assert.equal(memory.reports[0].personalReflection.status, 'not_provided')
+  assert.equal(memory.reports[0].reusableInsights.globalInstructionCandidates[0].id, 'focused-tests-before-handoff')
+  assert.deepEqual(memory.instructionChanges, [])
+})
+
+test('instruction plan and apply use separate gates, audit success, and support update and remove', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-instruction-cli-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, '# Human rules\n\nKeep exact.\n')
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  await run(['finalize', '--date', '2026-07-01', '--out-dir', tmp])
+  const before = await fs.readFile(target, 'utf8')
+
+  const planOutput = JSON.parse(await captureCli([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ]))
+  const proposalPath = path.join(tmp, '2026-07-01', 'draft', 'instruction-change.proposed.json')
+  const diffPath = path.join(tmp, '2026-07-01', 'draft', 'instruction-change.diff')
+  const proposal = await readJson(proposalPath)
+  assert.equal(await fs.readFile(target, 'utf8'), before)
+  assert.equal(await fs.readFile(diffPath, 'utf8'), proposal.exactDiff)
+  assert.equal(planOutput.targetPath, target)
+  assert.equal(planOutput.instructionProposalPath, proposalPath)
+  assert.equal((await readJson(path.join(tmp, 'memory.json'))).instructionChanges.length, 0)
+
+  const applyOutput = JSON.parse(await captureCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp]))
+  assert.equal(await fs.readFile(target, 'utf8'), proposal.afterContent)
+  let memory = await readJson(path.join(tmp, 'memory.json'))
+  assert.equal(memory.instructionChanges.length, 1)
+  assert.equal(memory.instructionChanges[0].proposalId, proposal.proposalId)
+  assert.equal(applyOutput.reloadRequired, true)
+
+  const reportPath = path.join(tmp, '2026-07-01', 'draft', 'report.json')
+  const report = await readJson(reportPath)
+  report.reusableInsights.globalInstructionCandidates[0].recommendation = 'Run focused and integration tests before claiming completion.'
+  await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`)
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'update', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+  await run(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp])
+  assert.ok((await fs.readFile(target, 'utf8')).includes('Run focused and integration tests'))
+
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'remove', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+  await run(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp])
+  assert.equal(await fs.readFile(target, 'utf8'), before)
+  memory = await readJson(path.join(tmp, 'memory.json'))
+  assert.deepEqual(memory.instructionChanges.map(item => item.action), ['add', 'update', 'remove'])
+  assert.equal(memory.todos.length > 0, true)
+  assert.equal(memory.ideas.length > 0, true)
+  assert.equal(memory.reports.length, 1)
+})
+
+test('ordinary finalize never mutates AGENTS.md and target drift leaves instruction audit unchanged', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-instruction-drift-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, 'human bytes\n')
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  await run(['finalize', '--date', '2026-07-01', '--out-dir', tmp])
+  assert.equal(await fs.readFile(target, 'utf8'), 'human bytes\n')
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+  const auditBefore = (await readJson(path.join(tmp, 'memory.json'))).instructionChanges
+  await fs.writeFile(target, 'drifted bytes\n')
+  await assert.rejects(
+    () => runCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp]),
+    /changed after the proposal/,
+  )
+  assert.equal(await fs.readFile(target, 'utf8'), 'drifted bytes\n')
+  assert.deepEqual((await readJson(path.join(tmp, 'memory.json'))).instructionChanges, auditBefore)
+})
+
+test('project instruction planning requires the explicit temporary repository and remains proposal-only', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-project-plan-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const repo = path.join(tmp, 'repo')
+  const memo = path.join(tmp, 'memo.json')
+  await fs.mkdir(path.join(repo, '.git'), { recursive: true })
+  await fs.writeFile(path.join(repo, 'AGENTS.md'), 'project human rules\n')
+  await fs.writeFile(memo, `${JSON.stringify({ status: 'provided', summary: '请把 smoke test 约定作为项目规则候选。', provenance: 'user_memo' })}\n`)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex, '--memo-file', memo,
+  ])
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'memo-project-validation',
+    '--action', 'add', '--project-root', repo, '--codex-home', path.join(tmp, 'codex-home'), '--out-dir', tmp,
+  ])
+  assert.equal(await fs.readFile(path.join(repo, 'AGENTS.md'), 'utf8'), 'project human rules\n')
+  const proposal = await readJson(path.join(tmp, '2026-07-01', 'draft', 'instruction-change.proposed.json'))
+  assert.equal(proposal.target.path, path.join(repo, 'AGENTS.md'))
+  assert.equal(proposal.target.scope, 'project')
+})
+
+test('help retains existing commands and exposes memo and instruction artifact commands', async () => {
+  const output = await captureCli(['--help'])
+  for (const command of ['collect', 'draft', 'run', 'render', 'finalize', 'instruction-plan', 'instruction-apply']) {
+    assert.ok(output.includes(`power-work-report ${command}`), `${command} should remain in help`)
+  }
+  assert.ok(output.includes('--memo-file PATH'))
 })
 
 test('finalize applies explicit confirmed todo completion updates', async t => {
@@ -761,10 +952,22 @@ test('malformed memory json fails draft clearly', async t => {
 })
 
 async function run(args) {
-  await execFileAsync(process.execPath, [bin, ...args], {
+  return execFileAsync(process.execPath, [bin, ...args], {
     cwd: root,
     maxBuffer: 10 * 1024 * 1024,
   })
+}
+
+async function captureCli(args) {
+  const lines = []
+  const original = console.log
+  console.log = value => lines.push(String(value))
+  try {
+    await runCli(args)
+  } finally {
+    console.log = original
+  }
+  return lines.join('\n')
 }
 
 async function readJson(filePath) {

@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Work Report"
-  short_description: "Generate and finalize manual Codex daily work reports"
-  default_prompt: "Use $power-work-report to generate a Codex daily work report draft for today, then ask before finalizing."
+  short_description: "Review daily work, personal reflection, and reusable insights"
+  default_prompt: "Use $power-work-report to generate today's draft, pause for the optional personal memo checkpoint, regenerate with --memo-file when provided, review insights, and keep finalize separate from instruction-plan and the second-confirmed instruction-apply."

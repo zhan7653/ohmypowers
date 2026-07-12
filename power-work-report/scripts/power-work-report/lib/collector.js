@@ -45,7 +45,7 @@ export async function collectDay({ date, codexHome, lookbackDays = DEFAULT_LOOKB
   scan.scannedFileCount = scan.files.length
 
   const projects = groupProjects(sessions)
-  const context = memoryFile ? await buildContext(memoryFile) : emptyContext()
+  const context = memoryFile ? await buildContext(memoryFile, { targetDate: date }) : emptyContext()
   return {
     schemaVersion: 1,
     date,
@@ -282,8 +282,58 @@ function extractSessionId(filePath) {
   return path.basename(filePath, '.jsonl').replace(/^rollout-/, '')
 }
 
-async function buildContext(memoryFile) {
+export async function buildContext(memoryFile, options = {}) {
   const memory = await readMemory(memoryFile)
+  const finalizedReports = []
+  const warnings = []
+  const reports = [...(memory.reports || [])].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+
+  for (const item of reports) {
+    if (finalizedReports.length >= 10) break
+    if (options.targetDate && item.date === options.targetDate) continue
+    if (!item.finalDir) {
+      warnings.push(`Historical report ${item.date || '(unknown date)'} has no finalDir and was not used as insight evidence.`)
+      continue
+    }
+    if (/(?:^|[/\\])draft(?:[/\\]|$)/i.test(item.finalDir)) {
+      warnings.push(`Historical report ${item.date || '(unknown date)'} points to a draft directory at ${item.finalDir} and was not used as insight evidence.`)
+      continue
+    }
+    const memoryStatus = String(item.status || '').toLowerCase()
+    if (memoryStatus === 'codex_failed' || memoryStatus === 'fallback') {
+      warnings.push(`Historical report ${item.date || '(unknown date)'} has invalid memory status "${memoryStatus}" and was not used as insight evidence.`)
+      continue
+    }
+
+    const sourceRef = path.join(item.finalDir, 'report.json')
+    let body
+    try {
+      body = JSON.parse(await fs.readFile(sourceRef, 'utf8'))
+    } catch (error) {
+      warnings.push(`Historical report ${item.date || '(unknown date)'} has unreadable or invalid JSON at ${sourceRef}: ${error.message}`)
+      continue
+    }
+    const status = String(body?.status || body?.metadata?.status || '').toLowerCase()
+    if (status !== 'draft' && status !== 'final' && status !== 'finalized') {
+      warnings.push(`Historical report ${item.date || '(unknown date)'} has invalid finalized status "${status || '(missing)'}" at ${sourceRef}.`)
+      continue
+    }
+
+    finalizedReports.push({
+      date: body.date || item.date || '',
+      title: body.metadata?.title || body.title || item.title || '',
+      status,
+      generatedAt: body.generatedAt || item.generatedAt || '',
+      sessionIds: Array.isArray(body.appendix?.sessionIds)
+        ? body.appendix.sessionIds
+        : Array.isArray(item.sessionIds)
+          ? item.sessionIds
+          : [],
+      sourceRef,
+      body,
+    })
+  }
+
   return {
     openTodos: (memory.todos || [])
       .filter(item => item.status === 'open')
@@ -300,11 +350,13 @@ async function buildContext(memoryFile) {
       generatedAt: item.generatedAt || '',
       sessionIds: Array.isArray(item.sessionIds) ? item.sessionIds : [],
     })),
+    finalizedReports: finalizedReports.reverse(),
+    warnings,
   }
 }
 
 function emptyContext() {
-  return { openTodos: [], recentReports: [] }
+  return { openTodos: [], recentReports: [], finalizedReports: [], warnings: [] }
 }
 
 function emptySkippedEvents() {

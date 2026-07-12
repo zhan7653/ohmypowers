@@ -80,6 +80,21 @@ export function buildFallbackDraft(rawSummary, options = {}) {
     ideas: {
       chips: ideas,
     },
+    personalReflection: {
+      status: 'not_provided',
+      summary: '',
+      provenance: 'none',
+    },
+    reusableInsights: {
+      skillCandidates: [],
+      automationCandidates: [],
+      globalInstructionCandidates: [],
+      projectInstructionCandidates: [],
+      warnings:
+        options.status === 'codex_failed'
+          ? ['Codex fallback output is not valid reusable-insight evidence.']
+          : [],
+    },
     appendix: {
       sessionIds: rawSummary.sessions.map(session => session.id),
       filesModified: unique(rawSummary.projects.flatMap(project => project.filesModified)),
@@ -125,6 +140,8 @@ export function buildReviewModel({ report, proposal, memory }) {
     newTodos: proposal.todos || [],
     remainingTodos: historicalOpenTodos.filter(item => !possibleKeys.has(itemKey(item))),
     newIdeas: proposal.ideas || [],
+    personalReflection: report.personalReflection,
+    reusableInsights: report.reusableInsights,
   }
 }
 
@@ -150,10 +167,14 @@ export function renderReviewMarkdown(review) {
   lines.push('## 新想法')
   lines.push('')
   appendBullets(lines, review.newIdeas || [], item => formatReviewTodo(item))
+  appendReflectionMarkdown(lines, review.personalReflection)
+  appendInsightsMarkdown(lines, review.reusableInsights)
   lines.push('## finalize 前必须确认')
   lines.push('')
   lines.push('- 哪些“可能完成的历史待办”要写入 `todoUpdates` 并标记为 `done`。')
   lines.push('- 哪些“新增待办”和“新想法”需要删除、改写或保留。')
+  lines.push('- 日报 finalize 只授权报告和 memory；不会授权任何 Codex 指令修改。')
+  lines.push('- 指令候选必须先单独确认，再审阅准确 diff，并对该 diff 进行第二次单独确认。')
   lines.push('- 确认后再运行 `finalize`；未确认时不要更新 memory。')
   lines.push('')
   return `${lines.join('\n')}\n`
@@ -224,6 +245,9 @@ export function renderMarkdown(report) {
   lines.push('')
   appendBullets(lines, report.ideas?.chips || [], item => formatTextItem(item))
 
+  appendReflectionMarkdown(lines, report.personalReflection)
+  appendInsightsMarkdown(lines, report.reusableInsights)
+
   lines.push('## 附录：证据索引')
   lines.push('')
   lines.push('### 原始会话')
@@ -249,6 +273,8 @@ export function renderHtml(report) {
     ['projects', '项目'],
     ['risks', '风险'],
     ['ideas', '灵感'],
+    ['reflection', '反思'],
+    ['insights', '洞察'],
     ['appendix', '证据'],
   ]
 
@@ -870,6 +896,16 @@ export function renderHtml(report) {
       </div>
     </section>
 
+    <section id="reflection" class="section card">
+      ${sectionTitle('Reflection', '个人补充与反思', '用户审阅后的备忘摘要')}
+      ${reflectionHtml(report.personalReflection)}
+    </section>
+
+    <section id="insights" class="section card evidence">
+      ${sectionTitle('Reusable Insights', '复用洞察', '建议与持久指令候选均需人工确认')}
+      ${insightsHtml(report.reusableInsights)}
+    </section>
+
     <section id="appendix" class="section card evidence">
       ${sectionTitle('Appendix', '附录：证据索引', '默认收起，避免污染阅读')}
       ${evidenceDetailsHtml('原始会话', report.appendix?.sessionIds || [])}
@@ -965,6 +1001,12 @@ export function normalizeReportShape(value, rawSummary, lang = 'zh-CN') {
     ideas: {
       chips: memoryItemList(value.ideas?.chips ?? value.ideas, fallback.ideas.chips),
     },
+    personalReflection: isObject(value.personalReflection)
+      ? value.personalReflection
+      : fallback.personalReflection,
+    reusableInsights: isObject(value.reusableInsights)
+      ? value.reusableInsights
+      : fallback.reusableInsights,
     appendix: {
       sessionIds: textList(value.appendix?.sessionIds ?? fallback.appendix.sessionIds),
       filesModified: textList(value.appendix?.filesModified ?? fallback.appendix.filesModified),
@@ -997,6 +1039,67 @@ function appendRiskMarkdown(lines, title, items) {
   lines.push(`### ${title}`)
   lines.push('')
   appendBullets(lines, items, item => formatTextItem(item))
+}
+
+function appendReflectionMarkdown(lines, reflection) {
+  const value = reflection || { status: 'not_provided', summary: '', provenance: 'none' }
+  lines.push('## 个人补充与反思')
+  lines.push('')
+  lines.push(`- 状态: ${value.status || 'not_provided'}`)
+  lines.push(`- 来源: ${value.provenance || 'none'}`)
+  if (value.summary) {
+    lines.push('')
+    lines.push(value.summary)
+  }
+  lines.push('')
+}
+
+function appendInsightsMarkdown(lines, insights) {
+  const value = insights || {}
+  lines.push('## 复用洞察')
+  lines.push('')
+  appendCandidateGroupMarkdown(lines, 'Skill 候选', value.skillCandidates || [])
+  appendCandidateGroupMarkdown(lines, '自动化候选', value.automationCandidates || [])
+  appendCandidateGroupMarkdown(lines, '全局 Codex 指令候选', value.globalInstructionCandidates || [])
+  appendCandidateGroupMarkdown(lines, '项目 Codex 指令候选', value.projectInstructionCandidates || [])
+  lines.push('### 洞察警告')
+  lines.push('')
+  appendBullets(lines, value.warnings || [], item => formatTextItem(item))
+}
+
+function appendCandidateGroupMarkdown(lines, title, candidates) {
+  lines.push(`### ${title}`)
+  lines.push('')
+  if (!candidates.length) {
+    lines.push('无。')
+    lines.push('')
+    return
+  }
+  for (const candidate of candidates) {
+    lines.push(`#### ${candidate.recommendation || candidate.id}`)
+    lines.push('')
+    lines.push(`- ID: ${candidate.id || ''}`)
+    lines.push(`- 类型: ${candidate.type || ''}`)
+    lines.push(`- 作用域: ${candidate.scope || ''}`)
+    lines.push(`- 状态: ${candidate.confirmationStatus || 'unconfirmed'}`)
+    lines.push(`- 来源: ${candidate.provenance || ''}`)
+    lines.push(`- 证据次数: ${candidate.evidenceCount ?? (candidate.evidence || []).length}`)
+    lines.push(`- 日期: ${formatInlineList(candidate.dates)}`)
+    lines.push(`- 项目: ${formatInlineList(candidate.projects)}`)
+    lines.push(`- 推荐理由: ${candidate.rationale || '未提供。'}`)
+    lines.push(`- 预期收益: ${candidate.expectedBenefit || '未提供。'}`)
+    lines.push(`- 建议下一步: ${candidateNextStep(candidate)}`)
+    lines.push('- 证据:')
+    const evidence = candidate.evidence || []
+    if (!evidence.length) {
+      lines.push('  - 无。')
+    } else {
+      for (const item of evidence) {
+        lines.push(`  - ${formatEvidenceMarkdown(item)}`)
+      }
+    }
+    lines.push('')
+  }
 }
 
 function formatTitledItem(item, options = {}) {
@@ -1096,9 +1199,78 @@ function evidenceDetailsHtml(title, items) {
   return `<details><summary>${escapeHtml(title)}</summary><div class="evidence-body">${listHtml(items, 'file-list')}</div></details>`
 }
 
+function reflectionHtml(reflection) {
+  const value = reflection || { status: 'not_provided', summary: '', provenance: 'none' }
+  return `<div class="block"><div class="chips"><span class="badge">状态: ${escapeHtml(value.status || 'not_provided')}</span><span class="badge">来源: ${escapeHtml(value.provenance || 'none')}</span></div>${value.summary ? `<p class="overview-text">${escapeHtml(value.summary)}</p>` : '<p class="empty">未提供个人备忘。</p>'}</div>`
+}
+
+function insightsHtml(insights) {
+  const value = insights || {}
+  return [
+    candidateGroupHtml('Skill 候选', value.skillCandidates || []),
+    candidateGroupHtml('自动化候选', value.automationCandidates || []),
+    candidateGroupHtml('全局 Codex 指令候选', value.globalInstructionCandidates || []),
+    candidateGroupHtml('项目 Codex 指令候选', value.projectInstructionCandidates || []),
+    evidenceDetailsHtml('洞察警告', value.warnings || []),
+  ].join('\n      ')
+}
+
+function candidateGroupHtml(title, candidates) {
+  if (!candidates.length) {
+    return `<details><summary>${escapeHtml(title)} · 0</summary><div class="evidence-body"><p class="empty">无。</p></div></details>`
+  }
+  const body = candidates.map(candidate => candidateHtml(candidate)).join('\n')
+  return `<details open><summary>${escapeHtml(title)} · ${candidates.length}</summary><div class="evidence-body">${body}</div></details>`
+}
+
+function candidateHtml(candidate) {
+  const evidence = candidate.evidence || []
+  return `<div class="block">
+    <h3>${escapeHtml(candidate.recommendation || candidate.id || '')}</h3>
+    <div class="chips">
+      <span class="badge">${escapeHtml(candidate.type || '')}</span>
+      <span class="badge">作用域: ${escapeHtml(candidate.scope || '')}</span>
+      <span class="badge">状态: ${escapeHtml(candidate.confirmationStatus || 'unconfirmed')}</span>
+      <span class="badge">证据: ${escapeHtml(candidate.evidenceCount ?? evidence.length)}</span>
+    </div>
+    <p><strong>ID：</strong>${escapeHtml(candidate.id || '')}</p>
+    <p><strong>来源：</strong>${escapeHtml(candidate.provenance || '')}</p>
+    <p><strong>日期：</strong>${escapeHtml(formatInlineList(candidate.dates))}</p>
+    <p><strong>项目：</strong>${escapeHtml(formatInlineList(candidate.projects))}</p>
+    <p><strong>推荐理由：</strong>${escapeHtml(candidate.rationale || '未提供。')}</p>
+    <p><strong>预期收益：</strong>${escapeHtml(candidate.expectedBenefit || '未提供。')}</p>
+    <p><strong>建议下一步：</strong>${escapeHtml(candidateNextStep(candidate))}</p>
+    <h4>证据</h4>
+    ${evidence.length ? `<ul class="file-list">${evidence.map(item => `<li>${escapeHtml(formatEvidenceText(item))}</li>`).join('')}</ul>` : '<p class="empty">无。</p>'}
+  </div>`
+}
+
 function listHtml(items, className) {
   if (!items.length) return '<p class="empty">无。</p>'
   return `<ul class="${className}">${items.map(item => `<li>${escapeHtml(formatTextItem(item))}</li>`).join('')}</ul>`
+}
+
+function formatInlineList(value) {
+  return Array.isArray(value) && value.length ? value.join('、') : '无。'
+}
+
+function formatEvidenceMarkdown(item) {
+  const source = `${item.sourceType || 'unknown'}:${item.sourceRef || ''}`
+  const context = [item.date, item.project].filter(Boolean).join(' · ')
+  return `**${source}**${context ? `（${context}）` : ''}：${item.summary || ''}`
+}
+
+function formatEvidenceText(item) {
+  const source = `${item.sourceType || 'unknown'}:${item.sourceRef || ''}`
+  const context = [item.date, item.project].filter(Boolean).join(' · ')
+  return `${source}${context ? ` (${context})` : ''}: ${item.summary || ''}`
+}
+
+function candidateNextStep(candidate) {
+  if (candidate.type === 'global_instruction' || candidate.type === 'project_instruction') {
+    return '先单独确认候选，再生成准确 instruction-plan diff；只有第二次确认该 diff 后才能 apply。'
+  }
+  return '仅审阅此建议；不会自动创建、安装或运行任何产物。'
 }
 
 function memoryItemsFromProjects(projects, key) {

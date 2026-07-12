@@ -1,0 +1,171 @@
+{
+  "skillCandidates": [
+    {
+      "id": "one-off-auto",
+      "type": "skill",
+      "recommendation": "Package the review routine as a skill.",
+      "scope": "local workflow",
+      "evidenceCount": 99,
+      "dates": ["invented"],
+      "projects": ["invented"],
+      "evidence": [
+        {
+          "date": "2026-07-12",
+          "project": "/workspace/alpha",
+          "sourceType": "session",
+          "sourceRef": "today-session",
+          "summary": "The review routine was used once."
+        }
+      ],
+      "rationale": "Reusable steps.",
+      "expectedBenefit": "Less repeated prompting.",
+      "provenance": "automatic",
+      "confirmationStatus": "unconfirmed"
+    },
+    {
+      "id": "repeated-skill",
+      "type": "skill",
+      "recommendation": "Package the review routine as a skill.",
+      "scope": "local workflow",
+      "evidenceCount": 99,
+      "dates": ["invented"],
+      "projects": ["invented"],
+      "evidence": [
+        {
+          "date": "2026-07-11",
+          "project": "/workspace/alpha",
+          "sourceType": "report",
+          "sourceRef": "/reports/2026-07-11/final/report.json",
+          "summary": "The finalized report records the review routine."
+        },
+        {
+          "date": "2026-07-12",
+          "project": "/workspace/alpha",
+          "sourceType": "session",
+          "sourceRef": "today-session",
+          "summary": "The same routine was used today."
+        }
+      ],
+      "rationale": "Reusable steps.",
+      "expectedBenefit": "Less repeated prompting.",
+      "provenance": "automatic",
+      "confirmationStatus": "unconfirmed"
+    }
+  ],
+  "automationCandidates": [
+    {
+      "id": "repeated-automation",
+      "type": "automation",
+      "recommendation": "Automate the deterministic report checks.",
+      "scope": "/workspace/alpha",
+      "evidenceCount": 2,
+      "dates": ["2026-07-11", "2026-07-12"],
+      "projects": ["/workspace/alpha"],
+      "evidence": [
+        {
+          "date": "2026-07-11",
+          "project": "/workspace/alpha",
+          "sourceType": "report",
+          "sourceRef": "/reports/2026-07-11/final/report.json",
+          "summary": "The finalized report records the same mechanical checks."
+        },
+        {
+          "date": "2026-07-12",
+          "project": "/workspace/alpha",
+          "sourceType": "session",
+          "sourceRef": "today-session",
+          "summary": "The mechanical checks were repeated today."
+        }
+      ],
+      "rationale": "The steps are deterministic and mechanical.",
+      "expectedBenefit": "Faster, consistent checks.",
+      "provenance": "automatic",
+      "confirmationStatus": "unconfirmed"
+    }
+  ],
+  "globalInstructionCandidates": [
+    {
+      "id": "single-project-global",
+      "type": "global_instruction",
+      "recommendation": "Always run the focused test before handoff.",
+      "scope": "global",
+      "evidenceCount": 2,
+      "dates": ["2026-07-11", "2026-07-12"],
+      "projects": ["/workspace/alpha"],
+      "evidence": [
+        {
+          "date": "2026-07-11",
+          "project": "/workspace/alpha",
+          "sourceType": "report",
+          "sourceRef": "/reports/2026-07-11/final/report.json",
+          "summary": "The finalized report records the test rule."
+        },
+        {
+          "date": "2026-07-12",
+          "project": "/workspace/alpha",
+          "sourceType": "session",
+          "sourceRef": "today-session",
+          "summary": "The same project used the rule again."
+        }
+      ],
+      "rationale": "Prevents incomplete handoffs.",
+      "expectedBenefit": "More reliable verification.",
+      "provenance": "automatic",
+      "confirmationStatus": "selected"
+    },
+    {
+      "id": "cross-project-global",
+      "type": "global_instruction",
+      "recommendation": "Always run the focused test before handoff.",
+      "scope": "global",
+      "evidenceCount": 2,
+      "dates": ["2026-07-11", "2026-07-12"],
+      "projects": ["/workspace/alpha", "/workspace/beta"],
+      "evidence": [
+        {
+          "date": "2026-07-11",
+          "project": "/workspace/alpha",
+          "sourceType": "report",
+          "sourceRef": "/reports/2026-07-11/final/report.json",
+          "summary": "Alpha used the focused-test rule."
+        },
+        {
+          "date": "2026-07-12",
+          "project": "/workspace/beta",
+          "sourceType": "session",
+          "sourceRef": "today-session",
+          "summary": "Beta used the same focused-test rule."
+        }
+      ],
+      "rationale": "The rule repeats across repositories.",
+      "expectedBenefit": "More reliable handoffs globally.",
+      "provenance": "automatic",
+      "confirmationStatus": "selected"
+    }
+  ],
+  "projectInstructionCandidates": [
+    {
+      "id": "memo-nomination",
+      "type": "project_instruction",
+      "recommendation": "Run the repository smoke test before handoff.",
+      "scope": "/workspace/alpha",
+      "evidenceCount": 1,
+      "dates": ["2026-07-12"],
+      "projects": ["/workspace/alpha"],
+      "evidence": [
+        {
+          "date": "2026-07-12",
+          "project": "/workspace/alpha",
+          "sourceType": "user_memo",
+          "sourceRef": "user-memo:2026-07-12",
+          "summary": "The user explicitly nominated the smoke-test rule."
+        }
+      ],
+      "rationale": "User requested persistence.",
+      "expectedBenefit": "Consistent project validation.",
+      "provenance": "user_nominated",
+      "confirmationStatus": "selected"
+    }
+  ],
+  "warnings": ["One historical report was unavailable."]
+}

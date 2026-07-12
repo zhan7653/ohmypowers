@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 
 export function emptyMemory() {
-  return { schemaVersion: 1, todos: [], ideas: [], reports: [] }
+  return { schemaVersion: 1, todos: [], ideas: [], reports: [], instructionChanges: [] }
 }
 
 export async function readMemory(filePath) {
@@ -24,7 +24,56 @@ export function normalizeMemory(value) {
     todos: normalizeTodos(memory.todos),
     ideas: Array.isArray(memory.ideas) ? memory.ideas.map(item => ({ ...item })) : [],
     reports: Array.isArray(memory.reports) ? memory.reports.map(item => ({ ...item })) : [],
+    instructionChanges: normalizeInstructionChanges(memory.instructionChanges),
   }
+}
+
+export function appendInstructionChange(memory, audit) {
+  const normalized = normalizeMemory(memory)
+  const entry = normalizeInstructionChange(audit)
+  if (!entry) throw new Error('Instruction change audit is incomplete.')
+  const byIdentity = new Map(normalized.instructionChanges.map((item, index) => [instructionChangeIdentity(item), index]))
+  const identity = instructionChangeIdentity(entry)
+  const index = byIdentity.get(identity)
+  if (index === undefined) normalized.instructionChanges.push(entry)
+  else normalized.instructionChanges[index] = entry
+  return normalized
+}
+
+export function normalizeInstructionChanges(items) {
+  if (!Array.isArray(items)) return []
+  const result = []
+  const seen = new Set()
+  for (const item of items) {
+    const normalized = normalizeInstructionChange(item)
+    if (!normalized) continue
+    const identity = instructionChangeIdentity(normalized)
+    if (seen.has(identity)) continue
+    seen.add(identity)
+    result.push(normalized)
+  }
+  return result
+}
+
+function normalizeInstructionChange(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const proposalId = String(value.proposalId || '').trim()
+  const candidateId = String(value.candidateId || '').trim()
+  const action = String(value.action || '').trim()
+  const targetPath = String(value.targetPath || '').trim()
+  if (!proposalId || !candidateId || !['add', 'update', 'remove'].includes(action) || !targetPath) return null
+  return {
+    ...value,
+    changeId: String(value.changeId || proposalId).trim(),
+    proposalId,
+    candidateId,
+    action,
+    targetPath,
+  }
+}
+
+function instructionChangeIdentity(value) {
+  return value.changeId || value.proposalId || `${value.candidateId}::${value.action}::${value.targetPath}::${value.afterSha256 || ''}`
 }
 
 export function normalizeTodos(items) {

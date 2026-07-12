@@ -16,7 +16,9 @@
     "projectSections",
     "riskGroups",
     "ideas",
-    "appendix"
+    "appendix",
+    "personalReflection",
+    "reusableInsights"
   ],
   "properties": {
     "schemaVersion": { "const": 2 },
@@ -105,7 +107,35 @@
         "chips": { "$ref": "#/$defs/taskItems" }
       }
     },
-    "appendix": { "$ref": "#/$defs/evidence" }
+    "appendix": { "$ref": "#/$defs/evidence" },
+    "personalReflection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "summary", "provenance"],
+      "properties": {
+        "status": { "enum": ["not_provided", "skipped", "provided"] },
+        "summary": { "type": "string" },
+        "provenance": { "enum": ["user_memo", "none"] }
+      }
+    },
+    "reusableInsights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "skillCandidates",
+        "automationCandidates",
+        "globalInstructionCandidates",
+        "projectInstructionCandidates",
+        "warnings"
+      ],
+      "properties": {
+        "skillCandidates": { "$ref": "#/$defs/candidates" },
+        "automationCandidates": { "$ref": "#/$defs/candidates" },
+        "globalInstructionCandidates": { "$ref": "#/$defs/candidates" },
+        "projectInstructionCandidates": { "$ref": "#/$defs/candidates" },
+        "warnings": { "$ref": "#/$defs/stringItems" }
+      }
+    }
   },
   "$defs": {
     "stringItems": { "type": "array", "items": { "type": "string" } },
@@ -141,6 +171,57 @@
       "properties": {
         "sessionIds": { "$ref": "#/$defs/stringItems" },
         "filesModified": { "$ref": "#/$defs/stringItems" }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/candidate" }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "recommendation",
+        "scope",
+        "evidenceCount",
+        "dates",
+        "projects",
+        "evidence",
+        "rationale",
+        "expectedBenefit",
+        "provenance",
+        "confirmationStatus"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "enum": ["skill", "automation", "global_instruction", "project_instruction"] },
+        "recommendation": { "type": "string" },
+        "scope": { "type": "string" },
+        "evidenceCount": { "type": "integer", "minimum": 1 },
+        "dates": { "$ref": "#/$defs/stringItems" },
+        "projects": { "$ref": "#/$defs/stringItems" },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/insightEvidence" }
+        },
+        "rationale": { "type": "string" },
+        "expectedBenefit": { "type": "string" },
+        "provenance": { "enum": ["automatic", "user_nominated"] },
+        "confirmationStatus": { "enum": ["unconfirmed", "selected", "rejected"] }
+      }
+    },
+    "insightEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "project", "sourceType", "sourceRef", "summary"],
+      "properties": {
+        "date": { "type": "string" },
+        "project": { "type": "string" },
+        "sourceType": { "enum": ["session", "report", "user_memo"] },
+        "sourceRef": { "type": "string" },
+        "summary": { "type": "string" }
       }
     }
   }

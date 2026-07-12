@@ -1,6 +1,6 @@
 ---
 name: power-work-report
-description: Generate a manual Codex daily work report draft, review it with the user, and finalize confirmed reports and memory updates.
+description: Generate a manual Codex daily work report, collect an optional personal memo, review reusable insights, and separately confirm report finalization or persistent Codex instruction changes.
 ---
 
 # Power Work Report
@@ -11,11 +11,11 @@ Generate a local daily work report from Codex session history.
 
 This skill uses the bundled `scripts/power-work-report` Node CLI. Generate a draft first, show the user where to review it, and only finalize after explicit user confirmation.
 
-V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, reads existing JSON memory, generates JSON/Markdown/HTML reports plus `review.md`, proposes todo and idea memory updates, and merges those updates only during `finalize`.
+V1 is Codex-only and local-only. It reads local Codex rollout JSONL files, reads existing JSON memory and up to 10 readable finalized reports, generates JSON/Markdown/HTML reports plus `review.md`, proposes todo and idea memory updates, and merges those updates only during `finalize`.
 
 Daily collection is based on event timestamps mapped to the user's local date, not only the rollout file's directory date. The default scan window is the target date plus the previous 30 days, so a long-running Codex session that started earlier can still contribute today's events.
 
-The draft report uses the component-style Codex daily report structure: metadata, overview, outcomes, decisions, tomorrow priorities, backlog, project sections, risk groups, idea chips, and appendix evidence. `review.md` is the primary confirmation surface for memory-related review; report Markdown remains the readable full report. HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and responsive print support.
+The draft report also includes a reviewed personal reflection and evidence-backed Skill, automation, global-instruction, and project-instruction candidates. Skill and automation candidates are suggestions only. `review.md` is the primary confirmation surface; report Markdown remains the readable full report. HTML is a single-file responsive component report with navigation, project accordions, dark mode, print styles, and responsive print support.
 
 ## Boundaries
 
@@ -25,6 +25,9 @@ The draft report uses the component-style Codex daily report structure: metadata
 - Do not install or modify schedulers.
 - Do not use root privileges.
 - Do not finalize reports or update memory without explicit user confirmation.
+- Do not treat report finalization as authorization to modify `AGENTS.md`.
+- Do not create or install a Skill, script, hook, automation, scheduler, cron job, or systemd unit from an insight candidate.
+- Do not use a `codex_failed` fallback report as actionable insight or instruction evidence.
 - Do not auto-close historical todos. Completion candidates in `review.md` are advisory until the user confirms them.
 
 ## Workflow
@@ -44,15 +47,35 @@ The draft report uses the component-style Codex daily report structure: metadata
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.html`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/report.json`
    - `~/.codex/daily-reports/YYYY-MM-DD/draft/memory-update.proposed.json`
-4. Read and summarize `review.md` first. Cover these sections:
+4. Immediately after the initial draft, always pause at the fixed **personal memo checkpoint**. Ask whether the user wants to add thoughts, reflections, omissions, or a memo that session history did not capture. The user may explicitly say `skip`; skipping must not block review or finalization.
+5. If the user provides a memo, first agree on the wording that may appear in the report. Save the reviewed memo as `~/.codex/daily-reports/YYYY-MM-DD/draft/personal-memo.json` using this shape (plain text is also accepted):
+
+   ```json
+   {"status":"provided","summary":"Reviewed wording","provenance":"user_memo"}
+   ```
+
+   Then regenerate the draft with `run` (or its `draft` alias) and `--memo-file`:
+
+   ```bash
+   node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" run --date YYYY-MM-DD --lang zh-CN --timezone Asia/Shanghai --memo-file ~/.codex/daily-reports/YYYY-MM-DD/draft/personal-memo.json
+   ```
+
+   Do not silently copy sensitive raw wording into the report. Re-open the regenerated `review.md` before continuing. If the user skips, keep the initial draft and continue without regeneration.
+6. Read and summarize `review.md` first. Cover these sections:
    - 今天完成了什么
    - 可能完成的历史待办
    - 新增待办
    - 保留待办
    - 新想法
+   - 个人补充与反思
+   - Skill 候选
+   - 自动化候选
+   - 全局 Codex 指令候选
+   - 项目 Codex 指令候选
+   - 洞察警告
    - finalize 前必须确认
-5. Ask the user to confirm or provide oral edits for todos, completion candidates, and ideas.
-6. If the user gives edits, update the draft JSON/proposal files, especially `memory-update.proposed.json`.
+7. Ask the user to confirm or provide oral edits for reflection wording, todos, completion candidates, ideas, and insight candidates.
+8. If the user gives edits, update the draft JSON/proposal files, especially `memory-update.proposed.json`.
    - Keep unconfirmed historical completion candidates in `review`, not `todoUpdates`.
    - Add confirmed completions to `todoUpdates` with `status: "done"` and enough identity to match the memory todo (`id`, or `text` plus `project`).
    - Remove or rewrite proposed new todos/ideas only when the user asks.
@@ -61,7 +84,7 @@ The draft report uses the component-style Codex daily report structure: metadata
      ```bash
      node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" render --date YYYY-MM-DD
      ```
-7. Optionally review the full report Markdown order before finalization:
+9. Review the full report Markdown order before finalization:
    - 今日概览
    - 关键成果
    - 关键决策
@@ -70,19 +93,41 @@ The draft report uses the component-style Codex daily report structure: metadata
    - 项目进展
    - 风险与阻塞
    - 想法与灵感
+   - 个人补充与反思
+   - 复用洞察（Skill、自动化、全局指令、项目指令、警告）
    - 附录：证据索引
-8. Only after explicit user confirmation, run:
+10. Treat Skill and automation candidates as recommendations only. Explain the evidence, scope, rationale, and expected benefit, but do not create, install, or run anything from them.
+11. For a global or project Codex instruction candidate, use a separate two-confirmation workflow:
+    - First confirmation: the user selects exactly one candidate and action (`add`, managed `update`, or managed `remove`). Run:
+
+      ```bash
+      node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" instruction-plan --date YYYY-MM-DD --candidate-id ID --action add|update|remove [--project-root DIR] [--codex-home DIR] [--out-dir DIR]
+      ```
+
+      This reads the actual target `AGENTS.md`, writes `draft/instruction-change.proposed.json` and `draft/instruction-change.diff`, and does not write the target file.
+    - Show the exact target, managed entry identity, source report, and the complete `draft/instruction-change.diff`.
+    - Second confirmation: ask whether to apply that exact displayed diff. Only after explicit confirmation, run:
+
+      ```bash
+      node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" instruction-apply --date YYYY-MM-DD [--codex-home DIR] [--out-dir DIR]
+      ```
+
+      A successful apply records the instruction audit in memory and requires a new Codex session for normal discovery.
+    - If the target drifts, discard the old confirmation, regenerate the plan/diff, and ask for both relevant confirmation again. Never apply a stale proposal.
+    - Revision and removal of report-managed entries use the same plan, exact-diff review, and separate apply confirmation. Never rewrite content outside the managed region.
+12. Pause and explain the specific refusal when planning or applying reports `ambiguous_target`, `nested_scope`, `override_present`, `conflict`, `size_limit`, `permission_denied`, `codex_failed`, `forbidden_content`, `target_drift`, proposal/candidate integrity failure, or atomic-write failure. Do not guess a target, override human rules, or claim a partial write succeeded.
+13. Finalization is an independent authorization. The user may finalize without approving any instruction candidate, or plan/apply an instruction without authorizing finalization. Only after explicit report confirmation, run:
 
    ```bash
    node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" finalize --date YYYY-MM-DD
    ```
 
-9. Report the final paths and memory file path.
+14. Report the final paths and memory file path. For an applied instruction, separately report its target path, managed entry identity, action, and source report. Explain that Codex rebuilds its instruction chain when a new run or TUI session starts: global instructions are discovered from the active `CODEX_HOME`, while project instructions are discovered only within the corresponding project scope. Do not claim the current session dynamically reloaded the change.
 
 ## Failure Handling
 
-If Codex draft generation fails, the CLI writes a fallback draft with status `codex_failed`. Do not finalize fallback drafts unless the user explicitly asks to allow fallback finalization, then pass `--allow-fallback`.
+If Codex draft generation fails, the CLI writes a fallback draft with status `codex_failed`. It may show warnings but must contain no actionable reusable or instruction candidates. Do not finalize fallback drafts unless the user explicitly asks to allow fallback finalization, then pass `--allow-fallback`.
 
 ## Privacy
 
-Reports may contain local project paths, thread content, commands, todos, and ideas from Codex session history. Remind the user to review generated files before sharing them.
+Reports and personal memos may contain local project paths, thread content, commands, todos, ideas, and private reflections. Use reviewed memo wording in the report and remind the user to inspect every generated file before sharing it.

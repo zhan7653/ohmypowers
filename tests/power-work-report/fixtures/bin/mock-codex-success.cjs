@@ -69,16 +69,104 @@ const report = {
       { text: 'HTML 可以先保持静态', project: '/workspace/beta', sourceSessionIds: ['2026-07-01T10-00-00-session-b'] },
     ],
   },
+  personalReflection: {
+    status: 'not_provided',
+    summary: '',
+    provenance: 'none',
+  },
+  reusableInsights: {
+    skillCandidates: [
+      {
+        id: 'review-workflow-skill',
+        type: 'skill',
+        recommendation: 'Package the repeatable report review workflow as a skill.',
+        scope: 'local workflow',
+        evidenceCount: 2,
+        dates: ['2026-07-01'],
+        projects: ['/workspace/alpha', '/workspace/beta'],
+        evidence: [
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: 'Alpha used the review workflow.' },
+          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: 'Beta used the review workflow.' },
+        ],
+        rationale: 'The workflow repeats across report tasks.',
+        expectedBenefit: 'Consistent report review.',
+        provenance: 'automatic',
+        confirmationStatus: 'unconfirmed',
+      },
+    ],
+    automationCandidates: [
+      {
+        id: 'report-check-automation',
+        type: 'automation',
+        recommendation: 'Automate the deterministic report checks.',
+        scope: '/workspace/alpha',
+        evidenceCount: 2,
+        dates: ['2026-07-01'],
+        projects: ['/workspace/alpha', '/workspace/beta'],
+        evidence: [
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: 'Alpha ran deterministic checks.' },
+          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: 'Beta ran deterministic checks.' },
+        ],
+        rationale: 'The checks are mechanical.',
+        expectedBenefit: 'Faster consistent validation.',
+        provenance: 'automatic',
+        confirmationStatus: 'unconfirmed',
+      },
+    ],
+    globalInstructionCandidates: [
+      {
+        id: 'focused-tests-before-handoff',
+        type: 'global_instruction',
+        recommendation: 'Run focused tests before claiming completion.',
+        scope: 'global',
+        evidenceCount: 2,
+        dates: ['2026-07-01'],
+        projects: ['/workspace/alpha', '/workspace/beta'],
+        evidence: [
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: 'Alpha required focused validation.' },
+          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: 'Beta required focused validation.' },
+        ],
+        rationale: 'The validation rule applies across repositories.',
+        expectedBenefit: 'More reliable completion claims.',
+        provenance: 'automatic',
+        confirmationStatus: 'unconfirmed',
+      },
+    ],
+    projectInstructionCandidates: [
+      {
+        id: 'memo-project-validation',
+        type: 'project_instruction',
+        recommendation: 'Run the repository smoke test before handoff.',
+        scope: '/workspace/alpha',
+        evidenceCount: 1,
+        dates: ['2026-07-01'],
+        projects: ['/workspace/alpha'],
+        evidence: [
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'user_memo', sourceRef: 'user-memo:2026-07-01', summary: 'The user nominated repository smoke tests.' },
+        ],
+        rationale: 'The user explicitly nominated this durable project rule.',
+        expectedBenefit: 'Consistent project validation.',
+        provenance: 'user_nominated',
+        confirmationStatus: 'unconfirmed',
+      },
+    ],
+    warnings: [],
+  },
   appendix: {
     sessionIds: ['2026-07-01T09-00-00-session-a', '2026-07-01T10-00-00-session-b'],
     filesModified: ['alpha.js', 'beta.js'],
   },
 }
 
-console.log(JSON.stringify({
-  type: 'item.completed',
-  item: {
-    type: 'agent_message',
-    text: JSON.stringify(report),
-  },
-}))
+let prompt = ''
+process.stdin.setEncoding('utf8')
+process.stdin.on('data', chunk => { prompt += chunk })
+process.stdin.on('end', () => {
+  console.log(JSON.stringify({
+    type: 'item.completed',
+    item: {
+      type: 'agent_message',
+      text: JSON.stringify(report),
+    },
+  }))
+})

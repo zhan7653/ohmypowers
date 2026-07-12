@@ -84,11 +84,17 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 - Reads local Codex session JSONL for a target local date, scanning a lookback window so cross-day Codex sessions can still be sliced by event timestamp.
 - Generates a draft Markdown/HTML/JSON report and `review.md` through the CLI bundled inside the installed skill.
+- Always pauses after the initial draft for an optional personal memo. An explicit skip continues with the initial draft; otherwise reviewed wording is saved as `draft/personal-memo.json` (`{"status":"provided","summary":"...","provenance":"user_memo"}`, with plain text also accepted) and regenerates through `run|draft ... --memo-file PATH`.
 - Uses an isolated read-only Luna Medium Codex run by default, with explicit model/reasoning override flags and no automatic escalation.
 - Reads JSON memory during draft so historical open todos roll forward.
+- Compares current evidence with up to 10 readable finalized reports and renders personal reflection plus Skill, automation, global-instruction, and project-instruction candidates with evidence, scope, and confirmation status.
+- Keeps Skill and automation candidates as suggestions only; it does not create, install, schedule, or run them.
 - Proposes todo and idea memory updates, including explicitly confirmed todo status changes.
 - Supports re-rendering edited draft JSON/proposal files before final confirmation.
 - Requires explicit confirmation before finalizing reports or merging `memory.json`.
+- Keeps report finalization independent from persistent instruction authorization. After the first candidate confirmation, `instruction-plan --date YYYY-MM-DD --candidate-id ID --action add|update|remove [--project-root DIR] [--codex-home DIR] [--out-dir DIR]` writes only `draft/instruction-change.proposed.json` and `draft/instruction-change.diff`, with no target write. After displaying that diff, a separate second confirmation authorizes `instruction-apply --date YYYY-MM-DD [--codex-home DIR] [--out-dir DIR]`; success records the memory audit and requires a new session.
+- Requires re-planning and re-confirmation after target drift. Managed instruction additions, revisions, and removals use the same exact-diff flow; ambiguous targets, nested scope, override files, conflicts, size limits, permissions, forbidden/fallback content, integrity failures, and atomic-write failures pause safely.
+- Reports applied instruction scope and reminds the user to start a new Codex run or TUI session for normal discovery: global rules load from the active `CODEX_HOME`, while project rules apply only in that project scope.
 - V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.

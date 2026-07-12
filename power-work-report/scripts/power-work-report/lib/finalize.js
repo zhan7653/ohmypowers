@@ -23,7 +23,18 @@ export async function finalizeReport({ paths, allowFallback = false }) {
   memory.todos = mergeItems(memory.todos || [], proposal.todos || [], now)
   memory.todos = applyTodoUpdates(memory.todos, proposal.todoUpdates || [], proposal, now)
   memory.ideas = mergeItems(memory.ideas || [], proposal.ideas || [], now)
-  memory.reports = upsertReport(memory.reports || [], proposal.report, paths.finalDir, now)
+  memory.reports = upsertReport(
+    memory.reports || [],
+    proposal.report
+      ? {
+          ...proposal.report,
+          personalReflection: report.personalReflection,
+          reusableInsights: report.reusableInsights,
+        }
+      : proposal.report,
+    paths.finalDir,
+    now,
+  )
   await fs.mkdir(path.dirname(paths.memoryFile), { recursive: true })
   await fs.writeFile(paths.memoryFile, `${JSON.stringify(memory, null, 2)}\n`, 'utf8')
 

@@ -12,15 +12,28 @@ export function resolveOutDir(explicitOutDir, codexHome = resolveCodexHome()) {
   return path.join(codexHome, 'daily-reports')
 }
 
+export function resolveGlobalInstructionsPath(explicitHome) {
+  return path.join(resolveCodexHome(explicitHome), 'AGENTS.md')
+}
+
+export function resolveProjectInstructionsPath(projectRoot) {
+  if (!projectRoot) return null
+  return path.join(path.resolve(projectRoot), 'AGENTS.md')
+}
+
 export function pathsForDate({ date, outDir }) {
   const root = path.resolve(outDir)
   const dayDir = path.join(root, date)
+  const draftDir = path.join(dayDir, 'draft')
   return {
     root,
     dayDir,
-    draftDir: path.join(dayDir, 'draft'),
+    draftDir,
     finalDir: path.join(dayDir, 'final'),
     memoryFile: path.join(root, 'memory.json'),
+    memoPath: path.join(draftDir, 'personal-memo.json'),
+    instructionProposalPath: path.join(draftDir, 'instruction-change.proposed.json'),
+    instructionDiffPath: path.join(draftDir, 'instruction-change.diff'),
   }
 }
 
