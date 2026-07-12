@@ -48,6 +48,7 @@ It does not require exact internal interfaces, files, task ownership, validation
 - A short decision summary plus exact compact reference patch; the full planning artifacts are not copied into the Issue body.
 - Delivery-lane-aware agent budgets: `LIGHT` defaults to direct main-agent work, `STANDARD` uses at most one implementation subagent by default, and `HIGH` preserves capacity for justified independent reviewers.
 - Metered `wait_agent` coordination with no short polling loops, bounded follow-ups, timeout circuit breakers, and mandatory wait/token metrics when telemetry is available.
+- Four validation layers (`V0` focused, `V1` integration, `V2` final deterministic, `V3` external), one batched adversarial review, at most one concentrated repair, a three-candidate ceiling, and one external run after V2 on the frozen tree immediately before final review.
 - Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
 - Final Goal Prompt only after the confirmed planning artifacts and compact reference patch are applied and verified. It is a thin launcher that pins the Issue and Task Contract identities plus planning-artifact digests, performs preflight/drift checks, and adds no requirement; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.

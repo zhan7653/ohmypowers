@@ -59,9 +59,19 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 ## Validation Replay
 
-| Required validation | Exact command | Safety class | Execution boundary | Observable host-isolation evidence | Git tree digest | Result | Relevant evidence |
-|---|---|---|---|---|---|---|---|
-|  |  | Safe read-only/Isolated writable/Unsafe-not-run |  | None observed |  | Passed/Failed/Not run |  |
+Validation lifecycle:
+
+- V0 focused development checks: `<summary and tree(s)>`
+- V1 integration checks: `<summary and integrated candidate>`
+- Concentrated adversarial review and repair: `<not applicable or batched findings plus 0/1 repair>`
+- Frozen certification candidate: `<Git tree digest>`
+- Final reviewer wave: `<reviewer identities and same-tree result>`
+- V3 ordering: `<not applicable | ran after V2 on frozen tree and before final review of unchanged evidence | invalid/stale>`
+- V3 replay decision: `<not replayed; valid primary evidence inspected | replayed because Task Contract required it | replayed because evidence was insufficient | not applicable>`
+
+| Tier | Required validation | Exact command | Safety class | Execution boundary | Observable host-isolation evidence | Git tree digest | Result | Relevant evidence |
+|---|---|---|---|---|---|---|---|---|
+| V2/V3 |  |  | Safe read-only/Isolated writable/Unsafe-not-run |  | None observed |  | Passed/Failed/Not run |  |
 
 ## Risks And Unresolved Evidence
 

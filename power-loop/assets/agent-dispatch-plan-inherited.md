@@ -97,6 +97,13 @@ Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact
 
 ## Verification and review plan
 
+- Development failure matrix: `<complete HIGH-risk matrix before implementation, or not applicable>`
+- Validation layers: `<V0 focused; V1 integration; V2 final deterministic; V3 external after V2 and before final review>`
+- Concentrated adversarial review: `<one development-feedback wave returning one batched finding set, or not applicable>`
+- Concentrated repair budget: `<0 or 1; same-risk systemic recurrence stops for replanning>`
+- Candidate snapshot ceiling: `3`
+- Final certification wave budget: `<planned 1; maximum 2 only for one unexpected blocker repair/recertification cycle>`
+- V3 rule: `run once after V2 passes on the frozen tree and immediately before the final reviewer wave; final verifier inspects rather than replays it by default`
 - Verification contract: `<the pinned Task Contract byte range is the sole normative contract; the complete Issue body supplies identity/lifecycle context, while this plan, the thin Goal, comments, discussions, PR body, and runner summaries are supplementary execution evidence and add no obligations>`
 - Confirmed mode evidence: `<inherited-model-routing plus capability evidence and confirmation>`
 - Stable snapshot: `<repository/ref, commit, Git tree digest, dirty/generated boundary, capture time, and validation evidence; tree digest controls freshness>`
@@ -112,7 +119,7 @@ Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact
 - Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
 - Contract-conformance packet: `<pinned Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and thin Goal, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
 - Other review packets: `<tailored to each selected capability and scope>`
-- Execution: `<run independent fresh-context reviews in parallel over the same snapshot when possible; use fork_turns: none when exposed>`
+- Execution: `<after V0/V1 and any concentrated adversarial repair, freeze one candidate; run V2, then V3 once, then independent fresh-context final reviews in one wave over that same snapshot and evidence package; use fork_turns: none when exposed>`
 
 ## Dispatch Summary requirements
 

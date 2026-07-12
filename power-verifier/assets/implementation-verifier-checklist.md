@@ -42,6 +42,11 @@ Use this checklist for a read-only contract-conformance pass.
 
 ## Validation Replay
 
+- Separate V0 focused and V1 integration development feedback from frozen-tree evidence.
+- Require V2 full deterministic evidence and final reviewers to identify the same frozen Git tree digest.
+- Accept V3 network/authentication/hosted/discovery evidence only after V2 passed on the frozen tree and when final reviewers inspect that unchanged evidence package.
+- Inspect existing V3 primary evidence and ordering; do not replay a valid external check by default unless the Task Contract explicitly requires independent replay.
+- If a frozen tree changes, mark affected V2/final-review/V3 evidence stale; do not pretend earlier V0/V1 development checks were final snapshot evidence.
 - Identify every contract-required validation and replay it against the stable snapshot when safe.
 - For each replay, record exact command, safety class, execution boundary, observable host-isolation evidence if any, snapshot, result, and relevant evidence.
 - Allow writable or generated artifacts only in a disclosed isolated environment that leaves canonical source and hosted state unchanged.

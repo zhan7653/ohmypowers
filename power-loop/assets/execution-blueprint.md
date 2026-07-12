@@ -87,6 +87,22 @@ Stable interface gates:
 
 ## Test seams and validation commands
 
+Validation layers:
+
+- `V0 Focused`: `<syntax, unit, and task-owned checks used during implementation>`
+- `V1 Integration`: `<relevant module and compatibility regression for the integrated candidate>`
+- `V2 Final deterministic`: `<full deterministic repository, installer, packaging, and isolated integration checks for the frozen certification candidate>`
+- `V3 External`: `<network, authentication, hosted service, or real runtime discovery checks; run once after V2 passes on the frozen tree and immediately before the final reviewer wave>`
+
+High-risk failure matrix: `<applicable fabrication, scope, authorization, tampering, drift, concurrency, partial failure, rollback, recovery, permission, privacy, and destructive-action cases, or not applicable>`
+
+Review gates:
+
+- Concentrated adversarial development review: `<one complete packet and one batched finding set, or not applicable>`
+- Concentrated repair rounds: `<0 or 1; same-risk systemic recurrence stops for replanning>`
+- Final certification waves: `<planned 1; maximum 2 only for one unexpected blocker repair/recertification cycle>`
+- Candidate snapshot ceiling: `3`
+
 | Validation ID | Command or manual check | Proves | Responsible Task ID |
 |---|---|---|---|
 | `VAL-1` | `<exact command>` | `<acceptance criteria or integration property>` | `<TASK-ID>` |
@@ -104,6 +120,11 @@ Stable interface gates:
 - Consecutive no-information timeout stop: `3`
 - Wait polling rule: `no 1-, 10-, 20-, or 30-second polling; use at least 60 seconds or the longest permitted interaction timeout`
 - Coordination telemetry: `<wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and token ratios when available>`
+- Candidate snapshot ceiling: `3`
+- Concentrated adversarial review waves: `<0 or 1>`
+- Concentrated repair rounds: `<0 or 1>`
+- Final certification wave budget: `<planned 1; hard stop after a second blocking wave>`
+- V3 external-check budget: `1 successful final-tree run after V2 and before final review; verifier does not replay it by default`
 - Max implementation iterations: `<confirmed limit>`
 - Same-failure retry limit: `<confirmed limit>`
 - No-progress stop: `<confirmed threshold>`

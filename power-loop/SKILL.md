@@ -188,11 +188,37 @@ Targets:
 - `wait_token_ratio = wait-related tokens / main-session tokens <= 0.10`;
 - all agent-coordination tokens <= 0.30 of main-session tokens when attribution is available.
 
+### Validation And Review Lifecycle
+
+Separate development feedback from final snapshot evidence:
+
+- `V0 Focused`: syntax, unit, and task-owned tests used freely during implementation.
+- `V1 Integration`: relevant module and compatibility regression after the integrated candidate exists.
+- `V2 Final deterministic`: full deterministic repository, installer, packaging, or isolated integration checks on a frozen certification candidate.
+- `V3 External`: network, authentication, hosted service, real runtime discovery, or other environment-sensitive smoke checks. Run once on the frozen tree after `V2` passes and immediately before the final reviewer wave.
+
+For `HIGH` work, create a failure matrix before implementation. Cover the Task Contract's applicable evidence fabrication, scope, authorization, tampering, drift, concurrency, partial failure, rollback, recovery, permission, privacy, and destructive-action boundaries. The matrix is a development input, not final certification evidence.
+
+Use this order:
+
+1. implement with `V0` checks;
+2. form one integrated candidate and run `V1`;
+3. run at most one concentrated adversarial review over the complete applicable failure matrix; reviewers must continue through the packet and return one batched finding set unless continuing would perform an unsafe mutation;
+4. perform at most one concentrated repair round, rerun `V0`/`V1`, and stop for replanning if the same risk domain still exposes a new systemic defect;
+5. freeze a certification candidate and capture its Git tree digest;
+6. run `V2` on that tree;
+7. if `V2` passes, run `V3` once on the unchanged tree;
+8. run all selected final independent reviewers in one wave over the same tree and the complete V2/V3 evidence package. The contract-conformance verifier inspects existing V3 primary evidence and does not replay it by default.
+
+Do not call an intermediate commit or tree a final snapshot merely because ordinary tests pass. Do not run `V3`, installed-runtime discovery, or hosted authentication checks before the concentrated adversarial review, repair boundary, freeze, and V2 gate. Final reviewers certify; they do not steer implementation one finding at a time.
+
+Normal execution has one integrated candidate, one concentrated repair candidate when needed, and one final certified tree. Set a hard ceiling of three recorded candidate snapshots. Plan one final reviewer wave. If final certification unexpectedly finds a blocker, allow one unfreeze/repair/recertification cycle; a second blocking certification wave stops for replanning instead of creating another rolling snapshot.
+
 Classify implementation directly into the two supported tiers. Use the lower implementation route when the task has clear requirements, stable interfaces, bounded ownership, deterministic validation, and no unresolved architecture, security, permission, migration, compatibility, concurrency, or complex-state decision. Use its fully evidenced Luna Max label only when Max reasoning is separately supported or its profile-configured effect is demonstrably applied. Use the higher implementation route initially when any of those conditions are absent or the task needs complex diagnosis or cross-module design; use its fully evidenced Sol Medium label only when Medium reasoning is separately supported.
 
 Allow at most one direct implementation replacement from the Luna route to the Sol route, backed by concrete capability or reasoning mismatch evidence. Use `power_luna_worker` to `power_sol_worker` when profile selection and the claimed configuration effects are supported; use the corresponding direct model selection when only model selection is supported. Do not claim a reasoning change unless reasoning is independently supported. Do not use a model ladder or escalate for permission, environment, dependency, validation-infrastructure, or ownership failures. The Sol route is the implementation ceiling.
 
-Plan review only after the final implementation diff, affected interfaces/data, validation requirements, and material risks are known. Preserve this review-plan record with the stable snapshot:
+Plan final certification only after the final implementation diff, affected interfaces/data, validation requirements, and material risks are known. The earlier concentrated adversarial review is development feedback and cannot satisfy the independent final certification requirement. Preserve the final review-plan record with the stable snapshot:
 
 - If the contract names reviewers, agents, models, providers, or procedures, assign and verify those requirements exactly. Record an unavailable prescribed capability as a blocker or `NEEDS_HUMAN` decision; do not substitute it silently.
 - Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Capability names and reviewer count remain dynamic; apply the reviewer tier policy below instead of imposing a fixed identity or specialization.
@@ -201,7 +227,7 @@ Plan review only after the final implementation diff, affected interfaces/data, 
 - For every selected reviewer, record identity/source, supported configuration evidence, model-selection rationale, implementation independence, capability, scope, boundary provenance, evidence inspected, result, and snapshot identity. Record model, reasoning effort, and host-enforced isolation only when each is separately evidenced. Tailor packets to that scope; give the contract-conformance reviewer the exact Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and Goal, clause evidence, snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals.
 - A reviewer that cannot produce a reliable conclusion within its assigned tier must return `BLOCKED` with reclassification evidence. The orchestrator may select a higher appropriate reviewer directly; do not silently walk every tier.
 
-Run independent selected reviews in parallel over the same stable snapshot when possible. They may cover different capabilities but do not substitute for any contract-prescribed review.
+Run independent selected final reviews in one parallel wave over the same stable snapshot and complete V2/V3 evidence package when possible. They may cover different capabilities but do not substitute for any contract-prescribed review. Do not replay V3 merely to create reviewer independence.
 
 For `inherited-model-routing`, subagents inherit the parent configuration. Do not specify or report an independently selected model, reasoning effort, custom profile, profile-specific sandbox, model escalation, reviewer tier, assignment accuracy, or model-cost guarantee. Plan generic subagents by role, objective, spawn/context policy, ownership, dependencies, deliverable, validation responsibility, parallelism, and failure behavior. A retry remains in the same inherited mode and is not a model upgrade.
 

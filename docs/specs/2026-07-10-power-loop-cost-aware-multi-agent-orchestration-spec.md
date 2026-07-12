@@ -128,6 +128,17 @@ Inherited mode still assigns explicit roles, objectives, ownership boundaries, d
 
 Independent review in inherited mode uses fresh context, such as `fork_turns: none` when exposed, and must not have participated in implementation. Review tasks may carry an instruction-level no-write boundary. This supports behavioral independence, but it is not a claim of host-enforced read-only isolation.
 
+### Validation And Review Lifecycle
+
+- V0 contains focused syntax, unit, and task-owned checks used during implementation.
+- V1 contains relevant module and compatibility regression for the integrated candidate.
+- V2 contains full deterministic repository, installer, packaging, and isolated integration checks for a frozen certification candidate.
+- V3 contains network, authentication, hosted-service, real-runtime discovery, or other environment-sensitive checks and runs once after V2 passes on the frozen tree, immediately before the final reviewer wave. Final reviewers inspect that unchanged evidence package; the verifier does not replay valid V3 evidence by default.
+- HIGH work creates its applicable failure matrix before implementation and receives at most one concentrated adversarial development-review wave that returns one batched finding set.
+- At most one concentrated repair round follows that adversarial review. A new systemic defect in the same risk domain stops for replanning.
+- Normal execution plans one final certification wave and records no more than three candidate snapshots. One unexpected blocking final certification may receive one repair/recertification cycle; a second blocking wave stops.
+- V0/V1 and adversarial findings are development feedback, not final snapshot evidence. V2, final reviewers, and V3 must identify the same final Git tree digest.
+
 If the Task Contract requires an exact model, custom profile, provider, reasoning level, sandbox, or isolation mechanism that the inherited host cannot provide, planning pauses and requests a human decision. The constraint must not be discarded or approximated silently.
 
 ### Orchestration, Ownership, And Parallelism
@@ -193,6 +204,8 @@ Execution Blueprint, Dispatch Plan, Goal, PR/MR evidence, verifier input, verifi
 - Incomplete tasks and pause reasons.
 - Stable implementation snapshot and validation evidence.
 - Independent review provenance and fresh-context evidence.
+- Validation lifecycle: V0 focused, V1 integration, concentrated adversarial review/repair, frozen candidate, V2 final deterministic, final reviewer wave, and V3 external evidence.
+- Candidate snapshot count, adversarial repair count, final certification waves, and evidence that V3 ran after V2 on the frozen tree and was inspected by final reviewers without default replay.
 
 Strict evidence may additionally record exposed initial/final models, reasoning efforts, profiles, verified isolation, bounded replacement, reviewer tiers, and Initial Assignment Accuracy.
 

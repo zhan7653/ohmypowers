@@ -1,0 +1,87 @@
+{
+  "schema": "validation-review-lifecycle-cases/v1",
+  "cases": [
+    {
+      "id": "normal-high-risk-flow",
+      "events": [
+        "failure-matrix",
+        "v0",
+        "v1",
+        "adversarial-batch",
+        "repair",
+        "v0",
+        "v1",
+        "freeze:tree-final",
+        "v2:tree-final",
+        "v3:tree-final",
+        "final-review-pass:tree-final"
+      ],
+      "expected": {
+        "result": "PASS",
+        "repairRounds": 1,
+        "finalReviewWaves": 1,
+        "v3Runs": 1,
+        "finalTree": "tree-final"
+      }
+    },
+    {
+      "id": "unexpected-final-blocker-allows-one-recertification",
+      "events": [
+        "failure-matrix",
+        "v0",
+        "v1",
+        "adversarial-batch",
+        "freeze:tree-one",
+        "v2:tree-one",
+        "v3:tree-one",
+        "final-review-block:tree-one",
+        "repair",
+        "freeze:tree-two",
+        "v2:tree-two",
+        "v3:tree-two",
+        "final-review-pass:tree-two"
+      ],
+      "expected": {
+        "result": "PASS",
+        "repairRounds": 1,
+        "finalReviewWaves": 2,
+        "v3Runs": 2,
+        "finalTree": "tree-two"
+      }
+    },
+    {
+      "id": "second-blocking-certification-stops",
+      "events": [
+        "failure-matrix",
+        "v0",
+        "v1",
+        "adversarial-batch",
+        "freeze:tree-one",
+        "v2:tree-one",
+        "v3:tree-one",
+        "final-review-block:tree-one",
+        "repair",
+        "freeze:tree-two",
+        "v2:tree-two",
+        "v3:tree-two",
+        "final-review-block:tree-two"
+      ],
+      "expected": {
+        "result": "REPLAN",
+        "repairRounds": 1,
+        "finalReviewWaves": 2,
+        "v3Runs": 2,
+        "finalTree": "tree-two"
+      }
+    }
+  ],
+  "issue29Baseline": {
+    "recordedSnapshots": 6,
+    "reviewRepairCycles": 5,
+    "targetCandidateSnapshotCeiling": 3,
+    "targetAdversarialReviewWaves": 1,
+    "targetConcentratedRepairRounds": 1,
+    "targetV3SuccessfulFinalTreeRuns": 1,
+    "exceptionalV3TotalRunCeiling": 2
+  }
+}

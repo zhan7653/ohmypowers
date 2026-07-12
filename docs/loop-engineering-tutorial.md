@@ -232,6 +232,9 @@ Check that:
 - every subagent receives a minimal explicit packet, preferably `fork_turns: none`, and no agent has more than two substantive follow-ups;
 - the plan records slot capacity, retire/close support, implementation-thread ceiling, reserved review slots, and `wait_agent` thresholds;
 - no 1-, 10-, 20-, or 30-second polling loop is planned, three consecutive no-information timeouts trigger replanning, and `STANDARD`/`HIGH` stop at 12/20 waits respectively.
+- validation is layered into V0 focused, V1 integration, V2 final deterministic, and V3 external checks;
+- high-risk work has a complete failure matrix before implementation, one batched adversarial review, at most one concentrated repair, and at most three candidate snapshots;
+- V2, V3, and final reviewers use one frozen tree; V3 runs once after V2 and the final reviewers inspect that unchanged evidence package without replaying V3 by default.
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
 
@@ -247,11 +250,11 @@ The user starts the returned prompt manually. The orchestrator should:
 4. In strict mode, verify each required selector and configuration independently. In inherited mode, verify generic delegation remains available and do not add per-agent configuration claims.
 5. Create or enter the one task-level branch/worktree.
 6. Dispatch tasks according to dependency waves and ownership.
-7. Run targeted and full validation.
-8. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe contract-required validation and run selected independent reviews over that snapshot. Give the contract-conformance reviewer the complete Issue/local contract and identity, with the thin Goal, session, PR text, and runner summaries only as supplementary evidence. Record only model, reasoning, profile, or isolation evidence that the host actually exposes.
-9. Repair fixable blockers within budget.
-10. Prepare draft PR/MR evidence.
-11. Produce the mode-accurate Dispatch Summary and loop decision.
+7. Run V0 focused checks during implementation and V1 integration checks on the integrated candidate.
+8. For high-risk work, run one concentrated adversarial review over the complete failure matrix and return one batched finding set; perform at most one concentrated repair.
+9. Freeze a certification candidate, capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time, then run V2 full deterministic checks on that tree.
+10. After V2 passes, run V3 external/network/authentication/discovery checks once, then run selected independent final reviewers over the same unchanged tree and complete evidence package. Give the contract-conformance reviewer the exact Task Contract bytes/digest and complete Issue identity/lifecycle context, with planning artifacts, the thin Goal, session, PR text, and runner summaries only as supplementary evidence. The verifier inspects valid V3 primary evidence rather than replaying it by default.
+11. Prepare draft PR/MR evidence and produce the mode-accurate Dispatch Summary and loop decision.
 
 If runtime capability evidence has materially changed, pause for renewed mode confirmation and replanning. Also pause when the confirmed mode cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement; do not silently weaken the contract.
 
@@ -278,6 +281,7 @@ The Dispatch Summary should record:
 - `useful_wait_ratio`, `wait_token_ratio`, and total coordination-token ratio when reliable telemetry is available, or an explicit unavailable value;
 - ownership conflicts;
 - incomplete tasks and pause reasons.
+- V0/V1 development checks, the batched adversarial finding set, concentrated repair count, frozen certification tree, V2 result, final reviewer wave, V3 ordering/result, and candidate snapshot count.
 
 In `strict-model-routing`, also record supported initial/final model assignments, bounded escalation, reviewer configuration, and Initial Assignment Accuracy. In `inherited-model-routing`, omit those strict-only metrics and do not describe the inherited parent configuration as a selected subagent assignment.
 

@@ -69,7 +69,19 @@ Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decisi
 
 # Validation results
 
-- `<command>`: <pass/fail and relevant output summary>
+Validation lifecycle:
+
+- `V0 Focused`: `<commands, result, and development tree>`
+- `V1 Integration`: `<commands, result, and integrated candidate tree>`
+- Concentrated adversarial review: `<not applicable or one batched finding set>`
+- Concentrated repair rounds: `<0 or 1>`
+- Frozen certification candidate: `<Git tree digest>`
+- `V2 Final deterministic`: `<commands and result on frozen tree>`
+- Final certification waves: `<1 normally; 2 only after one unexpected blocker repair>`
+- `V3 External`: `<commands/manual checks and result; exactly once after V2 passed the frozen tree and before final reviewers inspected the unchanged evidence package>`
+- Candidate snapshots recorded: `<count, maximum 3>`
+
+- `<command>`: <tier, pass/fail, snapshot, and relevant output summary>
 
 ## Independent validation replay
 
@@ -84,6 +96,10 @@ Contract-prescribed reviews: `<exact required identities, configurations, provid
 Selection basis when no topology is prescribed: `<contract obligations, final diff, affected interfaces/data, validation, and material risks>`
 
 Minimum sufficient capability coverage: `<capabilities selected and why>`
+
+Development adversarial review is supplementary feedback and does not count as final independent certification: `<not applicable or evidence>`
+
+Final reviewer wave identity: `<one shared frozen Git tree digest>`
 
 | Reviewer identity/source | Confirmed mode | Configuration provenance | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Snapshot |
 |---|---|---|---|---|---|---|---|---|---|---|
