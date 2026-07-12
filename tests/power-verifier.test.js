@@ -11,7 +11,7 @@ const fixedTopologyPaths = [
   'docs/loop-engineering-tutorial.md',
   'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
   'power-loop/SKILL.md',
-  'power-loop/assets/final-review-plan.md',
+  'power-loop/assets/final-review-record.md',
   'power-loop/assets/execution-blueprint.md',
   'power-loop/assets/issue-patch.md',
   'power-loop/assets/loop-readiness-checklist.md',
@@ -330,52 +330,48 @@ test('inherited verifier evidence records provenance honestly and pauses for una
   assert.equal(exact.reviewerProvenance.length, 0, 'execution pauses before substituting a reviewer')
 })
 
-test('verifier guidance requires runtime routing evidence and rejects unsupported configuration claims', async () => {
+test('verifier guidance requires honest runtime routing evidence without duplicating review records', async () => {
   const files = [
     'power-verifier/SKILL.md',
-    'power-verifier/assets/implementation-verifier-checklist.md',
     'power-verifier/assets/verifier-result-template.md',
   ]
 
   for (const relativePath of files) {
     const content = await readFile(path.join(root, relativePath), 'utf8')
-    assert.match(content, /Runtime Reviewer Routing|runtime reviewer-routing|runtime reviewer routing/i)
-    assert.match(content, /Evidence inspected|evidence inspected/)
-    assert.match(content, /Configuration provenance|configuration provenance|routing\/configuration provenance/i)
-    assert.match(content, /host-isolation|host isolation/i)
+    assert.match(content, /routing|configuration/i)
+    assert.match(content, /Final Review Record/)
   }
 
   const skill = await readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8')
-  for (const unsupported of [
-    'reviewer model or reasoning assignments',
-    'custom profiles',
-    'sandbox or host-isolation guarantees',
-    'reviewer tiers',
-    'model-cost savings',
-  ]) assert.match(skill, new RegExp(unsupported))
-  assert.match(skill, /return `NEEDS_HUMAN`/)
-  assert.match(skill, /Record model or reasoning only when directly exposed\./)
+  assert.match(skill, /Do not infer model, reasoning, profile, host isolation, reviewer tier, or cost claims/)
+  assert.match(skill, /`NEEDS_HUMAN`/)
+  assert.match(skill, /selected configuration fields only with direct evidence/)
+
+  const resultTemplate = await readFile(path.join(root, 'power-verifier', 'assets', 'verifier-result-template.md'), 'utf8')
+  assert.doesNotMatch(resultTemplate, /wait_agent|Reviewer identity\/source|Validation lifecycle/)
 })
 
 test('verifier artifacts define the Task Contract as normative, preserve Issue identity, and bind results to Git trees', async () => {
   const files = [
     'power-verifier/SKILL.md',
-    'power-verifier/assets/implementation-verifier-checklist.md',
     'power-verifier/assets/verifier-result-template.md',
   ]
 
   for (const relativePath of files) {
     const content = await readFile(path.join(root, relativePath), 'utf8')
-    assert.match(content, /full-body SHA-256|full persisted UTF-8 body/i)
+    assert.match(content, /full-body SHA-256|complete-body SHA-256|execution body digest/i)
     assert.match(content, /Git tree digest/)
-    assert.match(content, /supplementary/i)
   }
 
   const skill = await readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8')
-  assert.match(skill, /sole normative verification contract/)
+  assert.match(skill, /sole normative contract/)
   assert.match(skill, /Task Contract byte range/)
-  assert.match(skill, /full-body digest is the authoritative container identity; the Task Contract digest controls normative clauses/)
-  assert.match(skill, /planning artifacts.*supplementary evidence/i)
-  assert.match(skill, /Different commits with the same Git tree digest are tree-equivalent/)
-  assert.match(skill, /do not fabricate/i)
+  assert.match(skill, /supplementary evidence and cannot add requirements/)
+  assert.match(skill, /different commits with the same tree are equivalent/i)
+  assert.match(skill, /Do not invent requirements or historical identity/)
+
+  await assert.rejects(
+    readFile(path.join(root, 'power-verifier', 'assets', 'implementation-verifier-checklist.md'), 'utf8'),
+    'duplicate verifier checklist is removed',
+  )
 })

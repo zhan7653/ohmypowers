@@ -1,54 +1,18 @@
 # Loop Readiness Checklist
 
-Use this checklist before repository-aware implementation planning. Reviewer capability is intentionally not a readiness gate because it is inspected after the final tree is frozen.
+Use the delivery lane and split decision already recorded in the Task Contract.
 
-## Required Task Contract Fields
+Return `LOOP_READY` when the contract has:
 
-- Problem/background and bounded goal.
-- Delivery lane and explicit split/bundling decision.
-- User-observable behavior, scope, and non-goals.
-- Dependencies, blockers, external API/data contracts, constraints, risks, and assumptions.
-- Required safety guarantees and stronger guarantees out of scope.
-- Validation expectations and observable acceptance criteria.
-- Stop condition and pause-and-ask conditions.
+- a bounded outcome and user-observable behavior;
+- scope and non-goals;
+- external API/data, compatibility, security, permission, migration, or business decisions when applicable;
+- required safety guarantees and explicit exclusions;
+- observable acceptance and validation evidence;
+- completion and pause-and-ask conditions.
 
-## Repository-Derived Fields
+Return `NEEDS_GRILL` only for a missing requirement-level decision. Repository-derived paths, private interfaces, commands, implementation order, and worktree choices are not requirement gaps.
 
-Do not return `NEEDS_GRILL` solely because repository inspection can safely derive:
+Return `NEEDS_HUMAN` for missing authority, unauthorized irreversible action, or irreconcilable facts.
 
-- affected files/modules and private interfaces;
-- internal flow and error handling;
-- test seams and concrete validation commands;
-- implementation order and branch/worktree choice.
-
-If deriving one exposes a public behavior, compatibility, business, security, permission, migration, transaction, concurrency, audit, rollback, or recovery decision, return `NEEDS_GRILL` or `NEEDS_HUMAN`.
-
-## Complexity And Split Gate
-
-Return `NEEDS_GRILL` when:
-
-- independently useful `LIGHT` or `STANDARD` work is bundled with a separable `HIGH`-risk boundary;
-- independent risk domains can be delivered separately;
-- broad terms such as “safe”, “atomic”, or “recoverable” leave transaction, concurrency, audit, rollback, or recovery guarantees undecided;
-- the recorded delivery lane and split decision do not match actual boundaries.
-
-Do not split merely to increase task count.
-
-## Results
-
-### LOOP_READY
-
-Required output:
-
-- readiness result, delivery lane/split decision, residual risk, and execution decision;
-- proposed Execution Blueprint path and digest;
-- decision summary and compact Blueprint-reference patch;
-- direct execution withheld pending confirmed patch application.
-
-### NEEDS_GRILL
-
-Return missing requirement-level fields and the smallest next action. Do not generate execution artifacts.
-
-### NEEDS_HUMAN
-
-Return the blocking contradiction, permission, authorization, or material decision and the smallest next action. Do not generate execution artifacts.
+If repository evidence contradicts the recorded lane or split decision, route the conflict back to the Task Contract. Do not add a residual-risk or execution-decision classification.

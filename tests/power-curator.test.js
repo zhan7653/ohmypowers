@@ -183,7 +183,8 @@ test('skill documents the fixed interfaces without making labels normative', asy
 
   assert.match(skill, /Git tree digest controls freshness/i)
   assert.match(skill, /old result covers only verified snapshot; final tree is human-waived, not verifier PASS/i)
-  assert.match(skill, /route those contract decisions to `power-grill`, and use `power-loop` to confirm the revised execution plan/i)
+  assert.match(skill, /route those decisions to `power-grill`; use `power-loop` only when the revised work needs a persisted Blueprint/i)
+  assert.doesNotMatch(skill, /Latest canonical context|Decisions since contract/)
   assert.match(skill, /Persist only these Issue states: `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, and `follow-up-needed`/)
   assert.match(skill, /Labels are optional, non-normative presentation aids/i)
 })

@@ -102,7 +102,7 @@ Assign exactly one classification before closure:
 - `tree-equivalent`: verified and final Git tree digests are identical. The existing verifier result may be cited for the final content even when commit hashes differ.
 - `reverified`: the trees differ, the changed paths and impact are inventoried, and a new verifier result is explicitly bound to the final Git tree digest.
 - `human-waived`: the trees differ, the change is not contract-changing, and the user explicitly confirms a complete waiver record for the uncovered final-tree content.
-- `contract-changing`: the change affects the Task Contract, acceptance criteria, public behavior, security, permissions, or migration decisions. Stop closure, route those contract decisions to `power-grill`, and use `power-loop` to confirm the revised execution plan; a waiver cannot replace those owners.
+- `contract-changing`: the change affects the Task Contract, acceptance criteria, public behavior, security, permissions, or migration decisions. Stop closure and route those decisions to `power-grill`; use `power-loop` only when the revised work needs a persisted Blueprint. A waiver cannot replace those owners.
 - `unresolved`: identity or comparison evidence is missing, trees differ without final-tree verification or a complete waiver, or another closure condition remains unmet.
 
 Evaluate `contract-changing` before accepting re-verification or waiver evidence. For `tree-equivalent`, retain the verified and final commit identities as provenance while stating that their tree digests match. For every other classification, state the smallest next action. `human-waived` permits a human closure decision; it is not a verifier PASS for the final tree.
@@ -125,7 +125,7 @@ Show the exact proposed record and obtain explicit confirmation before applying 
 
 ## Canonical Issue Body
 
-Use the issue body as canonical. Preserve the `Task Contract` and `Execution Blueprint` as separately owned sections, and leave any legacy Dispatch block untouched when present. If important lifecycle context exists only in comments, propose promoting the short current truth into `Curation status` or creating a linked follow-up issue.
+Use the issue body as canonical. Preserve the `Task Contract` and optional `Execution Blueprint` as separately owned sections, and leave any legacy Dispatch block untouched when present. If important lifecycle context exists only in comments, place it in closure evidence or a linked follow-up issue instead of creating a second decision history.
 
 Append this section to old issues only when curation is confirmed or when drafting a new issue contract:
 
@@ -136,12 +136,6 @@ State: open | in-progress | pr-ready | merged | done | superseded | follow-up-ne
 
 Linked PRs:
 - <PR URL>: <status and relevance>
-
-Latest canonical context:
-<short current truth>
-
-Decisions since contract:
-- <decision>
 
 Follow-up issues:
 - <issue URL or none>
@@ -166,7 +160,7 @@ Human waiver (only for human-waived):
 - Verifier coverage statement: <old result covers only verified snapshot; final tree is human-waived, not verifier PASS>
 ```
 
-Use `Change history` for contract changes. Use `Curation status` for lifecycle truth, issue linkage, closure evidence, and comment-derived context that must not remain comment-only.
+Use `Change history` for contract changes. Use `Curation status` only for lifecycle state, issue/PR linkage, closure evidence, and snapshot reconciliation.
 
 ## Lifecycle Vocabulary and Mapping
 
@@ -186,7 +180,7 @@ Recommend closing an issue only when all of these are true:
 - PR/MR evidence maps to the issue acceptance criteria;
 - no unresolved acceptance criteria, `NEEDS_HUMAN`, required follow-up, or verifier blocker remains;
 - snapshot reconciliation is `tree-equivalent`, `reverified`, or complete `human-waived`; `contract-changing` and `unresolved` block closure;
-- important context is in `Curation status`, not only comments;
+- required closure context is in closure evidence or a linked follow-up, not only comments;
 - the close comment can include closure evidence;
 - the user explicitly confirms closure.
 

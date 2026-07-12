@@ -1,72 +1,54 @@
 # Task Contract
 
-## Problem
+## Problem and observable outcome
 
-<What problem exists today.>
-
-## Goal
-
-<What this task must accomplish.>
+- Current problem: `<what is wrong today>`
+- Required outcome: `<what users, operators, or integrations must observe when complete>`
 
 ## Delivery lane and split decision
 
 - Delivery lane: `<LIGHT | STANDARD | HIGH>`
-- Split assessment: `<not needed | recommended and accepted | recommended but explicitly declined>`
-- Delivery boundaries: `<one bounded outcome, or the separate Issue boundaries and dependency order>`
-- Required safety guarantees: `<requirement-level guarantees explicitly confirmed for this contract>`
-- Stronger guarantees out of scope: `<transaction, concurrency, audit, recovery, rollback, or other guarantees not required>`
+- Split assessment and boundaries: `<not needed, accepted split, or explicitly accepted combined boundary>`
+- Required safety guarantees: `<confirmed guarantees>`
+- Stronger guarantees out of scope: `<explicit exclusions>`
 
-## User-observable behavior
+## Scope and non-goals
 
-<What users, operators, or integrations will observe when the task is complete.>
+In scope:
 
-## Scope
+- `<item>`
 
-- <in-scope item>
+Out of scope:
 
-## Non-goals
+- `<item>`
 
-- <out-of-scope item>
+## External constraints and dependencies
 
-## Dependencies / blockers
-
-- <dependency, external team, credential, environment, upstream decision, or "None known">
-
-## Current context
-
-<Relevant repository, system, or workflow context discovered during inspection.>
-
-## External API / data contracts
-
-<Public APIs, externally visible schemas, config, compatibility, migration, permission, security, or business-rule decisions. Use "None expected" when not applicable.>
-
-## Constraints
-
-<Auth, permissions, security, privacy, compatibility, migration, rollback, documentation, or "None known".>
+- Dependencies/blockers: `<items or None known>`
+- Public API/data/config/compatibility/security/permission/migration decisions: `<items or None expected>`
+- Other constraints or repository context: `<items or None known>`
 
 ## Risks and assumptions
 
-- <risk or assumption>
+- `<material risk or assumption>`
 
-## Validation expectations
+## Acceptance and validation
 
-- <Observable evidence, test category, manual check, or quality gate required. Exact repository commands may be supplied later by power-loop.>
+| AC | Observable acceptance | Required validation/evidence |
+|---|---|---|
+| AC-1 | `<Given/When/Then or equivalent outcome>` | `<test category, manual check, or evidence>` |
 
-## Acceptance criteria
-
-- [ ] AC-1: Given <precondition>, when <action>, then <observable result>.
-
-## Stop condition
-
-<Observable condition that means the task is complete.>
+Completion condition: `Every applicable AC has implementation and validation evidence.`
 
 ## Pause-and-ask conditions
 
-- <condition that requires user input before continuing>
+- `<condition requiring user input>`
 
 ## Change history
 
 - YYYY-MM-DD: Initial task contract created.
+
+The Task Contract is the sole normative contract. Later planning and lifecycle sections are supplementary.
 
 <!-- power-loop:execution-blueprint:start -->
 # Execution Blueprint
@@ -81,9 +63,9 @@ Task Contract digest: `None`
 
 Delivery lane: `<copied from the confirmed Task Contract>`
 
-Execution entry: `Not ready until power-loop confirms and applies this reference.`
+Execution entry: `LIGHT may execute directly from this Issue after readiness checks. STANDARD/HIGH require a confirmed Blueprint unless the user explicitly chooses direct execution.`
 
-This compact block may later reference a separately persisted, non-normative repository-aware plan after explicit user confirmation. The plan may evolve without changing the Task Contract unless it exposes a new requirement-level decision.
+This compact block may later reference a separately persisted, non-normative repository-aware plan after explicit user confirmation.
 <!-- power-loop:execution-blueprint:end -->
 
 # Curation status
@@ -92,12 +74,6 @@ State: open
 
 Linked PRs:
 - None yet.
-
-Latest canonical context:
-The Task Contract is the sole normative contract. The complete persisted body supplies source identity and lifecycle context. Planning references, planning artifacts, comments, execution-session/PR evidence, and runner summaries are supplementary and cannot add obligations. Execution planning is not generated yet.
-
-Decisions since contract:
-- None.
 
 Follow-up issues:
 - None.

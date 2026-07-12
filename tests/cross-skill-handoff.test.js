@@ -61,11 +61,11 @@ function classifyHandoff(scenario, fixture) {
 }
 
 function directExecutionDecision(scenario) {
-  return scenario.issue.blueprintReference.planningStatus === 'confirmed' &&
+  if (!sha256Pattern.test(scenario.issue.taskContractSha256)) return 'stop'
+  if (scenario.issue.deliveryLane === 'LIGHT' && !scenario.issue.blueprintReference) return 'ready'
+  return scenario.issue.blueprintReference?.planningStatus === 'confirmed' &&
     scenario.issue.taskContractSha256 === scenario.issue.blueprintReference.taskContractSha256 &&
-    sha256Pattern.test(scenario.issue.blueprintReference.artifactSha256)
-    ? 'ready'
-    : 'stop'
+    sha256Pattern.test(scenario.issue.blueprintReference.artifactSha256) ? 'ready' : 'stop'
 }
 
 test('cross-skill fixtures enforce tree freshness and the Issue #25 stale-PASS regression', async () => {
@@ -111,13 +111,19 @@ test('confirmed Issue is the direct execution entry and Task Contract drift stop
 
   for (const scenario of executions) {
     assert.equal(scenario.issue.executionEntry, 'canonical-persisted-issue')
-    assert.equal(scenario.issue.blueprintReference.evidenceRole, 'supplementary-plan')
+    if (scenario.issue.blueprintReference) {
+      assert.equal(scenario.issue.blueprintReference.evidenceRole, 'supplementary-plan')
+    }
     assert.equal(directExecutionDecision(scenario), scenario.expected.startDecision, scenario.id)
   }
 
   const drift = executions.find(scenario => scenario.id === 'task-contract-drift-stop')
   assert.notEqual(drift.issue.taskContractSha256, drift.issue.blueprintReference.taskContractSha256)
   assert.equal(drift.expected.reason, 'task-contract-digest-mismatch')
+
+  const light = executions.find(scenario => scenario.id === 'confirmed-issue-direct-execution')
+  assert.equal(light.issue.deliveryLane, 'LIGHT')
+  assert.equal(light.issue.blueprintReference, undefined)
 })
 
 test('lifecycle mappings persist only canonical states and keep labels non-normative', async () => {

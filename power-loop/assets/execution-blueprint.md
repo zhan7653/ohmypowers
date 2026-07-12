@@ -7,97 +7,46 @@ Contract source: `<hosted issue URL/number or local brief path>`
 
 Task Contract digest: `sha256:<exact normative Task Contract bytes>`
 
-Delivery lane: `<LIGHT | STANDARD | HIGH>`
-
-Normative boundary: `The Task Contract is the sole normative contract. This Blueprint is confirmed operational guidance and cannot add acceptance criteria or requirement-level guarantees.`
-
-Pre-patch Issue identity: `<source, host revision when available, and exact complete-body SHA-256>`
-
 Source baseline: `<branch>@<full commit SHA>`
 
 Generated at: `<ISO-8601 timestamp with timezone>`
 
-## Repository facts and assumptions
+Boundary: `Non-normative operational guidance; cannot add Task Contract requirements.`
 
-Facts:
+## Implementation plan
 
-- `<verified fact>`
-
-Assumptions:
-
-- `<assumption that does not change the Task Contract>`
-
-Requirement conflicts or newly exposed decisions: `<None, NEEDS_GRILL, or NEEDS_HUMAN with exact reason>`
-
-## Planned changes
-
-| Path or module | Planned change | Contract linkage |
-|---|---|---|
-| `<path-or-module>` | `<smallest required change>` | `<clause or AC>` |
-
-## Internal interfaces and flow
-
-| Interface or boundary | Current shape | Planned shape | Consumers |
+| Path or module | Smallest required change | Contract linkage | Focused validation |
 |---|---|---|---|
-| `<private interface>` | `<current>` | `<planned>` | `<modules>` |
+| `<path-or-module>` | `<change>` | `<clause or AC>` | `<check>` |
 
-Ordered data/control flow:
+Implementation order: `<short ordered sequence when dependencies exist, otherwise follow the table>`
 
-1. `<step>`
+## Material interfaces, risks, and assumptions
 
-## Failure handling and test seams
-
-| Failure case | Expected handling | Evidence or test seam |
-|---|---|---|
-| `<failure>` | `<handling>` | `<test>` |
-
-## Implementation order
-
-1. `<main-agent implementation step and dependency>`
-
-Stable interface gates:
-
-- `<gate or None>`
+- `<Only items that change implementation or validation; otherwise None>`
 
 ## Work isolation
 
-- Base branch: `<repository-required base>`
 - Implementation branch: `<branch>`
-- Task-level worktree: `<path or not required>`
-- Protected-branch rule: `no normal implementation writes or merge without explicit authorization`
-- Current-worktree handling: `<clean, preserve unrelated changes, or pause>`
+- Task worktree/current-worktree handling: `<path, not required, or preserve unrelated changes>`
 
 ## Validation
 
-- `V0 Focused`: `<syntax, unit, and task-owned checks>`
-- `V1 Integration`: `<relevant module and compatibility regression>`
-- `V2 Final deterministic`: `<full deterministic repository/installer/packaging/integration checks>`
-- `V3 External`: `<network/authentication/hosted/runtime checks after V2, or not applicable>`
+- `V0 Focused`: `<task-owned checks>`
+- `V1 Integration`: `<relevant regression checks>`
+- `V2 Final deterministic`: `<full deterministic checks>`
+- `V3 External`: `<post-V2 external check or not applicable>`
+- `HIGH` failure matrix: `<material failure cases or not applicable>`
 
-High-risk failure matrix: `<applicable authorization, tampering, drift, concurrency, partial failure, rollback, recovery, permission, privacy, and destructive-action cases, or not applicable>`
+## Execution bounds
 
-## Runtime bounds and delivery policy
-
-- Execution sequence: `main-agent implementation -> V0 -> V1 -> optional HIGH failure-matrix review and one repair -> freeze tree -> V2 -> V3 when applicable -> runtime Final Review Plan -> concurrent independent reviewers -> verifier -> compact PR/MR evidence`
-- Candidate snapshot ceiling: `3`
-- Concentrated repair rounds: `<0 or 1>`
-- Final certification waves: `<planned 1; maximum 2 after one blocker repair>`
-- Max implementation iterations: `<confirmed limit>`
-- Same-failure retry limit: `<confirmed limit>`
-- No-progress stop: `<confirmed threshold>`
-- Draft PR/MR policy: `<when creation/update is allowed>`
-- Hosted mutation policy: `<exact confirmation requirement>`
-- Evidence invalidation: `<tree change invalidates affected V2/V3/review evidence>`
-- Pause conditions: `<scope, identity, repository, validation, or contract drift>`
+- Sequence: `main implementation -> V0 -> V1 -> optional HIGH self-review -> at most one repair -> freeze -> V2 -> V3 when applicable -> Final Review Record -> verifier -> PR/MR evidence`
+- No-progress stop: `<stop after the same diagnosed failure repeats, normally twice>`
+- Pause conditions: `<contract, authority, source, repository, or validation drift>`
 
 ## Staleness
 
-This Blueprint is stale when:
+This Blueprint is stale when the Task Contract changes, the source baseline materially invalidates an affected path/interface/check, or implementation exposes a new requirement-level decision.
 
-- the Task Contract or confirmed compact reference changes;
-- the source baseline materially changes an affected path, interface, validation command, or assumption;
-- implementation exposes a new requirement-level decision;
-- the planned interface or validation path becomes unsafe or unavailable.
-
-Reviewer capability, routing, count, and waiting are intentionally absent. They are decided after the final tree is frozen in the runtime Final Review Plan.
+Reviewer routing and waiting are decided only after the final tree is frozen and are recorded once in the Final Review Record.
 <!-- power-loop:execution-blueprint:end -->

@@ -19,9 +19,7 @@ function assess(input) {
 
   let result = 'READY'
   if (recommendSplit && input.splitDecision === 'missing') result = 'NEEDS_GRILL'
-  if (recommendSplit && input.splitDecision === 'explicitly-declined-with-guarantees') {
-    result = 'READY_WITH_STRICT_GATE'
-  }
+  if (recommendSplit && input.splitDecision === 'explicitly-declined-with-guarantees') result = 'READY'
 
   return { deliveryLane, recommendSplit, result }
 }
@@ -55,15 +53,15 @@ test('grill and loop require explicit split and safety decisions instead of sile
     readFile(path.join(root, 'power-grill', 'assets', 'issue-body.md'), 'utf8'),
   ])
 
-  for (const content of [grill, loop, checklist, issueTemplate]) {
+  for (const content of [grill, loop, issueTemplate]) {
     assert.match(content, /LIGHT/)
     assert.match(content, /STANDARD/)
     assert.match(content, /HIGH/)
   }
   assert.match(grill, /independently useful `LIGHT` or `STANDARD` feature is bundled with a `HIGH`-risk mutation boundary/)
   assert.match(grill, /Do not silently select the strongest transaction, concurrency, audit, recovery, or rollback guarantee/)
-  assert.match(loop, /Return `NEEDS_GRILL` when an independently valuable `LIGHT` or `STANDARD` outcome is bundled with a separable `HIGH`-risk boundary/)
-  assert.match(checklist, /broad terms such as “safe”, “atomic”, or “recoverable”/i)
+  assert.match(loop, /Use the delivery lane already recorded in the Task Contract/)
+  assert.match(checklist, /contradicts the recorded lane or split decision/i)
   assert.match(issueTemplate, /Required safety guarantees:/)
   assert.match(issueTemplate, /Stronger guarantees out of scope:/)
 })
@@ -72,21 +70,21 @@ test('Task Contract is normative while Blueprint and runtime review evidence sta
   const [issueTemplate, blueprint, finalReview, patch, verifier] = await Promise.all([
     readFile(path.join(root, 'power-grill', 'assets', 'issue-body.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'execution-blueprint.md'), 'utf8'),
-    readFile(path.join(root, 'power-loop', 'assets', 'final-review-plan.md'), 'utf8'),
+    readFile(path.join(root, 'power-loop', 'assets', 'final-review-record.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'issue-patch.md'), 'utf8'),
     readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8'),
   ])
 
   assert.match(issueTemplate, /The Task Contract is the sole normative contract/)
   assert.match(issueTemplate, /Artifact digest: `None`/)
-  assert.match(blueprint, /confirmed operational guidance/)
+  assert.match(blueprint, /Non-normative operational guidance/)
   assert.match(blueprint, /cannot add/)
-  assert.match(finalReview, /supplementary evidence/)
+  assert.match(finalReview, /supplementary evidence/i)
   assert.match(finalReview, /cannot add/)
-  assert.match(patch, /Compact Planning Reference Patch/)
-  assert.match(patch, /Decision summary/)
+  assert.match(patch, /Compact Blueprint Reference Patch/)
+  assert.doesNotMatch(patch, /Decision summary/)
   assert.match(patch, /Artifact digest: `sha256:/)
   assert.match(patch, /Task Contract digest: `sha256:/)
   assert.doesNotMatch(patch, /<all remaining filled Execution Blueprint fields and sections>/)
-  assert.match(verifier, /extract normative clauses only from the Task Contract/)
+  assert.match(verifier, /Extract every applicable obligation only from the Task Contract/)
 })

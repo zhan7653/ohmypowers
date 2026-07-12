@@ -10,12 +10,10 @@ const fixturePath = path.join(root, 'tests', 'fixtures', 'agent-coordination-bud
 function allocate(input) {
   const availableSubagentSlots = Math.max(0, input.hostSlots - 1)
   const selectedReviewers = Math.max(2, input.requiredReviewers)
-  const needsHuman = selectedReviewers > availableSubagentSlots
-  const reviewers = needsHuman ? 0 : selectedReviewers
   return {
-    reviewers,
-    totalDistinctSubagents: reviewers,
-    needsHuman,
+    reviewers: selectedReviewers,
+    totalDistinctSubagents: selectedReviewers,
+    needsHuman: availableSubagentSlots === 0,
   }
 }
 
@@ -40,7 +38,7 @@ test('Issue 29 wait baseline is stopped before repeated polling dominates the ma
 test('loop artifacts require decoupled contract and code review with patient metered waiting', async () => {
   const files = [
     'power-loop/SKILL.md',
-    'power-loop/assets/final-review-plan.md',
+    'power-loop/assets/final-review-record.md',
     'power-loop/assets/pr-evidence-template.md',
   ]
   const contents = await Promise.all(files.map(file => readFile(path.join(root, file), 'utf8')))
@@ -49,13 +47,15 @@ test('loop artifacts require decoupled contract and code review with patient met
   assert.match(combined, /wait_agent/)
   assert.doesNotMatch(combined, /Implementation subagent/i)
   assert.match(combined, /contract-conformance.*code-review/is)
-  assert.match(combined, /Add .*reviewers/i)
+  assert.match(combined, /Add .*risk scopes/i)
   assert.match(combined, /180 seconds|three minutes/i)
-  assert.match(combined, /third consecutive no-information timeout/i)
-  assert.match(combined, /Do not poll at 1, 10, 20, 30, or 60 seconds/i)
+  assert.match(combined, /after the third/i)
   assert.match(combined, /fork_turns: none/)
   assert.match(combined, /one consolidated.*follow-up/i)
-  assert.match(combined, /same frozen|same stable snapshot/i)
+  assert.match(combined, /frozen tree/i)
   assert.match(combined, /independent|decoupled/i)
   assert.doesNotMatch(combined, /useful_wait_ratio|wait_token_ratio|coordination-token ratio/i)
+
+  const prEvidence = contents[2]
+  assert.doesNotMatch(prEvidence, /wait_agent|Maximum consecutive no-information|Cumulative wait duration/)
 })

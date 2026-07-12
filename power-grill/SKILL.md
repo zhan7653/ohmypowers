@@ -9,7 +9,7 @@ description: Turn a vague or half-clear coding task, or an existing reviewed spe
 
 Produce a requirements-ready issue contract before implementation starts. The Task Contract is the sole normative contract. The complete persisted Issue body still supplies source identity and lifecycle context, but later planning references and execution artifacts are non-normative. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
 
-Leave exact files, private interfaces, internal flow, test seams, concrete commands, implementation order, ownership, and subagent routing to `power-loop`.
+Leave exact files, private interfaces, internal flow, test seams, concrete commands, implementation order, ownership, and subagent routing to execution-time repository inspection or `power-loop` when a persisted Blueprint is justified.
 
 The output is a clarified summary, a related-issue recommendation, an issue draft, and—after explicit confirmation—a hosted issue or persisted local brief. Do not implement code, start execution, create PRs/MRs, or create/update hosted issues by default.
 
@@ -44,17 +44,15 @@ Summarize:
 
 ### 2. Use The Reviewed-Spec Fast Path When Available
 
-When the input is a reviewed spec, map its confirmed content into the Task Contract fields before asking anything:
+When the input is a reviewed spec, map its confirmed content into the compact Task Contract before asking anything:
 
-- background/problem -> Problem;
-- requirement objective -> Goal and User-observable behavior;
-- functional requirements -> Scope;
-- out-of-scope section -> Non-goals;
-- public API, schema, config, compatibility, permission, security, migration, and business decisions -> External API/data contracts and Constraints;
+- background/problem, objective, and user behavior -> Problem and observable outcome;
+- functional requirements and exclusions -> Scope and non-goals;
+- dependencies, public API, schema, config, compatibility, permission, security, migration, and business decisions -> External constraints and dependencies;
 - risks and premises -> Risks and assumptions;
-- acceptance criteria -> Acceptance criteria and Validation expectations.
+- acceptance criteria and validation -> Acceptance and validation.
 
-Ask only for fields that remain absent, contradictory, or too vague for an issue contract, especially dependencies/blockers, stop condition, pause-and-ask conditions, or issue lifecycle choice. Do not repeat multi-round grilling when the mapped contract is already complete. Show the readiness check, then offer the issue draft.
+Ask only for fields that remain absent, contradictory, or too vague, especially external decisions, acceptance evidence, pause conditions, or issue lifecycle choice. Do not repeat multi-round grilling when the mapped contract is already complete. Show the readiness check, then offer the issue draft.
 
 ### 3. Grill Only The Missing Requirement Boundaries
 
@@ -64,12 +62,10 @@ Each question must explain why it matters, provide a recommended default, and as
 
 Cover or explicitly mark not applicable:
 
-- objective and current problem/workaround;
-- user-observable behavior;
-- scope and non-goals;
-- dependencies and blockers;
+- current problem and observable outcome;
+- scope, non-goals, dependencies, and blockers;
 - external API, schema, config, compatibility, auth, permission, security, privacy, migration, rollback, and business decisions when relevant;
-- constraints, validation expectations, acceptance criteria, risks, stop condition, and pause-and-ask conditions.
+- constraints, risks, observable acceptance/validation evidence, and pause-and-ask conditions.
 
 Do not ask the user to choose internal function signatures, private module boundaries, exact paths, internal control flow, error-handling shape, test seams, commands, implementation order, ownership, or Agent assignments unless they are externally meaningful requirements.
 
@@ -111,7 +107,7 @@ Record the confirmed delivery lane and any accepted bundling decision in the Tas
 
 Read and fill [assets/issue-body.md](assets/issue-body.md). Treat its `Task Contract` section as the sole canonical source for what and why.
 
-Leave the marked Execution Blueprint reference section at `Planning status: not-generated`. `power-loop` may later replace only that compact reference block after explicit confirmation. The runtime Final Review Plan is created after implementation and is not stored in the Issue.
+Leave the marked Execution Blueprint reference section at `Planning status: not-generated`. `LIGHT` work may execute directly from the Issue. `power-loop` may later replace only that compact reference block for `STANDARD`, `HIGH`, explicit plan-review, or handoff needs. The runtime Final Review Record is created after implementation and is not stored in the Issue.
 
 Search conservatively for directly related existing issues when hosted or local issue state is available. Recommend:
 
@@ -119,7 +115,7 @@ Search conservatively for directly related existing issues when hosted or local 
 - create a linked follow-up when the prior issue is complete or should not expand;
 - create a new issue when no candidate is a defensible canonical home.
 
-Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. The compact Execution Blueprint block records only its artifact reference, digest, confirmed delivery lane, and planning status. The Blueprint and runtime Final Review Plan are non-normative; only the Task Contract defines conformance.
+Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. The compact Execution Blueprint block records only its optional artifact reference, digests, and planning status. The Blueprint and runtime Final Review Record are non-normative; only the Task Contract defines conformance.
 
 The Task Contract identity is SHA-256 over the exact persisted UTF-8 bytes from the document start to the byte immediately before `<!-- power-loop:execution-blueprint:start -->`, with no whitespace or newline normalization. Preserve the marked planning boundaries so `power-loop` can verify this digest before and after patching.
 
@@ -135,15 +131,15 @@ After explicit confirmation, create, update, or save the contract:
 
 Before hosted mutation, inspect project host guidance and remotes. For GitHub read [references/github-issue-creation.md](references/github-issue-creation.md); for GitLab read [references/gitlab-issue-creation.md](references/gitlab-issue-creation.md). Preserve any project-required full GitLab repository URL. Stop if the canonical host or target is unclear.
 
-Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for direct execution because the compact confirmed planning reference needs a canonical home and the complete persisted body needs a stable identity.
+Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for direct execution because the execution model and verifier need a stable persisted contract identity.
 
-### 6. Hand Off To power-loop
+### 6. Hand Off For Execution
 
 Stop after persistence. Return:
 
 1. the issue URL/number or local brief path;
 2. the readiness summary;
-3. the next step: run `power-loop` on that persisted source.
+3. the next step: execute `LIGHT` directly, or run `power-loop` when a persisted Blueprint is justified.
 
 Do not include internal interfaces, exact implementation paths, worktree choices, Agent/model assignments, iteration budgets, verifier prompts, or a PR/MR body.
 
@@ -151,4 +147,4 @@ Do not include internal interfaces, exact implementation paths, worktree choices
 
 Before persistence, output the clarified summary, complete issue draft, related-issue recommendation, and confirmation request.
 
-After persistence, output the canonical reference, readiness summary, confirmed delivery lane or split decision, and the instruction to run `power-loop` for the separate planning artifact and compact confirmable reference patch that make the Issue directly executable.
+After persistence, output the canonical reference, readiness summary, and confirmed delivery lane/split decision. State that `LIGHT` work can execute directly; recommend `power-loop` only when a persisted Blueprint is required.

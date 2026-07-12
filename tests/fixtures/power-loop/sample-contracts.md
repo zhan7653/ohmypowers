@@ -58,23 +58,14 @@ Pause-and-ask conditions:
 
 - The new skill name or installation location conflicts with repository conventions.
 
-### Expected power-loop result before patch confirmation
+### Expected power-loop result
 
 - Readiness result: `LOOP_READY`
 - Delivery lane: `LIGHT`; split decision: not needed
-- Residual risk level: `LOW`
-- Execution decision: `ALLOW_EXECUTION`
-- Exact files and validation commands: discovered from the repository and added to the separate Execution Blueprint artifact
-- Execution Blueprint artifact: `proposed`, with source and digest
-- Decision summary and compact reference patch: displayed in full
-- Direct execution: withheld until the Blueprint and exact compact patch are confirmed, persisted, and verified
-
-### Expected result after confirmation
-
-- Issue/local brief compact Blueprint reference: updated and verified
+- Planning path: direct Issue execution; no persisted Blueprint or Issue Patch
 - Canonical Issue identity: source plus host revision when available plus SHA-256 of the exact complete persisted body; the body digest is authoritative
 - Task Contract identity: SHA-256 of exact UTF-8 bytes from document start to the byte before the Blueprint start marker
-- Execution entry: the confirmed Issue itself, whose compact reference pins the Task Contract and Blueprint digests for preflight
+- Repository details: discovered at execution time and summarized in a short in-session plan
 - Identity drift: stops before implementation and requires the Issue-owned re-read/replan path
 - Execution start: left to the user, who asks the model to execute the confirmed Issue directly
 

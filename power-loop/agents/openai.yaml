@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Loop"
   short_description: "Plan lean, review-gated Codex loops"
-  default_prompt: "Use $power-loop on this persisted Task Contract. Confirm its delivery lane and split decision, generate one non-normative Execution Blueprint and compact confirmable reference patch, then make the confirmed Issue ready for direct execution."
+  default_prompt: "Use $power-loop on this persisted Task Contract. Verify readiness and the recorded delivery lane. Prefer direct execution for LIGHT work; generate a compact confirmed Execution Blueprint only for STANDARD/HIGH or explicit handoff needs."

@@ -45,10 +45,9 @@ test('validation lifecycle runs V3 after V2 on the frozen tree and stops after a
   }
 })
 
-test('Issue 29 six-snapshot loop is bounded to one batched review, one repair, and three candidates', async () => {
+test('Issue 29 review churn is bounded to one batched review and one repair', async () => {
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
   const baseline = fixture.issue29Baseline
-  assert.ok(baseline.targetCandidateSnapshotCeiling < baseline.recordedSnapshots)
   assert.ok(baseline.targetAdversarialReviewWaves < baseline.reviewRepairCycles)
   assert.equal(baseline.targetConcentratedRepairRounds, 1)
   assert.equal(baseline.targetV3SuccessfulFinalTreeRuns, 1)
@@ -59,10 +58,9 @@ test('loop and verifier artifacts separate V0-V3, batch adversarial findings, an
   const files = [
     'power-loop/SKILL.md',
     'power-loop/assets/execution-blueprint.md',
-    'power-loop/assets/final-review-plan.md',
+    'power-loop/assets/final-review-record.md',
     'power-loop/assets/pr-evidence-template.md',
     'power-verifier/SKILL.md',
-    'power-verifier/assets/implementation-verifier-checklist.md',
     'power-verifier/assets/verifier-result-template.md',
   ]
   const combined = (await Promise.all(files.map(file => readFile(path.join(root, file), 'utf8')))).join('\n')
@@ -71,10 +69,10 @@ test('loop and verifier artifacts separate V0-V3, batch adversarial findings, an
     assert.match(combined, new RegExp(tier, 'i'))
   }
   assert.match(combined, /failure matrix/i)
-  assert.match(combined, /one batched finding set|one batched finding/i)
-  assert.match(combined, /at most one concentrated repair|Concentrated repair rounds: `<0 or 1/)
-  assert.match(combined, /Candidate snapshot ceiling: `3`/)
+  assert.match(combined, /one batched failure-matrix|one batched finding/i)
+  assert.match(combined, /at most one concentrated repair|at most one repair/i)
+  assert.doesNotMatch(combined, /Candidate snapshot ceiling|Max implementation iterations/)
   assert.match(combined, /V3 External.*after V2|after V2.*V3/i)
   assert.match(combined, /does not replay|do not replay/i)
-  assert.match(combined, /same frozen Git tree digest|same unchanged tree|unchanged frozen tree/i)
+  assert.match(combined, /final frozen tree|unchanged tree|frozen tree/i)
 })

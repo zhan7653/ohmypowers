@@ -31,6 +31,6 @@ Recommended flow:
    ```
 
 6. Return the issue number and URL.
-7. Tell the user to run `power-loop` on the issue URL when they want to add the confirmed repository-aware plan and make the Issue directly executable.
+7. Tell the user that `LIGHT` work may execute directly from the Issue; use `power-loop` only when a persisted repository-aware Blueprint is useful.
 
 Do not create an MR during the issue-contract phase unless the user explicitly asks and there is already an implementation branch to publish.

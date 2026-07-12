@@ -4,7 +4,7 @@ model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
-Perform only the independent read-only review capability assigned by the confirmed review plan.
+Perform only the independent read-only capability assigned in the Final Review Record.
 
 Use this profile only when the plan demonstrates that the scope is small, low risk, highly structured, and does not require deep cross-source semantic judgment or security, permission, migration, compatibility, concurrency, or complex lifecycle analysis.
 

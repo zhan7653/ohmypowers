@@ -303,13 +303,8 @@
         "hostRevision": "updatedAt=2026-07-11T06:00:00Z",
         "fullBodySha256": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
         "taskContractSha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "executionEntry": "canonical-persisted-issue",
-        "blueprintReference": {
-          "planningStatus": "confirmed",
-          "evidenceRole": "supplementary-plan",
-          "taskContractSha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-          "artifactSha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-        }
+        "deliveryLane": "LIGHT",
+        "executionEntry": "canonical-persisted-issue"
       },
       "expected": {
         "startDecision": "ready"
@@ -323,6 +318,7 @@
         "hostRevision": "updatedAt=2026-07-11T07:05:00Z",
         "fullBodySha256": "sha256:1616161616161616161616161616161616161616161616161616161616161616",
         "taskContractSha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "deliveryLane": "STANDARD",
         "executionEntry": "canonical-persisted-issue",
         "blueprintReference": {
           "planningStatus": "confirmed",

@@ -19,7 +19,7 @@
     {
       "id": "insufficient-slots",
       "input": { "hostSlots": 2, "requiredReviewers": 2 },
-      "expected": { "reviewers": 0, "totalDistinctSubagents": 0, "needsHuman": true }
+      "expected": { "reviewers": 2, "totalDistinctSubagents": 2, "needsHuman": false }
     }
   ],
   "issue29Baseline": {

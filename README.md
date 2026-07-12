@@ -31,32 +31,33 @@ It does not write implementation code or implementation plans.
 - An issue draft for user review.
 - A hosted issue or local issue brief after user confirmation.
 - A reserved compact `Execution Blueprint` reference section for later planning.
-- Requirements-ready handoff guidance for running `power-loop` on the persisted contract.
+- Requirements-ready handoff guidance for direct `LIGHT` execution or optional `power-loop` planning.
 
-It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, start execution, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
+It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived decisions belong to execution-time inspection or an optional Blueprint. It also does not implement code, start execution, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
 
-`power-loop` converts a requirements-ready persisted contract into a confirmed Codex implementation loop:
+`power-loop` checks the smallest safe execution path for a requirements-ready persisted contract:
 
-- Loop readiness, delivery-lane, split, and residual-risk gating without putting reviewer capability on the implementation critical path.
-- Confirmed delivery lane, split decision, residual risk level, and execution decision.
-- Repository inspection with source branch and commit baseline.
+- Loop readiness and delivery-lane verification without putting reviewer capability on the implementation critical path.
+- One readiness result plus the delivery lane already confirmed in the Task Contract; no derived residual-risk or execution-decision state.
+- `LIGHT` direct execution without a persisted planning artifact by default.
+- Repository inspection and a persisted Blueprint only for `STANDARD`, `HIGH`, explicit plan review, or cross-session handoff.
 - A confirmed delivery-lane and split gate before repository-aware planning; separable high-risk mutation boundaries return to contract clarification instead of being silently bundled.
-- A separately persisted, non-normative fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
-- A short decision summary plus one exact compact Blueprint-reference patch; the full Blueprint is not copied into the Issue body.
+- A compact non-normative Execution Blueprint for affected paths, material interfaces/risks, validation, execution bounds, and staleness when one is justified.
+- One confirmation covering the complete Blueprint and exact compact reference patch.
 - Minimum-subagent delivery: the main agent owns exploration, implementation, tests, integration, validation, and repair for every lane; subagents are reserved for final review.
 - Review-only parallelism: every final wave includes contract-conformance and code review, then adds decoupled security, test, compatibility, migration, data, permission, concurrency, or domain reviewers up to observed concurrent capacity.
-- Patient `wait_agent` coordination: allow a three-minute reviewer grace period, use three-minute waits when interaction policy permits, tolerate two consecutive no-information timeouts, and stop after the third when no concrete progress is observable.
+- Patient `wait_agent` coordination recorded once in the Final Review Record: allow a three-minute grace period, use three-minute waits when permitted, tolerate two no-information timeouts, and inspect once after the third.
 - Four validation layers (`V0` focused, `V1` integration, `V2` final deterministic, `V3` external), one batched adversarial review, at most one concentrated repair, a three-candidate ceiling, and one external run after V2 on the frozen tree immediately before final review.
 - Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
-- Direct Issue execution after the confirmed Blueprint reference patch is applied and verified. The Issue pins the Task Contract and Blueprint digests needed for preflight, so no separate launcher prompt is generated or manually started.
+- Direct Issue execution for `LIGHT`; when a Blueprint is used, its confirmed Issue reference pins the Task Contract and artifact digests needed for preflight. No separate launcher prompt is generated.
 - One task-level branch/worktree rather than one worktree per subagent.
 - Contract-prescribed reviews plus baseline independent contract-conformance and code-review capabilities, with additional risk-specific reviewers when justified.
-- One runtime Final Review Plan generated after V2/V3 from the final diff and visible reviewer-spawn capability. Selected fields require direct evidence; otherwise configuration is recorded as inherited.
+- One runtime Final Review Record containing reviewer assignments, results, routing provenance, and coordination metrics. PR and verifier evidence reference it instead of copying reviewer tables.
 - PR/MR evidence requirements and loop decision rules.
 
 Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement during planning, mutate requirements, or automatically start implementation. Reviewer routing is selected only after the final tree is frozen. Human input is required only when an exact Task Contract reviewer or configuration requirement is unavailable.
 
-For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, direct Issue execution, validation, dispatch reporting, and review.
+For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression optimizer task to demonstrate the LIGHT direct-execution path, validation, final review, and verification.
 
 `power-verifier` checks implementation evidence after a bounded loop has run:
 
@@ -103,11 +104,11 @@ Use them by phase:
 
 - `power-think`: vague idea -> reviewed spec.
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: requirements-ready Issue/local brief -> delivery/split gate -> Execution Blueprint -> confirmed compact reference patch -> directly executable Issue -> runtime Final Review Plan.
+- `power-loop`: requirements-ready Issue/local brief -> readiness/lane check -> LIGHT direct execution or confirmed STANDARD/HIGH Blueprint -> runtime Final Review Record.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill delivery/split decision -> power-loop Blueprint and compact patch -> direct Issue execution -> main-agent implementation -> frozen-tree Final Review Plan -> snapshot-bound verifier -> compact PR evidence -> power-curator reconciliation`.
+- Recommended Loop Engineering flow: `power-grill Task Contract -> LIGHT direct execution or optional power-loop Blueprint -> main-agent implementation -> frozen-tree Final Review Record -> compact verifier result -> PR evidence -> power-curator reconciliation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -145,7 +146,7 @@ Use $power-grill to grill this feature and draft an issue contract.
 Ask for repository-aware execution planning from an existing persisted task contract:
 
 ```text
-Use $power-loop on this issue to confirm the delivery lane and split decision, generate one Execution Blueprint, and show the decision summary plus compact Blueprint-reference patch that makes the confirmed Issue directly executable.
+Use $power-loop on this issue to verify readiness. Prefer direct execution for LIGHT work; generate and confirm a compact Blueprint only if the lane or handoff needs one.
 ```
 
 Ask for independent critique:
@@ -197,7 +198,7 @@ power-loop/
     power-sol-high-reviewer.toml
   assets/
     execution-blueprint.md
-    final-review-plan.md
+    final-review-record.md
     issue-patch.md
     loop-readiness-checklist.md
     pr-evidence-template.md
@@ -206,7 +207,6 @@ power-verifier/
   agents/
     openai.yaml
   assets/
-    implementation-verifier-checklist.md
     verifier-result-template.md
 power-curator/
   SKILL.md

@@ -73,7 +73,7 @@
       "expected": {
         "deliveryLane": "HIGH",
         "recommendSplit": true,
-        "result": "READY_WITH_STRICT_GATE"
+        "result": "READY"
       }
     }
   ]

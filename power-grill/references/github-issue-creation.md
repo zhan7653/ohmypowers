@@ -26,6 +26,6 @@ Recommended flow:
 
 7. If optional labels are missing, retry without labels or ask the user.
 8. Return the issue number and URL.
-9. Tell the user to run `power-loop` on the issue URL when they want to add the confirmed repository-aware plan and make the Issue directly executable.
+9. Tell the user that `LIGHT` work may execute directly from the Issue; use `power-loop` only when a persisted repository-aware Blueprint is useful.
 
 Do not create a PR during the issue-contract phase unless the user explicitly asks and there is already an implementation branch to publish.

@@ -4,7 +4,7 @@ model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
-Perform only the independent read-only review capability assigned by the confirmed review plan.
+Perform only the independent read-only capability assigned in the Final Review Record.
 
 Use this profile for security, permissions, authentication, sensitive data, migration, compatibility, concurrency, irreversible changes, large cross-module diffs, complex lifecycle state, conflicting evidence, or other verification that the plan classifies as high risk or semantically complex.
 

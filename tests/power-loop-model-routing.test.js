@@ -40,19 +40,19 @@ test('runtime reviewer capability is inspected after implementation without mode
   for (const scenario of fixture.cases) assert.deepEqual(runtimeRouting(scenario.input), scenario.expected, scenario.id)
 
   const skill = await readFile(path.join(root, 'power-loop/SKILL.md'), 'utf8')
-  const readiness = skill.indexOf('### 1. Gate Readiness And Risk')
+  const readiness = skill.indexOf('### 1. Check Readiness And Lane')
   const runtimeReview = skill.indexOf('## Runtime Final Review')
   assert.ok(readiness >= 0 && runtimeReview > readiness)
   assert.match(skill, /Only after V2\/V3 and the final diff are known, inspect the visible `spawn_agent` contract/)
   assert.doesNotMatch(skill, /confirm the execution mode|mode-specific Agent Dispatch Plan/i)
 })
 
-test('one runtime Final Review Plan replaces all pre-implementation Dispatch templates', async () => {
-  const finalPlan = await readFile(path.join(assetsDir, 'final-review-plan.md'), 'utf8')
-  assert.match(finalPlan, /Runtime capability evidence/)
-  assert.match(finalPlan, /selected configuration \| inherited from parent/)
-  assert.match(finalPlan, /contract-conformance and code-review capabilities/)
-  assert.match(finalPlan, /180-second waits/)
+test('one runtime Final Review Record owns reviewer results and wait telemetry', async () => {
+  const finalRecord = await readFile(path.join(assetsDir, 'final-review-record.md'), 'utf8')
+  assert.match(finalRecord, /Routing provenance/)
+  assert.match(finalRecord, /contract-conformance and code-review capabilities/)
+  assert.match(finalRecord, /180-second waits|180 seconds/)
+  assert.match(finalRecord, /Reviewer wave and results/)
 
   for (const removed of [
     'agent-dispatch-plan.md',
@@ -86,26 +86,26 @@ test('Issue patch makes the confirmed Issue directly executable without a launch
     readFile(path.join(assetsDir, 'execution-blueprint.md'), 'utf8'),
   ])
 
-  assert.match(patchTemplate, /Replacement block: Execution Blueprint reference/)
+  assert.match(patchTemplate, /Exact replacement block/)
   assert.match(patchTemplate, /Task Contract digest: `sha256:/)
-  assert.match(patchTemplate, /Execution entry: `This confirmed persisted Issue/)
+  assert.match(patchTemplate, /Execution entry: `This persisted Issue/)
   assert.match(patchTemplate, /ready for direct execution/i)
-  assert.doesNotMatch(patchTemplate, /Agent Dispatch Plan|Final Review Plan reference/)
+  assert.doesNotMatch(patchTemplate, /Decision summary|User-visible scope|Required safety guarantees/)
   assert.equal((await readdir(assetsDir)).some(name => /goal/i.test(name)), false, 'no launcher asset remains')
-  assert.match(blueprint, /Reviewer capability, routing, count, and waiting are intentionally absent/)
-  assert.match(blueprint, /main-agent implementation -> V0 -> V1/)
+  assert.match(blueprint, /Reviewer routing and waiting are decided only after the final tree is frozen/)
+  assert.match(blueprint, /main implementation -> V0 -> V1/)
+  assert.doesNotMatch(blueprint, /Candidate snapshot ceiling|Max implementation iterations|Same-failure retry limit/)
 })
 
-test('Final Review Plan stays supplementary while direct-execution preflight lives in power-loop', async () => {
-  const [finalPlan, skill] = await Promise.all([
-    readFile(path.join(assetsDir, 'final-review-plan.md'), 'utf8'),
+test('LIGHT direct execution skips persisted planning while STANDARD and HIGH retain the optional Blueprint path', async () => {
+  const [finalRecord, skill] = await Promise.all([
+    readFile(path.join(assetsDir, 'final-review-record.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8'),
   ])
-  assert.match(finalPlan, /Task Contract is the sole normative contract/)
-  assert.match(finalPlan, /supplementary evidence/)
-  assert.match(skill, /Hand Off The Confirmed Issue For Direct Execution/)
-  assert.match(skill, /recompute the Task Contract digest/)
-  assert.match(skill, /Do not generate a launcher prompt/)
+  assert.match(finalRecord, /Frozen Git tree digest/)
+  assert.match(skill, /For `LIGHT`, prefer direct execution/)
+  assert.match(skill, /Use a persisted Blueprint for `STANDARD`, `HIGH`/)
+  assert.doesNotMatch(skill, /residual risk|ALLOW_EXECUTION|EXECUTION_WITH_STRICT_GATE/i)
 })
 
 async function parseToml(filePath) {

@@ -76,9 +76,7 @@
     }
   ],
   "issue29Baseline": {
-    "recordedSnapshots": 6,
     "reviewRepairCycles": 5,
-    "targetCandidateSnapshotCeiling": 3,
     "targetAdversarialReviewWaves": 1,
     "targetConcentratedRepairRounds": 1,
     "targetV3SuccessfulFinalTreeRuns": 1,
