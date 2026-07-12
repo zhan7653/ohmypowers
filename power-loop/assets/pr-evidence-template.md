@@ -6,6 +6,16 @@
 
 <Issue URL, issue number, local brief path, or pasted contract reference>
 
+# Execution mode and capability evidence
+
+- Confirmed execution mode: `<strict-model-routing | inherited-model-routing>`
+- Capability classification: `<strict-selection-supported | inherited-model-only>`
+- Evidence inspected: `<visible host-contract evidence>`
+- User confirmation: `<confirmation evidence>`
+- Runtime recheck: `<result and any drift>`
+- Configuration provenance: `<selected configuration supported by strict evidence, or inherited from parent and not independently selected>`
+- Host-isolation evidence: `<separately observable enforcement, or None; instruction-level boundaries are not host enforcement>`
+
 # Issue curation evidence
 
 Linked contract status:
@@ -66,17 +76,15 @@ Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decisi
 
 # Review plan and provenance
 
-Contract-prescribed reviews: `<exact reviewers, agents, models, providers, and procedures, or None>`
+Contract-prescribed reviews: `<exact required identities, configurations, providers, and procedures, or None>`
 
 Selection basis when no topology is prescribed: `<contract obligations, final diff, affected interfaces/data, validation, and material risks>`
 
 Minimum sufficient capability coverage: `<capabilities selected and why>`
 
-Reviewer tier policy: `<Terra High only for simple structured checks; Sol Medium by default; Sol High for high-risk or semantically complex review>`
-
-| Reviewer identity/source | Model / reasoning | Selection rationale | Independent from implementation | Capability | Scope | Read-only boundary | Evidence inspected | Result | Snapshot |
-|---|---|---|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |  |  |  |
+| Reviewer identity/source | Confirmed mode | Configuration provenance | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Snapshot |
+|---|---|---|---|---|---|---|---|---|---|---|
+|  |  |  |  |  |  |  |  |  |  |  |
 
 # Verifier result
 
@@ -92,13 +100,23 @@ Smallest next action: `<required for BLOCKED or NEEDS_HUMAN, or None>`
 
 # Dispatch Summary
 
+Use the exact summary fields from the confirmed mode's Agent Dispatch Plan. Do not add fields or guarantees from the other mode.
+
+Confirmed execution mode: `<strict-model-routing | inherited-model-routing>`
+
+Capability evidence: `<visible host-contract evidence>`
+
 Planned tasks: <count>
 
 Actual tasks: <count>
 
-| Task ID | Role | Initial model | Final model | Escalated | Reason | Execution wave/mode | Status |
-|---|---|---|---|---|---|---|---|
-| `<TASK-ID>` | `<role>` | `<model>` | `<model>` | `<yes/no>` | `<reason or None>` | `<wave; parallel/sequential>` | `<complete/blocked/incomplete>` |
+| Task ID | Role | Spawned task identity | Context policy | Execution wave/mode | Status |
+|---|---|---|---|---|---|
+| `<TASK-ID>` | `<role>` | `<identity>` | `<policy>` | `<wave; parallel/sequential>` | `<complete/blocked/incomplete>` |
+
+Mode-specific task and retry evidence:
+
+- `<only fields supported by the confirmed mode>`
 
 Ownership conflicts:
 
@@ -108,9 +126,9 @@ Pause reasons:
 
 - <reason, or None>
 
-Initial Assignment Accuracy:
+Validation and reviewer snapshot identities:
 
-- `<tasks completed without escalation> / <completed or attempted implementation tasks with an initial assignment> = <percentage>`
+- <snapshot references>
 
 # Loop decision
 
@@ -133,5 +151,7 @@ Reason:
 - [ ] Check contract alignment.
 - [ ] Check acceptance criteria evidence.
 - [ ] Check validation relevance.
+- [ ] Check execution mode and capability evidence consistency.
+- [ ] Check configuration and isolation claims against observable evidence.
 - [ ] Check scope and non-goals.
 - [ ] Check verifier result and loop decision.

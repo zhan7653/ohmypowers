@@ -1,21 +1,29 @@
 /goal Execute the confirmed Task Contract at <contract-source> using its confirmed Execution Blueprint and Agent Dispatch Plan. For verification, treat the complete canonical Issue/local body together with this final Goal Prompt as the contract; do not copy, reinterpret, criticize, or revise either source.
 
+This template must be fully resolved before delivery. Replace every placeholder and retain only instructions supported by the confirmed execution mode and its recorded capability evidence.
+
 Confirmed planning references:
 - Contract source: <contract-source>
 - Execution Blueprint section: <section heading or anchor>
 - Agent Dispatch Plan section: <section heading or anchor>
 - Planned source baseline: <source-branch>@<full-commit-sha>
+- Confirmed execution mode: <strict-model-routing | inherited-model-routing>
+- Capability classification: <strict-selection-supported | inherited-model-only>
+- Capability evidence at planning time: <visible host-contract evidence>
 
 Preflight:
 1. Read the complete persisted Issue/local body, this final Goal Prompt, Execution Blueprint, and Agent Dispatch Plan.
-2. Require both execution sections to say `Planning status: confirmed`.
-3. Check the current repository against the recorded source branch and commit. If the commit differs, inspect whether changes materially affect planned paths, interfaces, dependencies, validation commands, or assumptions. Stop for a new power-loop pass or confirmed plan revision when drift is material.
-4. Confirm every contract-prescribed reviewer and every required custom agent named by the Dispatch Plan is discoverable with the specified settings. Do not silently inherit or substitute a model, provider, agent, or procedure; pause and report missing configuration unless the contract or confirmed plan names an approved alternative.
-5. Confirm the Task Contract still has precedence over both execution sections. Stop on any conflict.
+2. Require both execution sections to say `Planning status: confirmed` and to record the same confirmed execution mode and capability evidence.
+3. Reinspect the currently exposed subagent-spawn contract. Do not launch a probe when its visible schema is conclusive.
+4. Confirm that the runtime capability still supports the confirmed execution mode and required delegation. Recheck model, profile, reasoning, and sandbox or isolation dimensions independently; do not infer one from another. Stop for renewed user confirmation and a new or revised power-loop plan when evidence is contradictory or indeterminate, or when capability drift materially changes the confirmed mode assumptions.
+5. Check the current repository against the recorded source branch and commit. If the commit differs, inspect whether changes materially affect planned paths, interfaces, dependencies, validation commands, or assumptions. Stop for a new power-loop pass or confirmed plan revision when drift is material.
+6. Confirm the Task Contract still has precedence over both execution sections. Stop on any conflict.
+7. Pause with `NEEDS_HUMAN` when execution requires an exact configuration, provider, or isolation guarantee that the exposed host contract and confirmed mode cannot satisfy.
 
 Main-agent role:
-- Act as the orchestrator for interfaces, dependency coordination, conflict resolution, dispatch, waiting, steering, escalation decisions, validation coordination, review coordination, and result consolidation.
-- Do not normally edit implementation files. Delegate implementation changes to the exact worker profiles and Task IDs in the confirmed Dispatch Plan.
+- Act as the orchestrator for capability checks, mode enforcement, interfaces, dependency coordination, conflict resolution, dispatch, waiting, steering, validation coordination, review coordination, and result consolidation.
+- Do not normally edit implementation files. Delegate implementation changes to the exact Task IDs and roles in the confirmed Dispatch Plan using only supported spawn fields.
+- Apply the selected plan's configuration and failure protocol exactly. Populate or report a configuration field only when its capability evidence supports it; preserve explicit unavailable values. Do not reinterpret inherited configuration as independently selected routing or add arguments absent from the exposed host contract.
 - If delegation is unavailable, pause unless the confirmed Dispatch Plan explicitly authorizes a narrow main-agent exception with exact paths and rationale.
 - Do not expand scope, alter public contracts, or revise confirmed execution sections during the run.
 
@@ -24,25 +32,16 @@ Work isolation and ownership:
 - Do not perform normal implementation writes directly on the shared source/integration branch.
 - Do not create one worktree per subagent.
 - Preserve unrelated user changes.
-- Start write-capable workers in parallel only when their allowed write paths and interface responsibilities do not overlap.
+- Start write-capable subagents in parallel only when their allowed write paths and interface responsibilities do not overlap.
 - Serialize overlapping files, unstable shared interfaces, and unresolved dependencies.
 - Keep explicit ownership throughout the run; stop and resolve ambiguity before additional writes.
 
 Dispatch:
 - Execute the confirmed task graph and dependency waves.
-- Preserve meaningful parallelism for independent deliverables; do not reduce agent count merely as a cost metric.
-- Give every agent its Task ID, objective, relevant contract and Blueprint excerpts, allowed paths, dependencies, deliverable, validation responsibility, and stop conditions.
-- Wait for required task results, steer only within the confirmed contract, and consolidate artifacts without redoing completed worker exploration.
-
-Model escalation:
-- Allow at most one model escalation per implementation task.
-- Escalate only when failure evidence shows that the initial model assignment underestimated capability or reasoning needs.
-- Do not escalate for permission, environment, dependency, unavailable validation, interface-conflict, or other non-capability failures.
-- Reclassify only an under-classified Luna Max task directly to `power_sol_worker` on `gpt-5.6-sol` Medium; there is no implementation model ladder.
-- Use Sol Medium initially when the confirmed plan already places the task above the Luna boundary.
-- Never exceed `power_sol_worker` on `gpt-5.6-sol` Medium for implementation.
-- Give the replacement worker the prior worker's useful findings, failure evidence, artifacts, and current state.
-- If Sol Medium cannot complete the task, stop and report the blocker.
+- Preserve meaningful parallelism for independent deliverables.
+- Give every subagent its Task ID, objective, relevant contract and Blueprint excerpts, allowed paths, dependencies, deliverable, validation responsibility, context policy, and stop conditions.
+- Follow the confirmed plan's task configuration, retry, replacement, and pause rules without adding unsupported guarantees.
+- Wait for required task results, steer only within the confirmed contract, and consolidate artifacts without redoing completed exploration.
 
 Validation loop:
 - Run the exact validation commands and manual checks from the confirmed Execution Blueprint.
@@ -50,49 +49,45 @@ Validation loop:
 - Diagnose failures before retrying and do not hide failing or unreliable validation.
 - Capture the stable implementation snapshot before accepting validation or review evidence: repository/ref, commit, diff or tree digest, dirty/generated boundary, and capture time.
 - Independently replay contract-required validation when it is safe against that snapshot. Record the exact command, safety class, result, relevant evidence, and snapshot identity. Writable artifacts are allowed only in a disclosed isolated environment that does not mutate the canonical snapshot or hosted state; otherwise disclose why replay did not run.
-- Pause when validation cannot prove the acceptance criteria or when forbidden/high-risk work becomes necessary.
+- Pause when validation cannot prove the acceptance criteria or when forbidden or high-risk work becomes necessary.
 
 Budget:
 - Max implementation iterations: 5.
 - Same-failure retry limit: 3.
 - Stop after 3 consecutive no-progress iterations.
-- Pause on scope expansion, material plan drift, missing validation, forbidden paths, unapproved high-risk operations, or missing required agents.
+- Pause on scope expansion, material plan drift, missing validation, forbidden paths, unapproved high-risk operations, unavailable delegation, or an unavailable exact capability requirement.
 
 Verifier gate:
-- After the final diff, validation output, acceptance-criteria evidence, and draft PR/MR evidence package are stable, build the review plan against the captured snapshot. The evidence package may remain local until review finishes.
-- If the contract names exact reviewers, agents, models, providers, or procedures, run and verify them exactly. Do not silently substitute unavailable requirements.
-- Otherwise, select the minimum sufficient independent, read-only capabilities from the contractual obligations, final diff, affected interfaces/data, validation requirements, and material security, compatibility, migration, data, permission, concurrency, and domain risks. Capability names and reviewer count remain dynamic; apply the reviewer tier policy below instead of imposing a fixed identity or specialization.
-- Require at least one reviewer independent from implementation to perform contract-conformance review before `PASS` or `PASS_WITH_NOTES`. Add code, test, security, compatibility, migration, data, or domain review only when the contract or identified risk justifies it.
-- Use `power_sol_reviewer` on Sol Medium by default. Use `power_terra_reviewer` on Terra High only for demonstrably simple, low-risk, highly structured checks. Use `power_sol_high_reviewer` on Sol High for security, permissions, authentication, sensitive data, migration, compatibility, concurrency, irreversible changes, large cross-module diffs, conflicting evidence, or other semantically complex review.
-- For every reviewer, record identity/source, model, reasoning effort, model-selection rationale, implementation independence, capability, scope, read-only boundary, evidence inspected, result, and snapshot identity. Give the contract-conformance reviewer the complete canonical Issue/local body and final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals; tailor other packets to their capabilities.
-- If a selected reviewer cannot reach a reliable conclusion within its assigned tier, treat that result as `BLOCKED` and reclassify directly to an appropriate higher reviewer instead of silently traversing every tier.
-- Run independent selected reviews in parallel over the same snapshot when possible. Contract-prescribed reviews do not consume or substitute for one another.
-- Route fixable `BLOCKED` findings back to the owning implementation task within the remaining budget. A repair creates a new snapshot, invalidates affected validation and review evidence, and requires the relevant replay and reviews again.
-- Use `NEEDS_HUMAN` for scope changes, contract conflicts, required human interpretation or authorization, unavailable contract-prescribed capabilities requiring approval, or repeated repair failure beyond budget.
+- After the final diff, validation output, acceptance-criteria evidence, and draft PR/MR evidence package are stable, execute the confirmed review plan against the captured snapshot.
+- If the contract names exact review identities, configurations, providers, or procedures, run and verify them exactly. Do not silently substitute unavailable requirements.
+- Otherwise, select the minimum sufficient independent capabilities from the contractual obligations, final diff, affected interfaces/data, validation requirements, and material risks.
+- Require at least one reviewer independent from implementation to perform contract-conformance review before `PASS` or `PASS_WITH_NOTES`. Add other review capabilities only when the contract or identified risk justifies them.
+- Record each reviewer using the provenance fields required by the confirmed mode. Record configuration or host-isolation values only when separately observable. Instruction-level no-write behavior is not host-enforced isolation.
+- Give the contract-conformance reviewer the complete canonical Issue/local body and final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals; tailor other packets to their capabilities.
+- Run independent reviews in parallel over the same snapshot when possible. A repair creates a new snapshot, invalidates affected validation and review evidence, and requires the relevant replay and reviews again.
+- Use `NEEDS_HUMAN` for scope changes, contract conflicts, required human interpretation or authorization, unavailable exact capabilities, or repeated repair failure beyond budget.
 
 PR/MR evidence:
 - After all planned reviews finish, create or update a draft PR/MR only; do not merge or push directly to a protected branch.
 - Link <contract-source> and reference its confirmed Execution Blueprint and Agent Dispatch Plan.
-- Include summary, rationale, changed files, clause/acceptance-criteria evidence, stable snapshot, validation replay, review plan and reviewer provenance, verifier result, the final Dispatch Summary, risks, assumptions, out-of-scope items, issue curation handoff, and loop decision.
+- Include the confirmed execution mode, capability evidence, summary, rationale, changed files, clause/acceptance-criteria evidence, stable snapshot, validation replay, mode-accurate reviewer provenance, verifier result, mode-accurate Dispatch Summary, risks, assumptions, out-of-scope items, issue curation handoff, and loop decision.
+- Include only configuration, isolation, retry, and summary claims supported by the confirmed mode. Inherited configuration is provenance, not selected routing.
 - Do not mutate issue bodies, labels, comments, or closure state without separate explicit confirmation of the exact curation mutation.
 
 Dispatch Summary:
-- Report planned and actual task counts.
-- For every task, report initial model and final model. For every implementation task, also report escalation status and reason.
-- Report dependency wave and parallel/sequential execution.
-- Report ownership conflicts and resolutions.
-- Report incomplete tasks and pause reasons.
-- Calculate Initial Assignment Accuracy as implementation tasks completed without escalation divided by completed or attempted implementation tasks that received an initial assignment.
+- Use exactly the summary fields required by the confirmed mode's Agent Dispatch Plan.
+- Always report the confirmed execution mode, capability evidence, planned and actual task counts, dependency waves, execution concurrency, statuses, ownership conflicts, incomplete tasks, pause reasons, and snapshot identities.
+- Include only mode-supported task configuration and retry evidence.
 
 Loop decision:
-- `pr-ready`: a draft PR/MR exists, required validation passes, all contract-prescribed reviews or the selected minimum sufficient capability plan are complete, an implementation-independent contract-conformance review exists, and the verifier result is PASS or PASS_WITH_NOTES.
+- `pr-ready`: a draft PR/MR exists, required validation passes, all required reviews are complete, an implementation-independent contract-conformance review exists, and the verifier result is PASS or PASS_WITH_NOTES.
 - `blocked`: a technical or capability blocker prevents progress within the confirmed contract and budget.
-- `needs-human`: a human decision or approval is required.
+- `needs-human`: a human decision, mode confirmation, exact-capability decision, or approval is required.
 - `follow-up-needed`: the current contract is complete, but new work belongs in a separate issue.
 - `done`: use only after human confirmation, not immediately after agent implementation.
 
 Final response:
 - State the loop decision.
 - Summarize completed work and validation evidence.
-- Include the stable snapshot, validation replay, reviewer provenance, verifier result, Dispatch Summary, and remaining risks or human decisions.
+- Include the stable snapshot, validation replay, reviewer provenance, verifier result, mode-accurate Dispatch Summary, and remaining risks or human decisions.
 - Do not merge.

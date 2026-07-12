@@ -62,6 +62,15 @@ test('installer installs the complete managed inventory idempotently without cha
     await assertDirectoriesMatch(path.join(root, skill), path.join(tmp, 'skills', skill))
   }
 
+  const installedLoopAssets = path.join(tmp, 'skills', 'power-loop', 'assets')
+  for (const template of ['agent-dispatch-plan-strict.md', 'agent-dispatch-plan-inherited.md']) {
+    assert.equal(await exists(path.join(installedLoopAssets, template)), true, `${template} is installed`)
+    assert.deepEqual(
+      await fs.readFile(path.join(installedLoopAssets, template)),
+      await fs.readFile(path.join(root, 'power-loop', 'assets', template)),
+    )
+  }
+
   for (const [source, expectedName, model, effort, sandbox] of managedProfiles) {
     const installed = path.join(agentsDir, path.basename(source))
     assert.deepEqual(await fs.readFile(installed), await fs.readFile(path.join(root, source)))

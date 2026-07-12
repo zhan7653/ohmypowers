@@ -10,6 +10,9 @@ const execFileAsync = promisify(execFile)
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const agentsDir = path.join(root, 'power-loop', 'agents')
 const fixturePath = path.join(root, 'tests', 'fixtures', 'power-loop', 'model-routing-cases.json')
+const capabilityFixturePath = path.join(root, 'tests', 'fixtures', 'power-loop', 'capability-routing-cases.json')
+const assetsDir = path.join(root, 'power-loop', 'assets')
+const unavailableSelector = 'unavailable — not independently selectable'
 
 const expectedProfiles = {
   power_luna_worker: ['gpt-5.6-luna', 'max', 'workspace-write'],
@@ -43,15 +46,298 @@ function route(input) {
   }
 }
 
+function classifyCapability(input) {
+  if (!input.schemaAvailable || input.contradictoryEvidence) {
+    return {
+      classification: 'indeterminate',
+      recommendedMode: null,
+      probeSpawned: false,
+      asksUser: true,
+    }
+  }
+
+  const selectors = input.exposedFields.filter(field => ['model', 'agent_type', 'profile'].includes(field))
+  if (selectors.length) {
+    return {
+      classification: 'strict-selection-supported',
+      recommendedMode: 'strict-model-routing',
+      probeSpawned: false,
+      asksUser: true,
+      selectorEvidence: selectors,
+    }
+  }
+
+  if (input.exposedFields.includes('reasoning_effort')) {
+    return {
+      classification: 'indeterminate',
+      recommendedMode: null,
+      probeSpawned: false,
+      asksUser: true,
+    }
+  }
+
+  return {
+    classification: 'inherited-model-only',
+    recommendedMode: 'inherited-model-routing',
+    probeSpawned: false,
+    asksUser: true,
+    selectorEvidence: [],
+  }
+}
+
+function selectPlanningArtifacts(capability, confirmedMode, exactRequirements = []) {
+  if (!confirmedMode) return { status: 'awaiting-confirmation', dispatchTemplate: null, goal: null }
+  if (capability.classification === 'indeterminate') {
+    return { status: 'needs-human', dispatchTemplate: null, goal: null }
+  }
+  if (confirmedMode !== capability.recommendedMode) {
+    return { status: 'needs-human', dispatchTemplate: null, goal: null }
+  }
+  if (confirmedMode === 'inherited-model-routing' && exactRequirements.length) {
+    return { status: 'needs-human', dispatchTemplate: null, goal: null }
+  }
+  return {
+    status: 'ready',
+    dispatchTemplate: confirmedMode === 'strict-model-routing'
+      ? 'agent-dispatch-plan-strict.md'
+      : 'agent-dispatch-plan-inherited.md',
+    goal: 'codex-loop-goal.txt',
+  }
+}
+
+function strictPlanningFields(input) {
+  const supports = field => input.exposedFields.includes(field)
+  return {
+    capabilityMatrix: {
+      model: supports('model') ? 'supported' : unavailableSelector,
+      profile: supports('agent_type') || supports('profile') ? 'supported' : unavailableSelector,
+      reasoning: supports('reasoning_effort') ? 'supported' : unavailableSelector,
+      sandbox: supports('sandbox_mode') ? 'supported' : unavailableSelector,
+    },
+    task: {
+      customAgent: supports('agent_type') || supports('profile') ? 'power_luna_worker' : unavailableSelector,
+      initialModel: supports('model') ? 'gpt-5.6-luna' : unavailableSelector,
+      reasoningEffort: supports('reasoning_effort') ? 'max' : unavailableSelector,
+      sandboxMode: supports('sandbox_mode') ? 'workspace-write' : 'instruction-level boundary only; host enforcement unavailable',
+    },
+  }
+}
+
 test('routing cases encode the two implementation tiers and three reviewer tiers', async () => {
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
 
   assert.equal(fixture.schema, 'power-loop-model-routing-cases/v1')
+  assert.equal(fixture.executionMode, 'strict-model-routing')
   for (const scenario of fixture.cases) {
     assert.deepEqual(route(scenario), scenario.expected, scenario.id)
   }
 
   assert.ok(new Set(fixture.cases.filter(item => item.type === 'review').map(item => item.capability)).size > 1)
+})
+
+test('capability fixtures classify strict, inherited, incomplete, and contradictory evidence without probe spawns', async () => {
+  const fixture = JSON.parse(await readFile(capabilityFixturePath, 'utf8'))
+
+  assert.equal(fixture.schema, 'power-loop-capability-routing-cases/v1')
+  for (const scenario of fixture.cases) {
+    const actual = classifyCapability(scenario.input)
+    assert.deepEqual(actual, scenario.expected, scenario.id)
+    if (scenario.input.schemaAvailable && !scenario.input.contradictoryEvidence) {
+      assert.equal(actual.probeSpawned, false, `${scenario.id} uses conclusive schema evidence`)
+    }
+  }
+})
+
+test('mode-specific planning and the Goal stay withheld until confirmation', async () => {
+  const fixture = JSON.parse(await readFile(capabilityFixturePath, 'utf8'))
+
+  for (const scenario of fixture.cases) {
+    const capability = classifyCapability(scenario.input)
+    assert.deepEqual(
+      selectPlanningArtifacts(capability, null),
+      { status: 'awaiting-confirmation', dispatchTemplate: null, goal: null },
+      scenario.id,
+    )
+  }
+
+  const skill = await readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8')
+  assert.match(skill, /Until the user confirms, do not generate a mode-specific Agent Dispatch Plan, Issue Patch, or final Goal Prompt\./)
+})
+
+test('confirmed modes select separate templates and exact unavailable requirements pause inherited planning', async () => {
+  const fixture = JSON.parse(await readFile(capabilityFixturePath, 'utf8'))
+  const cases = new Map(fixture.cases.map(scenario => [scenario.id, classifyCapability(scenario.input)]))
+
+  assert.deepEqual(selectPlanningArtifacts(cases.get('strict-profile-selector'), 'strict-model-routing'), {
+    status: 'ready',
+    dispatchTemplate: 'agent-dispatch-plan-strict.md',
+    goal: 'codex-loop-goal.txt',
+  })
+  assert.deepEqual(selectPlanningArtifacts(cases.get('current-reduced-spawn-schema'), 'inherited-model-routing'), {
+    status: 'ready',
+    dispatchTemplate: 'agent-dispatch-plan-inherited.md',
+    goal: 'codex-loop-goal.txt',
+  })
+  for (const requirement of ['model', 'profile', 'provider', 'reasoning', 'sandbox', 'isolation']) {
+    assert.deepEqual(
+      selectPlanningArtifacts(cases.get('current-reduced-spawn-schema'), 'inherited-model-routing', [requirement]),
+      { status: 'needs-human', dispatchTemplate: null, goal: null },
+      requirement,
+    )
+  }
+  assert.equal(selectPlanningArtifacts(cases.get('contradictory-user-and-schema-evidence'), 'strict-model-routing').status, 'needs-human')
+})
+
+test('model-only strict planning selects the model while marking profile, reasoning, and sandbox guarantees unavailable', async () => {
+  const fixture = JSON.parse(await readFile(capabilityFixturePath, 'utf8'))
+  const cases = new Map(fixture.cases.map(scenario => [scenario.id, scenario]))
+  const modelOnly = cases.get('strict-model-selector-with-independent-omissions')
+  const fullProfile = cases.get('strict-full-profile-routing')
+
+  assert.equal(classifyCapability(modelOnly.input).recommendedMode, 'strict-model-routing')
+  assert.deepEqual(strictPlanningFields(modelOnly.input), {
+    capabilityMatrix: {
+      model: 'supported',
+      profile: unavailableSelector,
+      reasoning: unavailableSelector,
+      sandbox: unavailableSelector,
+    },
+    task: {
+      customAgent: unavailableSelector,
+      initialModel: 'gpt-5.6-luna',
+      reasoningEffort: unavailableSelector,
+      sandboxMode: 'instruction-level boundary only; host enforcement unavailable',
+    },
+  })
+
+  assert.deepEqual(strictPlanningFields(fullProfile.input), {
+    capabilityMatrix: {
+      model: 'supported',
+      profile: 'supported',
+      reasoning: 'supported',
+      sandbox: 'supported',
+    },
+    task: {
+      customAgent: 'power_luna_worker',
+      initialModel: 'gpt-5.6-luna',
+      reasoningEffort: 'max',
+      sandboxMode: 'workspace-write',
+    },
+  })
+})
+
+test('strict template preserves selectable profile routing and inherited template preserves orchestration without unsupported fields', async () => {
+  const strict = await readFile(path.join(assetsDir, 'agent-dispatch-plan-strict.md'), 'utf8')
+  const inherited = await readFile(path.join(assetsDir, 'agent-dispatch-plan-inherited.md'), 'utf8')
+  const router = await readFile(path.join(assetsDir, 'agent-dispatch-plan.md'), 'utf8')
+
+  for (const required of [
+    'Execution mode: `strict-model-routing`',
+    'Independent capability matrix',
+    'unavailable — not independently selectable',
+    'Custom agent:',
+    'Initial model:',
+    'Reasoning effort:',
+    'power_luna_worker',
+    'power_sol_worker',
+    'power_terra_reviewer',
+    'power_sol_reviewer',
+    'power_sol_high_reviewer',
+    'Initial Assignment Accuracy',
+  ]) assert.match(strict, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+
+  assert.match(strict, /Custom agent: `<exact installed agent name when profile selection is supported \| unavailable — not independently selectable>`/)
+  assert.match(strict, /Initial model: `<exact selected model when separately supported \| unavailable — not independently selectable>`/)
+  assert.match(strict, /Reasoning effort: `<Medium \| High \| Max when separately supported \| unavailable — not independently selectable>`/)
+  assert.match(strict, /Sandbox or permission mode: `<host-enforced mode when separately observable \| instruction-level boundary only; host enforcement unavailable>`/)
+  assert.match(strict, /With model-only selection, use the corresponding direct model transition and mark the custom-agent field unavailable\./)
+
+  for (const required of [
+    'Execution mode: `inherited-model-routing`',
+    'Objective:',
+    'Role:',
+    'Context policy:',
+    'Allowed write paths:',
+    'Dependencies:',
+    'Expected deliverable:',
+    'Parallelization conditions:',
+    'fork_turns: none',
+    'distinct non-implementing subagent',
+    'instruction-level no-write boundary',
+  ]) assert.match(inherited, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+
+  for (const forbidden of [
+    /^- Custom agent:/m,
+    /^- Initial model:/m,
+    /^- Reasoning effort:/m,
+    /^- Sandbox or permission mode:/m,
+    /^- Allowed direct escalation targets:/m,
+    /^- Escalation ceiling:/m,
+    /Reviewer tier selection:/,
+    /Initial Assignment Accuracy/,
+    /model-cost sav/i,
+  ]) assert.doesNotMatch(inherited, forbidden)
+
+  assert.match(router, /strict-model-routing` -> `agent-dispatch-plan-strict\.md/)
+  assert.match(router, /inherited-model-routing` -> `agent-dispatch-plan-inherited\.md/)
+  assert.match(router, /Do not combine the two templates or generate mode-specific planning before confirmation\./)
+})
+
+test('shared Goal and repository guidance consistently describe dual-track mode evidence', async () => {
+  const paths = [
+    'README.md',
+    'docs/loop-engineering-tutorial.md',
+    'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
+    'power-loop/SKILL.md',
+    'power-loop/assets/codex-loop-goal.txt',
+    'power-loop/assets/execution-blueprint.md',
+    'power-loop/assets/pr-evidence-template.md',
+  ]
+
+  for (const relativePath of paths) {
+    const content = await readFile(path.join(root, relativePath), 'utf8')
+    assert.match(content, /strict-model-routing/, `${relativePath} names strict mode`)
+    assert.match(content, /inherited-model-routing/, `${relativePath} names inherited mode`)
+    assert.match(content, /capabilit/i, `${relativePath} records capability evidence`)
+  }
+
+  const goal = await readFile(path.join(assetsDir, 'codex-loop-goal.txt'), 'utf8')
+  assert.match(goal, /Do not launch a probe when its visible schema is conclusive\./)
+  assert.match(goal, /Instruction-level no-write behavior is not host-enforced isolation\./)
+  assert.match(goal, /Pause with `NEEDS_HUMAN` when execution requires an exact configuration, provider, or isolation guarantee/)
+  assert.doesNotMatch(goal, /Initial Assignment Accuracy/)
+  assert.doesNotMatch(goal, /Luna Max|Sol Medium|Terra High/)
+})
+
+test('workflow guidance places capability preflight and mode confirmation before readiness gating', async () => {
+  const orderedMarkers = [
+    ['power-loop/SKILL.md', '### 1. Preflight Subagent Capability And Confirm The Mode', '### 2. Gate Readiness And Risk'],
+    ['README.md', 'Low-cost inspection of the exposed subagent-spawn contract', 'Loop readiness check'],
+    ['docs/loop-engineering-tutorial.md', 'Ask the user to confirm the execution mode.', 'Run readiness and risk gating'],
+    [
+      'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
+      '-> wait for explicit execution-mode confirmation',
+      '-> run readiness and risk gating',
+    ],
+  ]
+
+  for (const [relativePath, preflightMarker, readinessMarker] of orderedMarkers) {
+    const content = await readFile(path.join(root, relativePath), 'utf8')
+    const preflightIndex = content.indexOf(preflightMarker)
+    const readinessIndex = content.indexOf(readinessMarker)
+    assert.notEqual(preflightIndex, -1, `${relativePath} contains preflight/confirmation marker`)
+    assert.notEqual(readinessIndex, -1, `${relativePath} contains readiness marker`)
+    assert.ok(preflightIndex < readinessIndex, `${relativePath} orders confirmation before readiness`)
+  }
+
+  const readme = await readFile(path.join(root, 'README.md'), 'utf8')
+  const specification = await readFile(
+    path.join(root, 'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md'),
+    'utf8',
+  )
+  assert.match(readme, /supported model selector or custom-profile selector is enough to recommend `strict-model-routing`/)
+  assert.match(readme, /Model, profile, reasoning, and sandbox selection are still independent capabilities/)
+  assert.match(specification, /This classification does not imply that reasoning, profile, model, or sandbox selection is also available/)
 })
 
 test('managed power-loop profiles exactly match the routing contract', async () => {

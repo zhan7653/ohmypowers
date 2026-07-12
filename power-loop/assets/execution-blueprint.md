@@ -11,6 +11,19 @@ Source commit: `<full commit SHA>`
 
 Generated at: `<ISO-8601 timestamp with timezone>`
 
+## Capability preflight and execution mode
+
+- Classification: `<strict-selection-supported | inherited-model-only | indeterminate>`
+- Evidence inspected: `<visible spawn schema or equivalent host contract evidence>`
+- Selectable capabilities exposed: `<model/profile/reasoning/sandbox selectors independently evidenced, or None>`
+- Selectable capabilities not exposed or unavailable evidence: `<details or None>`
+- Probe agent spawned: `<No when schema evidence was conclusive; otherwise explain separately approved evidence collection>`
+- Recommended mode: `<strict-model-routing | inherited-model-routing | no recommendation pending human decision>`
+- Confirmed mode: `<strict-model-routing | inherited-model-routing>`
+- User confirmation: `<explicit confirmation evidence>`
+- Uncertainty or contradictory evidence: `<details or None>`
+- Runtime recheck: `Required before implementation; material capability drift requires renewed mode confirmation and replanning`
+
 ## Repository facts and assumptions
 
 Facts:
@@ -73,6 +86,8 @@ Stable interface gates:
 Treat this Blueprint as stale and stop for a new `power-loop` pass or confirmed revision when:
 
 - the Task Contract changes;
+- the exposed spawn capability materially changes or conflicts with the confirmed execution mode;
+- the user changes the confirmed execution mode;
 - the source branch or commit changes in a way that materially affects an owned path, interface, dependency, validation command, or assumption;
 - a planned internal interface cannot be implemented without changing a public contract or other requirement-level decision;
 - ownership paths begin to overlap or a dependency order becomes unsafe;

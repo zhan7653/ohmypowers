@@ -1,0 +1,107 @@
+{
+  "schema": "power-loop-capability-routing-cases/v1",
+  "cases": [
+    {
+      "id": "strict-profile-selector",
+      "input": {
+        "schemaAvailable": true,
+        "contradictoryEvidence": false,
+        "exposedFields": ["task_name", "message", "fork_turns", "agent_type"]
+      },
+      "expected": {
+        "classification": "strict-selection-supported",
+        "recommendedMode": "strict-model-routing",
+        "probeSpawned": false,
+        "asksUser": true,
+        "selectorEvidence": ["agent_type"]
+      }
+    },
+    {
+      "id": "strict-model-selector-with-independent-omissions",
+      "input": {
+        "schemaAvailable": true,
+        "contradictoryEvidence": false,
+        "exposedFields": ["task_name", "message", "fork_turns", "model"]
+      },
+      "expected": {
+        "classification": "strict-selection-supported",
+        "recommendedMode": "strict-model-routing",
+        "probeSpawned": false,
+        "asksUser": true,
+        "selectorEvidence": ["model"]
+      }
+    },
+    {
+      "id": "strict-full-profile-routing",
+      "input": {
+        "schemaAvailable": true,
+        "contradictoryEvidence": false,
+        "exposedFields": ["task_name", "message", "fork_turns", "agent_type", "model", "reasoning_effort", "sandbox_mode"]
+      },
+      "expected": {
+        "classification": "strict-selection-supported",
+        "recommendedMode": "strict-model-routing",
+        "probeSpawned": false,
+        "asksUser": true,
+        "selectorEvidence": ["agent_type", "model"]
+      }
+    },
+    {
+      "id": "current-reduced-spawn-schema",
+      "input": {
+        "schemaAvailable": true,
+        "contradictoryEvidence": false,
+        "exposedFields": ["task_name", "message", "fork_turns"]
+      },
+      "expected": {
+        "classification": "inherited-model-only",
+        "recommendedMode": "inherited-model-routing",
+        "probeSpawned": false,
+        "asksUser": true,
+        "selectorEvidence": []
+      }
+    },
+    {
+      "id": "reasoning-only-selector-is-indeterminate",
+      "input": {
+        "schemaAvailable": true,
+        "contradictoryEvidence": false,
+        "exposedFields": ["task_name", "message", "fork_turns", "reasoning_effort"]
+      },
+      "expected": {
+        "classification": "indeterminate",
+        "recommendedMode": null,
+        "probeSpawned": false,
+        "asksUser": true
+      }
+    },
+    {
+      "id": "spawn-schema-unavailable",
+      "input": {
+        "schemaAvailable": false,
+        "contradictoryEvidence": false,
+        "exposedFields": []
+      },
+      "expected": {
+        "classification": "indeterminate",
+        "recommendedMode": null,
+        "probeSpawned": false,
+        "asksUser": true
+      }
+    },
+    {
+      "id": "contradictory-user-and-schema-evidence",
+      "input": {
+        "schemaAvailable": true,
+        "contradictoryEvidence": true,
+        "exposedFields": ["task_name", "message", "fork_turns"]
+      },
+      "expected": {
+        "classification": "indeterminate",
+        "recommendedMode": null,
+        "probeSpawned": false,
+        "asksUser": true
+      }
+    }
+  ]
+}

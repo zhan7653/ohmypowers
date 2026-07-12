@@ -1,142 +1,58 @@
-# Power Loop Cost-Aware Multi-Agent Orchestration Spec
+# Power Loop Dual-Track Multi-Agent Orchestration Spec
 
 ## Background
 
-`ohmypowers` currently separates task clarification, loop preparation, implementation, and verification across `power-grill`, `power-loop`, Codex `/goal`, and `power-verifier`.
+`ohmypowers` separates task clarification, repository-aware planning, implementation, and verification across `power-grill`, `power-loop`, a manually started Codex Goal, and `power-verifier`.
 
-The current `power-grill` issue contract includes both requirement-level decisions and implementation-design details such as exact files, internal interfaces, control flow, test seams, and validation commands. This makes the grilling phase heavier than necessary and asks the user to confirm implementation details before `power-loop` has performed its focused repository inspection.
+`power-loop` originally described one universally selectable custom-agent routing design. That assumption is not portable. A host can install Luna, Sol, and Terra profile declarations while exposing a `spawn_agent` contract that cannot select a model, reasoning effort, custom profile, or sandbox. Installed configuration files alone are therefore not evidence that strict routing is executable.
 
-The current `power-loop` is already described as an orchestrator, but it primarily produces a bounded Goal Prompt. It does not yet produce a structured implementation blueprint, a model-aware subagent dispatch plan, or a reviewable Issue Patch containing those derived execution details.
+The orchestration protocol must retain strict routing where the current host demonstrably supports it and provide a complete inherited-model workflow where generic subagents inherit the parent configuration. Pausing all delegation would discard useful roles, ownership, dependency handling, safe parallelism, and fresh-context independent review.
 
-The desired workflow makes `power-grill` responsible for a lighter but complete requirements contract and makes `power-loop` responsible for deriving the concrete implementation and dispatch design. The resulting execution should use each GPT-5.6 model according to the work it is best suited for:
+## Normative Terminology
 
-- Luna Max for most simple through lower-medium implementation work.
-- Sol Medium for implementation work that is even slightly complex or above, and as the only replacement for an underestimated Luna task.
-- No Terra implementation tier.
-- Independent contract-conformance review, with additional code, security, compatibility, migration, test, data, permission, concurrency, or domain review selected dynamically by capability and risk. Terra High is reserved for explicitly simple reviews, Sol Medium is the default review tier, and Sol High is reserved for the most complex or high-risk reviews.
+Capability preflight produces exactly one classification:
 
-The primary cost objective is correct initial model assignment, fewer unnecessary model escalations, less high-capability-model implementation work, and less conflict-driven rework. Reducing the number of agents is not a goal. Meaningful parallelism is desirable when tasks have independent deliverables and non-overlapping write ownership.
+- `strict-selection-supported`: the exposed host contract demonstrably provides a supported model or custom-agent selector needed by the strict plan.
+- `inherited-model-only`: generic subagent delegation is available, but the exposed host contract provides no supported per-subagent model, reasoning, or custom-agent selector.
+- `indeterminate`: capability evidence is incomplete, contradictory, or insufficient to select a mode safely.
+
+The user may confirm exactly one execution mode:
+
+- `strict-model-routing`
+- `inherited-model-routing`
+
+Classification is an evidence conclusion. Execution mode is a user-confirmed planning choice. The two values must not be conflated.
 
 ## Requirements
 
-### Functional Requirements
+### Requirements Contract And Repository Planning
 
-- FR-1: `power-grill` must produce a requirements-focused task contract rather than a detailed execution plan.
-- FR-2: The `power-grill` contract must retain the problem, goal, user-observable behavior, scope, non-goals, dependencies, external API or data contracts, constraints, risks, validation expectations, acceptance criteria, stop condition, and pause-and-ask conditions.
-- FR-3: `power-grill` must not require exact internal code interfaces, complete file ownership, concrete subagent assignments, or an exact implementation sequence before creating a requirements-ready contract.
-- FR-4: Public API behavior, externally visible schemas, compatibility behavior, migration decisions, security decisions, permission decisions, and business rules must remain requirement-level contract decisions owned by `power-grill` or a human decision.
-- FR-5: Internal function signatures, module responsibilities, private interfaces, exact affected files, control flow, error-handling shape, test seams, execution order, and concrete validation commands may be derived by `power-loop` after repository inspection.
-- FR-6: A requirements-ready contract must not be rejected solely because exact internal implementation details or exact validation commands have not yet been supplied, when `power-loop` can discover them safely from the repository.
-- FR-7: If repository inspection shows that execution requires an unresolved public contract, product decision, security decision, migration decision, or other material scope choice, `power-loop` must return `NEEDS_GRILL` or `NEEDS_HUMAN` instead of deciding silently.
-- FR-8: Whenever a contract passes the `power-loop` readiness and risk gates, `power-loop` must generate a structured Execution Blueprint and Agent Dispatch Plan. This behavior must not depend on detecting Ultra mode.
-- FR-9: `power-loop` must not inspect, infer, or gate behavior on the current reasoning mode. The user remains responsible for selecting Ultra or another supported mode when manually running the final Goal Prompt.
-- FR-10: Ultra may be documented as the recommended runtime for proactive orchestration, but it must not be a feature flag or prerequisite for generating the orchestration artifacts.
-- FR-11: The Execution Blueprint must use a fixed Markdown structure.
-- FR-12: The Execution Blueprint must include planning status, contract source, source branch and commit, generation time, relevant repository assumptions, affected files and modules, internal interfaces, data or control flow, error handling, task dependencies, integration order, file ownership, work isolation, test seams, concrete validation commands, and staleness conditions.
-- FR-13: The Agent Dispatch Plan must use a fixed Markdown structure.
-- FR-14: Every dispatched task must include a Task ID, objective, role, initial model, reasoning effort, sandbox or permission mode, allowed write paths, dependencies, expected deliverable, validation responsibility, parallelization conditions, and escalation ceiling.
-- FR-15: The default model-routing policy must be:
-  - `gpt-5.6-luna` with Max reasoning for most simple through lower-medium implementation work.
-  - `gpt-5.6-sol` with Medium reasoning for implementation work that is even slightly complex or above, and as the only direct replacement for an underestimated Luna task.
-  - Terra must not be assigned implementation work.
-  - Read-only review capabilities must be selected by contract and implementation risk; no reviewer identity, specialization, or count is universal.
-  - `gpt-5.6-terra` with High reasoning may be selected only for explicitly simple review work.
-  - `gpt-5.6-sol` with Medium reasoning is the default review tier.
-  - `gpt-5.6-sol` with High reasoning is reserved for the most complex or high-risk review work.
-- FR-16: `power-loop` must optimize initial task classification and model assignment rather than relying on a multi-step escalation ladder.
-- FR-17: A task may receive at most one model escalation during execution.
-- FR-18: Model escalation is allowed only when evidence shows that the original model assignment underestimated capability or reasoning requirements.
-- FR-19: Permission failures, environment failures, dependency failures, unavailable validation, interface conflicts, or other non-capability failures must not trigger a model escalation.
-- FR-20: When a Luna assignment is proven insufficient, the main orchestrator must replace it directly with Sol Medium, without an intermediate tier.
-- FR-21: Implementation escalation must never exceed Sol Medium. Failure at Sol Medium must pause the task and report the blocker.
-- FR-22: A replacement worker must receive the prior worker's useful findings, failure evidence, relevant artifacts, and current state so that escalation does not repeat completed exploration.
-- FR-23: The root or main agent executing the Goal Prompt must act as the orchestrator: it owns task decomposition, interface decisions, dependency coordination, conflict resolution, escalation decisions, and result consolidation.
-- FR-24: The main orchestrator must not normally edit implementation files. Implementation changes must be delegated to the assigned workers. If delegation or a required agent configuration is unavailable, execution must pause unless the confirmed plan explicitly authorizes a narrow exception.
-- FR-25: The number of agents must not be treated as a cost-reduction metric.
-- FR-26: `power-loop` must preserve meaningful parallelism when tasks have independent deliverables and safe ownership boundaries.
-- FR-27: Every dispatched agent must have an independent objective and deliverable. The plan must avoid fragmentation that creates coordination work without useful parallel progress.
-- FR-28: One task-level branch or worktree must be used for the implementation loop. The default plan must not create one worktree per subagent.
-- FR-29: Read-only exploration agents may run in parallel.
-- FR-30: Write-capable agents may run in parallel only when their allowed write paths and interface responsibilities do not overlap.
-- FR-31: Tasks with overlapping files, unstable shared interfaces, or unresolved dependencies must be serialized until the conflict is removed.
-- FR-32: The Agent Dispatch Plan must assign explicit file or module ownership before write-capable workers start.
-- FR-33: `power-loop` must generate the Execution Blueprint and Agent Dispatch Plan before generating an Issue Patch.
-- FR-34: The Issue Patch must update only fixed execution-planning sections and their metadata. It must not modify the confirmed requirements contract sections.
-- FR-35: `power-loop` must display the complete Issue Patch and request explicit user confirmation before changing a hosted issue or local brief.
-- FR-36: If the user requests a patch revision, `power-loop` must regenerate and redisplay the patch. A previous confirmation must not apply to the revised patch.
-- FR-37: If the user rejects the patch, does not confirm it, or the update fails, `power-loop` must not generate the final Goal Prompt.
-- FR-38: After the user confirms the patch, `power-loop` must update the hosted issue or local brief and verify that the update succeeded.
-- FR-39: `power-loop` may generate the final Goal Prompt only after the confirmed Issue Patch has been applied successfully.
-- FR-40: A pasted-only contract must be persisted as a hosted issue or local brief before the structured execution sections can be confirmed and the final Goal Prompt can be generated.
-- FR-41: The requirements contract remains canonical for what and why. The Execution Blueprint and Agent Dispatch Plan are derived execution artifacts for how and who.
-- FR-42: If an execution artifact conflicts with the requirements contract, the requirements contract wins and Goal generation must pause.
-- FR-43: The issue or brief must clearly distinguish the requirements contract from the generated Execution Blueprint and Agent Dispatch Plan.
-- FR-44: The Execution Blueprint must record a source branch and commit so the final Goal Prompt can detect material repository drift.
-- FR-45: The final Goal Prompt must reference the confirmed issue or brief and its execution-planning sections instead of embedding a second complete copy that can drift independently.
-- FR-46: The final Goal Prompt may repeat only the operational rules required to start, coordinate, wait for, steer, escalate, validate, review, and summarize the confirmed plan.
-- FR-47: The final Goal Prompt must require a baseline consistency check before implementation starts. Material drift must stop execution and require a new `power-loop` pass or a confirmed plan revision.
-- FR-48: `power-loop` must output the final Goal Prompt for the user to run manually. It must not automatically invoke or execute `/goal`.
-- FR-49: Missing or undiscoverable custom-agent configurations must not silently fall back to the parent model when that would violate the confirmed routing plan.
-- FR-50: If a required Luna Max or Sol Medium implementation configuration, or a selected Terra High, Sol Medium, or Sol High reviewer configuration, is unavailable, execution must pause and report the missing configuration or request explicit approval for an alternative.
-- FR-51: Review must be read-only, independent from implementation, and run against stable evidence. The verifier must require at least one implementation-independent contract-conformance review before `PASS` or `PASS_WITH_NOTES`.
-- FR-52: When the contract does not prescribe review topology, `power-loop` must select the minimum sufficient capabilities from contractual obligations, the final diff, affected interfaces/data, validation, and material risks, then assign Terra High only to explicitly simple review, Sol Medium by default, or Sol High to the most complex or high-risk review. Reviewer provenance must record model, reasoning effort, and selection rationale. Contract-prescribed reviewers, agents, models, providers, and procedures must be honored exactly.
-- FR-53: The final Goal Prompt must require a Dispatch Summary at completion or stop.
-- FR-54: The Dispatch Summary must record planned and actual task counts, each task's initial and final model, escalation status and reason, parallel or sequential execution, ownership conflicts, incomplete tasks, pause reasons, and Initial Assignment Accuracy.
-- FR-55: Initial Assignment Accuracy must be calculated as the number of tasks completed without model escalation divided by the total number of completed or attempted implementation tasks for which an initial assignment was made.
+- `power-grill` owns the requirement-level contract: problem, goal, user-observable behavior, scope, non-goals, dependencies, external contracts, constraints, risks, validation expectations, acceptance criteria, stop condition, and pause conditions.
+- `power-loop` may derive private interfaces, exact affected files, control flow, error handling, test seams, validation commands, ownership, dependencies, and integration order after repository inspection.
+- Unresolved user behavior, public API, schema, compatibility, security, permission, migration, provider, or business decisions return `NEEDS_GRILL` or `NEEDS_HUMAN` rather than being decided silently.
+- The Task Contract remains canonical and takes precedence over the Execution Blueprint, Agent Dispatch Plan, Issue Patch, and Goal Prompt.
 
-### Non-Functional Requirements
+### Capability Preflight
 
-- NFR-1: The first version must extend `power-loop`; it must not introduce a new orchestration skill.
-- NFR-2: Execution Blueprint and Agent Dispatch Plan output must be structurally consistent enough for a user or verifier to compare two runs without interpreting free-form prose.
-- NFR-3: The workflow must minimize duplicate canonical content between the issue and the final Goal Prompt.
-- NFR-4: Hosted issue and local brief mutation must remain reviewable and explicitly authorized.
-- NFR-5: The workflow must prefer correct initial routing, useful parallelism, and low-conflict ownership over minimizing agent count.
-- NFR-6: The first version must not claim exact monetary savings or exact credit savings without an authoritative usage source.
-- NFR-7: The existing high-risk boundary remains unchanged: unresolved high-risk work must remain `HUMAN_ONLY` and must not receive an implementation Goal Prompt.
-- NFR-8: Custom-agent model and sandbox declarations must be explicit enough to prevent accidental inheritance from an expensive parent session where the confirmed plan requires a cheaper worker.
-- NFR-9: The generated plan must remain understandable as Markdown in a hosted issue or local brief without requiring an external database or orchestration service.
+- Preflight and explicit execution-mode confirmation must occur before readiness/risk gating or mode-specific planning.
+- Preflight must prefer inspection of the currently exposed `spawn_agent` schema or an equivalent supported host contract.
+- When schema inspection is conclusive, preflight must not launch a subagent solely to probe model or profile selection.
+- CLI version, installed TOML files, undocumented arguments, a failed speculative tool call, or the parent model name alone must not establish strict selection support.
+- Model selection, profile selection, reasoning selection, and sandbox selection are separate capabilities. Evidence for one must not imply another.
+- The preflight report must record the classification, evidence inspected, unavailable evidence or uncertainty, recommended mode, whether a probe was spawned, and the user's confirmation status.
+- `strict-selection-supported` recommends `strict-model-routing` when a supported model selector or custom-agent/profile selector is demonstrably usable. This classification does not imply that reasoning, profile, model, or sandbox selection is also available; each capability and guarantee requires its own evidence.
+- `inherited-model-only` recommends `inherited-model-routing` and records that subagent configuration is inherited rather than independently selected.
+- `indeterminate` must ask the user for evidence or a decision and must not silently select a mode.
+- The user must explicitly confirm an execution mode before `power-loop` generates a mode-specific Agent Dispatch Plan or final Goal Prompt.
+- Capability must be rechecked before Goal execution. Material drift, contradictory evidence, or newly exposed model/profile selection requires renewed confirmation and replanning.
 
-## Chosen Approach
+### Shared Execution Blueprint
 
-Use a structured orchestration protocol inside the existing `power-loop` skill.
-
-`power-grill` will produce a requirements-focused contract. Its issue template will retain all externally meaningful behavior, contract, scope, risk, validation-expectation, acceptance, and stop decisions, while leaving concrete internal execution design to `power-loop`.
-
-`power-loop` will inspect the repository and produce two fixed-shape artifacts:
-
-1. **Execution Blueprint**: the concrete repository-aware implementation design, including internal interfaces, ownership, dependencies, integration order, validation commands, and the source revision on which the design is based.
-2. **Agent Dispatch Plan**: the concrete task graph and model-routing design, including each subagent's role, model, reasoning effort, permissions, write boundaries, dependencies, deliverables, parallelization rules, and escalation ceiling.
-
-The issue or local brief will use this conceptual structure:
-
-```text
-Task Contract
-  Owned by power-grill and the user; defines what and why.
-
-Execution Blueprint
-  Proposed by power-loop; defines how.
-
-Agent Dispatch Plan
-  Proposed by power-loop; defines who, model, ownership, and dependencies.
-
-Curation Status
-  Retains existing lifecycle context.
-```
-
-The Task Contract has precedence over all derived execution sections.
-
-After generating the structured artifacts, `power-loop` will display an Issue Patch. It will update only the execution sections after explicit user confirmation. If the update succeeds, `power-loop` will generate a final ready-to-run Goal Prompt that references the confirmed issue or brief. The user will start the Goal manually.
-
-The Goal Prompt will instruct the main agent to operate as an orchestrator and delegate implementation to the confirmed worker profiles. It will not depend on `power-loop` detecting Ultra. Ultra remains a recommended user-selected runtime for proactive delegation, while non-Ultra modes can follow the same explicit dispatch instructions when they support subagents.
-
-### Execution Blueprint Schema
-
-The fixed Markdown structure must contain at least:
+The Execution Blueprint is shared by both modes and uses a fixed Markdown structure containing at least:
 
 - Planning status: `proposed`, `confirmed`, or `stale`.
-- Contract source.
-- Source branch and commit.
-- Generated timestamp.
+- Contract source, source branch and commit, and generation time.
+- Capability classification, inspected evidence, uncertainty, recommended mode, confirmed mode, and confirmation evidence.
 - Repository facts and assumptions.
 - Affected files and modules.
 - Internal interfaces and ownership boundaries.
@@ -144,41 +60,73 @@ The fixed Markdown structure must contain at least:
 - Error handling.
 - Task dependencies and integration order.
 - Work isolation and shared-worktree policy.
-- Test seams and validation commands.
+- Test seams and concrete validation commands.
 - Staleness and replan conditions.
 
-### Agent Dispatch Plan Schema
+The Blueprint must not call an instruction-level no-write boundary a sandbox. Host-enforced isolation may be recorded only when independently exposed and verified.
 
-The fixed Markdown structure must contain a routing-policy summary and one row or section per task with at least:
+### Separate Agent Dispatch Plan Templates
 
-- Task ID.
-- Objective.
-- Role.
-- Initial model.
-- Reasoning effort.
-- Permission or sandbox mode.
-- Allowed write paths.
-- Dependencies.
-- Expected deliverable.
+`power-loop` must maintain two separate templates rather than a single conditional schema dominated by unavailable fields.
+
+Both templates include:
+
+- Confirmed execution mode and capability evidence.
+- Task ID, objective, and role.
+- Allowed write paths or explicit no-write instruction boundary.
+- Dependencies and expected deliverable.
 - Validation responsibility.
-- Parallelization conditions.
-- Escalation ceiling.
+- Parallelization conditions and integration order.
+- Failure behavior and pause conditions.
 
-### Model Routing Policy
+#### Strict Model Routing
+
+The `strict-model-routing` template preserves the existing custom-profile design when the selectors needed for those guarantees are demonstrably available. A supported model selector or custom-profile selector is sufficient for the strict recommendation, but does not establish any other selector. The template may include a per-task profile, model, reasoning effort, host-verified sandbox, or bounded model replacement only when the corresponding capability is evidenced.
+
+The default strict routing policy is:
 
 | Work class | Initial model | Reasoning | Notes |
 |---|---|---|---|
 | Simple through lower-medium implementation | `gpt-5.6-luna` | Max | Default for most bounded implementation, tests, docs, and fixes |
-| Slightly complex or harder implementation | `gpt-5.6-sol` | Medium | Assign initially when the task is above Luna; also the implementation ceiling |
-| Explicitly simple review | `gpt-5.6-terra` | High | Read-only and selected sparingly |
-| Ordinary review | `gpt-5.6-sol` | Medium | Default read-only reviewer tier |
-| Most complex or high-risk review | `gpt-5.6-sol` | High | Read-only and justified by contract or material risk |
+| Slightly complex or harder implementation | `gpt-5.6-sol` | Medium | Initial assignment above Luna and implementation ceiling |
+| Explicitly simple review | `gpt-5.6-terra` | High | Selected sparingly when supported |
+| Ordinary review | `gpt-5.6-sol` | Medium | Default strict reviewer tier |
+| Most complex or high-risk review | `gpt-5.6-sol` | High | Requires contract or material-risk justification |
 
-Each Luna task may be replaced at most once, directly by Sol Medium. The orchestrator must diagnose whether the failure is a capability mismatch before replacing it. Non-capability failures must be handled without model replacement.
+Terra is not an implementation tier. A Luna implementation task may be replaced directly by Sol Medium at most once, and only after evidence shows a capability or reasoning mismatch. Permission, environment, dependency, validation-infrastructure, or interface failures do not trigger model replacement. A replacement receives useful findings, failure evidence, artifacts, and current state. Failure at Sol Medium pauses the task.
 
-### Parallelism And Ownership Policy
+Every strict field remains conditional on evidence for the corresponding selector. If a required strict configuration is unavailable, the workflow pauses; it does not silently switch to inherited behavior or use undocumented arguments.
 
-The plan must pursue meaningful parallelism rather than a low agent count. Read-only work may run concurrently. Write-capable workers may run concurrently only with non-overlapping ownership and stable interfaces. The default is one task-level branch or worktree shared by the coordinated workers, with explicit file or module ownership recorded in the Dispatch Plan.
+#### Inherited Model Routing
+
+The `inherited-model-routing` template is complete without per-subagent configuration selection. Generic subagents inherit the parent configuration, and inherited values must not be represented as independently selected assignments.
+
+The inherited template must not require, populate, calculate, or guarantee:
+
+- Initial or target per-subagent model.
+- Per-subagent reasoning effort.
+- Custom-agent profile or provider selection.
+- Profile-specific or host-enforced sandbox behavior without separate host evidence.
+- Luna-to-Sol or any other model escalation.
+- Reviewer model tiers.
+- Model-cost optimization or savings.
+- Initial Assignment Accuracy or any equivalent model-assignment metric.
+
+Inherited mode still assigns explicit roles, objectives, ownership boundaries, dependencies, deliverables, validation responsibility, parallelization constraints, and failure behavior. Generic delegation remains useful even though configuration is inherited.
+
+Independent review in inherited mode uses fresh context, such as `fork_turns: none` when exposed, and must not have participated in implementation. Review tasks may carry an instruction-level no-write boundary. This supports behavioral independence, but it is not a claim of host-enforced read-only isolation.
+
+If the Task Contract requires an exact model, custom profile, provider, reasoning level, sandbox, or isolation mechanism that the inherited host cannot provide, planning pauses and requests a human decision. The constraint must not be discarded or approximated silently.
+
+### Orchestration, Ownership, And Parallelism
+
+- The main agent owns interfaces, dispatch, dependency coordination, conflict handling, validation, and consolidation.
+- Every delegated task has an independent objective and deliverable; tasks are not combined merely to reduce agent count.
+- The implementation loop uses one task-level branch or worktree rather than one worktree per subagent.
+- Read-only or instruction-level no-write exploration may run concurrently when it does not depend on unstable state.
+- Write-capable tasks may run concurrently only with non-overlapping ownership and stable interfaces.
+- Tasks with overlapping files, unstable shared interfaces, or unresolved dependencies are serialized.
+- Useful generic delegation, ownership, dependencies, parallelism, stable-snapshot review, and fresh-context review are preserved in both modes.
 
 ### Issue Patch And Goal Protocol
 
@@ -186,217 +134,162 @@ The required order is:
 
 ```text
 Read and validate the Task Contract
--> inspect the repository
--> generate the Execution Blueprint
--> generate the Agent Dispatch Plan
+-> inspect the exposed spawn capability
+-> report classification, evidence, uncertainty, and recommended mode
+-> wait for explicit execution-mode confirmation
+-> run readiness and risk gating
+-> inspect the repository and generate the shared Execution Blueprint
+-> generate exactly one mode-specific Agent Dispatch Plan
 -> generate and display the Issue Patch
--> wait for explicit user confirmation
+-> wait for explicit patch confirmation
 -> apply and verify the Issue Patch
--> generate the final Goal Prompt
+-> generate the mode-specific final Goal Prompt
 -> return the Goal Prompt for manual execution
 ```
 
-No final Goal Prompt may be generated before the confirmed patch is applied successfully.
+No mode-specific Dispatch Plan or Goal Prompt may be generated before execution-mode confirmation. No final Goal Prompt may be generated before the exact confirmed Issue Patch is applied and verified.
+
+The Issue Patch may update only the marked Execution Blueprint, Agent Dispatch Plan, and execution metadata. A revised patch requires fresh confirmation. Pasted-only contracts must be persisted as a hosted issue or local brief before the execution sections can be confirmed.
+
+The Goal references the confirmed persisted contract and planning sections instead of embedding a second canonical copy. It performs capability and repository-baseline checks before implementation and stops when material drift makes the confirmed plan stale. The user starts it manually; `power-loop` does not execute it.
+
+### Mode-Accurate Evidence And Verification
+
+Execution Blueprint, Dispatch Plan, Goal, PR/MR evidence, verifier input, verifier result, and Dispatch Summary must record:
+
+- Confirmed execution mode.
+- Capability classification and evidence.
+- Configuration provenance, including unavailable or inherited fields.
+- Planned and actual task counts.
+- Dependency waves and parallel or sequential execution.
+- Ownership conflicts.
+- Incomplete tasks and pause reasons.
+- Stable implementation snapshot and validation evidence.
+- Independent review provenance and fresh-context evidence.
+
+Strict evidence may additionally record exposed initial/final models, reasoning efforts, profiles, verified isolation, bounded replacement, reviewer tiers, and Initial Assignment Accuracy.
+
+Inherited evidence must omit those strict-only metrics and guarantees. When the host happens to expose the inherited parent model, the evidence may record it as inherited runtime provenance, not as selected subagent routing. Missing model, reasoning, profile, or sandbox evidence must remain visibly unavailable rather than being inferred.
+
+At least one implementation-independent contract-conformance review is required before `PASS` or `PASS_WITH_NOTES`. Additional review capabilities are selected from the contract and material implementation risks; no fixed reviewer count, identity, specialization, profile, or model tier is universal.
+
+## Non-Functional Requirements
+
+- The behavior extends `power-loop`; it does not introduce a separate orchestration skill or external scheduler.
+- Capability inspection is low cost and avoids paid or speculative probe work when schema evidence is conclusive.
+- Both execution templates remain fixed-shape and separately reviewable.
+- Canonical content is not duplicated unnecessarily between the issue and Goal Prompt.
+- Hosted issue and local brief mutation remains explicit and reviewable.
+- No mode claims exact monetary, token, credit, or subscription savings without authoritative usage evidence.
+- Unresolved high-risk work remains `HUMAN_ONLY` and receives no implementation Goal Prompt.
+- Historical generated plans require no compatibility, migration, or reopening.
 
 ## Out Of Scope
 
-- Automatically executing the final `/goal`.
-- Automatically updating an issue or local brief without explicit user confirmation.
-- Detecting whether the current session uses Ultra.
-- Making Ultra a prerequisite or feature flag.
-- Minimizing agent count as a cost target.
+- Fixing or patching the Codex multi-agent host.
+- Depending on undocumented hidden `spawn_agent` arguments.
+- Using failed tool calls or paid subagent work as the default capability probe.
+- Building a separate `codex exec --model` orchestration system.
+- Removing the strict Luna/Sol/Terra profiles or strict routing template.
+- Automatically executing the final Goal Prompt.
+- Automatically mutating an issue or local brief without explicit confirmation.
+- Changing unrelated skills' model policies.
+- Treating agent count as a cost metric.
 - Creating one branch or worktree per subagent by default.
-- Exact dollar, token, credit, or subscription-cost accounting.
-- A new `power-dispatch` or `power-ultra` skill.
-- An external scheduler, orchestration database, daemon, or hosted coordination service.
-- Allowing implementation workers to escalate beyond Sol Medium.
-- Changing the runtime model policy of `power-think`, `power-grill`, `power-curator`, `power-work-report`, or `power-critic` as part of this feature.
-- Allowing `power-loop` to decide unresolved public API, schema, product, business, security, permission, or migration contracts.
-- Reintroducing or imposing a universal fixed review topology, or an equivalent fixed reviewer requirement, over contract-prescribed or capability-based independent review.
 
 ## Acceptance Criteria
 
-### AC-1: Power Grill Produces A Lighter Requirements Contract
+### AC-1: Strict Capability Recommends Strict Routing
 
-Given a user uses `power-grill` to define a task
-When the issue contract is generated
-Then it contains the problem, goal, user behavior, external API or data contract, scope, non-goals, constraints, risks, acceptance criteria, validation expectations, stop condition, and pause conditions, without requiring internal interfaces, exact file ownership, or an Agent Dispatch Plan.
+Given the current spawn interface exposes a supported model or custom-agent selector
+When capability preflight runs
+Then it returns `strict-selection-supported`, recommends `strict-model-routing`, and shows the evidence used.
 
-### AC-2: Implementation Detail Moves To Power Loop
+### AC-2: Reduced Schema Recommends Inherited Routing Without A Probe
 
-Given the requirements contract is clear
-When `power-loop` inspects the repository
-Then it may supply exact files, internal interfaces, control flow, error handling, test seams, and validation commands without sending the task back solely because those internal details were absent.
+Given the spawn interface exposes no supported model, reasoning, or custom-agent selector
+When capability preflight runs
+Then it returns `inherited-model-only`, recommends `inherited-model-routing`, and does not attempt a model-specific probe spawn when the schema is conclusive.
 
-### AC-3: External Contracts Remain Requirement Decisions
+### AC-3: Indeterminate Capability Does Not Guess
 
-Given `power-loop` discovers that implementation requires a change to user behavior, a public API, a schema, compatibility, security, permissions, migration behavior, or a business rule
-When that decision is not confirmed in the contract
-Then it returns `NEEDS_GRILL` or `NEEDS_HUMAN` instead of deciding the change.
+Given capability evidence is incomplete or contradictory
+When capability preflight runs
+Then it returns `indeterminate`, reports the uncertainty, and asks the user instead of silently choosing a mode.
 
-### AC-4: Structured Orchestration Artifacts Are Always Generated
+### AC-4: Confirmation Gates Mode-Specific Planning
 
-Given a task contract passes the readiness and risk gates
-When `power-loop` runs
-Then it generates an Execution Blueprint, Agent Dispatch Plan, Issue Patch, and, after confirmed issue update, a final Goal Prompt regardless of the current reasoning mode.
+Given any preflight result
+When the user has not confirmed the execution mode
+Then `power-loop` does not generate a mode-specific Agent Dispatch Plan or final Goal Prompt.
 
-`power-loop` does not detect or infer Ultra mode. The user chooses the runtime mode.
+### AC-5: Strict Routing Is Preserved When Supported
 
-### AC-5: Execution Blueprint Has A Fixed Structure
+Given the user confirms `strict-model-routing`
+When planning proceeds with independently sufficient evidence for every required selector
+Then the separate strict template preserves the existing Luna, Sol, and Terra profile and routing guarantees without inferring reasoning, profile, model, or sandbox support from a different selector.
 
-Given the contract passes readiness
-When `power-loop` generates the Execution Blueprint
-Then the blueprint contains the baseline branch and commit, affected files and modules, internal interfaces, dependencies, data or control flow, error handling, ownership, integration order, test seams, validation commands, assumptions, and staleness conditions.
+### AC-6: Inherited Routing Uses A Separate Template
 
-### AC-6: Agent Dispatch Plan Has A Fixed Structure
+Given the user confirms `inherited-model-routing`
+When planning proceeds
+Then `power-loop` uses the separate inherited template rather than populating the strict template conditionally.
 
-Given the Execution Blueprint exists
-When `power-loop` generates the Agent Dispatch Plan
-Then every task includes a Task ID, objective, role, initial model, reasoning effort, permission mode, allowed write paths, dependencies, deliverable, validation responsibility, escalation ceiling, and parallelization conditions.
+### AC-7: Inherited Plans Contain No Unsupported Configuration Claims
 
-### AC-7: Generation Order Is Enforced
+Given inherited mode
+When the Dispatch Plan and Goal are reviewed
+Then they do not specify unsupported per-subagent models, reasoning efforts, custom profiles, sandbox guarantees, model escalation, reviewer tiers, model-cost savings, or assignment-accuracy metrics.
 
-Given the Blueprint and Dispatch Plan have been generated
-When `power-loop` continues
-Then it displays the Issue Patch, waits for confirmation, applies the confirmed patch, verifies the update, and only then generates the final Goal Prompt.
+### AC-8: Inherited Mode Retains Useful Delegation
 
-### AC-8: Issue Mutation Requires Explicit Confirmation
+Given inherited mode
+When work is decomposed
+Then generic subagents may receive explicit roles, objectives, ownership boundaries, dependencies, deliverables, validation responsibilities, and parallelization constraints.
 
-Given `power-loop` has displayed an Issue Patch
-When the user has not explicitly confirmed that exact patch
-Then no hosted issue or local brief is modified.
+### AC-9: Review Evidence Distinguishes Fresh Context From Isolation
 
-When the user requests a revision
-Then the revised patch is displayed and requires a new confirmation.
+Given inherited mode requires independent review
+When review is planned and evidenced
+Then fresh-context independence may be required, but host-enforced read-only isolation is claimed only when separately observable; an instruction-level no-write boundary is not represented as a sandbox.
 
-### AC-9: Issue Mutation Is Restricted To Execution Sections
+### AC-10: Unavailable Exact Requirements Pause
 
-Given the user confirms the Issue Patch
-When `power-loop` updates the issue or brief
-Then it changes only the Execution Blueprint, Agent Dispatch Plan, and their execution metadata, leaving the requirements contract unchanged.
+Given a Task Contract requires an exact model, profile, provider, reasoning level, sandbox, or isolation mechanism unavailable in inherited mode
+When planning runs
+Then it pauses and requests a human decision instead of weakening the contract.
 
-### AC-10: Requirements Contract Has Precedence
+### AC-11: Execution Evidence Is Mode-Accurate
 
-Given a generated execution artifact conflicts with the requirements contract
-When `power-loop` detects the conflict
-Then the requirements contract wins and Goal generation stops until the conflict is resolved.
+Given either mode
+When execution evidence is produced
+Then it records the confirmed mode and capability evidence without presenting inherited behavior as selected model routing or inventing unavailable configuration and isolation provenance.
 
-### AC-11: The Contract Must Be Persisted
+### AC-12: Repository Artifacts Remain Consistent
 
-Given the input is a hosted issue or local brief
-When the user confirms the patch
-Then `power-loop` updates that persisted contract.
-
-Given the input is only a pasted contract
-When the structured plan needs to be confirmed
-Then `power-loop` asks the user to create a hosted issue or save a local brief before it generates the final Goal Prompt.
-
-### AC-12: Initial Model Routing Follows The Confirmed Policy
-
-Given `power-loop` classifies implementation tasks
-When it assigns initial models
-Then it uses Luna Max for most simple through lower-medium work, Sol Medium for anything even slightly complex or above, and no Terra implementation tier.
-
-Given `power-loop` selects read-only review work
-When the contract does not prescribe the reviewer model and reasoning effort
-Then it uses Terra High only for an explicitly simple review, Sol Medium by default, or Sol High for the most complex or high-risk review, while selecting the actual review capabilities dynamically.
-
-### AC-13: Model Escalation Is Limited
-
-Given a worker fails because the initial assignment underestimated capability or reasoning complexity
-When the main orchestrator approves escalation
-Then a Luna task is replaced directly by Sol Medium at most once, and the replacement worker receives the prior worker's useful findings, failure evidence, relevant artifacts, and current state.
-
-Given the failure comes from permissions, environment, dependencies, validation infrastructure, or interface conflicts
-When the orchestrator diagnoses the failure
-Then it does not escalate the model.
-
-Given Sol Medium has attempted the task
-When it still cannot complete the assigned work
-Then the task stops and reports the blocker.
-
-### AC-14: Model Substitution Is Not Silent
-
-Given a required Luna Max or Sol Medium implementation configuration, or a selected Terra High, Sol Medium, or Sol High reviewer configuration, is unavailable
-When the Goal is prepared or executed
-Then the workflow does not silently inherit the parent Sol Ultra configuration and instead pauses with the missing configuration or asks for an explicitly approved substitute.
-
-### AC-15: The Main Agent Is An Orchestrator
-
-Given the final Goal Prompt is running
-When implementation begins
-Then the main agent owns interfaces, dispatch, dependency coordination, conflict handling, escalation decisions, and consolidation, while implementation-file changes are delegated to the assigned workers. If delegation is unavailable, execution pauses unless the confirmed plan explicitly authorizes a narrow exception.
-
-### AC-16: Parallelism Respects Ownership
-
-Given tasks are independent and their write ownership does not overlap
-When the Goal executes the Dispatch Plan
-Then those tasks may run in parallel up to the platform concurrency limit.
-
-Given tasks share files, depend on an unstable interface, or have unresolved dependencies
-When the orchestrator determines their execution order
-Then they run sequentially or wait until the shared boundary is stable.
-
-The implementation uses one task-level branch or worktree rather than one worktree per worker.
-
-### AC-17: Agent Count Is Not A Cost Metric
-
-Given the task can be split into independently useful units
-When `power-loop` creates the Dispatch Plan
-Then it does not combine those units merely to reduce agent count.
-
-Every agent still has an independent objective and deliverable so that fragmentation without useful parallel value is avoided.
-
-### AC-18: The Goal References The Confirmed Issue
-
-Given the Issue Patch was applied successfully
-When `power-loop` generates the final Goal Prompt
-Then the Goal references the confirmed issue or brief and its Execution Blueprint and Agent Dispatch Plan rather than embedding a second full copy.
-
-The Goal performs a baseline consistency check and stops when material repository drift makes the confirmed plan stale.
-
-### AC-19: Goal Execution Is Manual
-
-Given the final Goal Prompt has been generated
-When `power-loop` completes
-Then it returns the ready-to-run prompt and does not invoke `/goal` automatically.
-
-### AC-20: Review Is Independent And Capability-Appropriate
-
-Given implementation and validation are complete
-When the verifier gate runs
-Then at least one implementation-independent reviewer checks contract conformance in a read-only context, and any additional review capabilities are selected from the contract and material implementation risks. No fixed reviewer count, identity, specialization, or named profile is imposed unless contractually required; when the model is not prescribed, the reviewer tier follows the Terra High, Sol Medium, and Sol High policy and its provenance records model, reasoning effort, and selection rationale.
-
-### AC-21: Dispatch Results Are Reported
-
-Given the Goal completes or stops
-When it produces the Dispatch Summary
-Then the summary records planned and actual task counts, initial and final model per task, escalation and reason, parallel or sequential execution, ownership conflicts, incomplete tasks, pause reasons, and Initial Assignment Accuracy, calculated as tasks completed without model escalation divided by implementation tasks that received an initial assignment and were attempted.
+Given the completed change
+When repository validation runs
+Then dual-track tests and all relevant existing tests pass, and documentation, specification, templates, installer expectations, and verifier evidence describe the same two modes and capability vocabulary.
 
 ## Open Questions Resolved
 
-- Should `power-grill` keep producing detailed implementation notes? -> No. It should produce a lighter requirements-focused contract while preserving all externally meaningful decisions and acceptance boundaries.
-- Who owns concrete internal implementation design? -> `power-loop`, after repository inspection.
-- Should `power-loop` produce more than a bounded Goal Prompt? -> Yes. It must also produce a structured Execution Blueprint, Agent Dispatch Plan, and Issue Patch.
-- Should the additional artifacts be generated only in Ultra mode? -> No. They are always generated after readiness passes. The user chooses the runtime mode.
-- Should `power-loop` automatically update the issue? -> No. It displays the exact patch and waits for explicit confirmation.
-- When is the final Goal Prompt generated? -> Only after the confirmed Issue Patch is applied successfully.
-- Should `power-loop` automatically execute the Goal? -> No. The user starts it manually.
-- Where does the stable dispatch plan live? -> In the issue or local brief. The final Goal Prompt references it and contains only operational execution instructions.
-- Is reducing agent count a cost objective? -> No. Meaningful parallelism is desirable; avoid only fragmentation without independent value.
-- How are implementation models selected? -> Luna Max for most simple through lower-medium tasks; Sol Medium for anything even slightly complex or above. An underestimated Luna task may be replaced directly by Sol Medium at most once.
-- What reviews perform verification? -> Contract-prescribed reviews when specified; otherwise the minimum sufficient independent capability plan derived from the contract, final diff, validation, and material risks, using Terra High only for explicitly simple review, Sol Medium by default, and Sol High for the most complex or high-risk review.
-- How are worktrees handled? -> One task-level branch or worktree, with explicit shared-worktree ownership; no default worktree per subagent.
-- How is issue mutation scoped? -> `power-loop` may update only the confirmed execution-planning sections and metadata.
+- Should strict routing be removed because the current host cannot select profiles? -> No. Preserve it for hosts with demonstrated selector support.
+- Should all multi-agent execution pause when model selection is unavailable? -> No. Use the complete inherited-model track for generic role-based delegation.
+- How is capability detected? -> Inspect the visible supported spawn contract first; avoid a probe spawn when schema evidence is conclusive.
+- Does an installed TOML prove strict routing is available? -> No. Selectability requires current host evidence.
+- When is an execution mode selected? -> Only after the preflight report and explicit user confirmation.
+- Can inherited mode record the parent model? -> Only as observable inherited provenance, never as an independently selected subagent configuration.
+- Does a no-write instruction prove read-only isolation? -> No. Host-enforced isolation requires separate observable evidence.
+- What happens to exact model, provider, profile, reasoning, sandbox, or isolation requirements in inherited mode? -> Planning pauses for a human decision.
+- Is reducing agent count a goal? -> No. Preserve independently useful work and safe parallelism.
+- When is the final Goal Prompt generated? -> Only after mode confirmation and successful application of the separately confirmed Issue Patch.
 
 ## Premises
 
-- A requirements contract can be complete and agent-ready without fixing every internal implementation detail before focused repository inspection.
-- `power-loop` is the correct owner for repository-aware implementation design because it already owns loop readiness, risk classification, work isolation, validation-loop design, verifier gating, and Goal Prompt generation.
-- Stable dispatch decisions belong in the persisted issue or brief so the user can review them and the Goal can reference one confirmed source.
+- Feature detection must rely on observed host capabilities rather than CLI version or installed declarations.
+- A supported model selector does not imply a supported sandbox selector, and vice versa.
+- Strict routing and inherited routing are separately maintained product behaviors, not preferred and degraded forms of one template.
+- Useful delegation is defined by roles, ownership, dependencies, deliverables, validation, and review independence, not solely by model selection.
+- Fresh-context review strengthens independence but does not create host-enforced filesystem isolation.
 - The final Goal Prompt is an operational launcher, not a second canonical plan.
-- Correct initial routing and clear ownership save more cost than an arbitrary reduction in agent count.
-- Useful parallelism is beneficial when ownership and interfaces prevent conflict-driven rework.
-- Model replacement should be exceptional, evidence-based, bounded to a direct Luna Max-to-Sol Medium transition, and capped at Sol Medium for implementation.
-- Independent review remains necessary even when lower-cost workers perform most implementation work; its capability and reviewer tier should match the contract and material risk.
-- Exact monetary savings cannot be guaranteed without authoritative usage and pricing telemetry.
+- Stable mode and capability evidence belongs in persisted planning and execution artifacts so users and verifiers can audit what was actually supported.
