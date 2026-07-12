@@ -8,6 +8,10 @@ Patch state: `awaiting-confirmation`
 
 Task Contract preservation check: `<unchanged at generation time>`
 
+Task Contract digest: `sha256:<exact UTF-8 bytes from document start to the byte before the Blueprint start marker>`
+
+Canonical Issue identity before application: `<source plus host revision when available plus exact full-body SHA-256; body digest authoritative>`
+
 Curation status preservation check: `<unchanged at generation time>`
 
 Capability classification: `<strict-selection-supported | inherited-model-only | indeterminate>`
@@ -49,7 +53,9 @@ Planning status: `confirmed`
 - If both markers exist, replace exactly the content from each start marker through its matching end marker.
 - If the markers do not exist, insert both complete marked blocks immediately before `# Curation status`; append them at the end only when no curation section exists.
 - Do not edit, reformat, reorder, or normalize any Task Contract or Curation status content.
+- Immediately before applying, re-read exact bytes and require both the authoritative complete-body digest and Task Contract digest to match this displayed patch. Host revision metadata alone is insufficient.
 - Re-read the target after applying the patch and compare both replacement blocks exactly.
+- Prove the Task Contract digest is unchanged, then compute the new authoritative SHA-256 over the exact complete persisted body for the thin Goal. Do not write that digest into the body it hashes.
 - Verify that the persisted Blueprint and Dispatch block record the same confirmed mode and capability evidence used to generate this patch.
 - A revised patch requires new explicit confirmation.
 

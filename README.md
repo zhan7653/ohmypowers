@@ -43,7 +43,8 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
 - Exactly one separate Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Luna/Sol/Terra profiles and their routing policy, while `inherited-model-routing` assigns roles, objectives, ownership, dependencies, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, escalation, or model-cost control.
 - Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
-- Final Goal Prompt only after the confirmed patch is applied and verified; the user starts it manually.
+- Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
+- Final Goal Prompt only after the confirmed patch is applied and verified. It is a thin launcher that pins the Issue identity, reads the confirmed sections, performs preflight/drift checks, and adds no budget, scope, validation, review, PR, lifecycle, permission, or other obligation; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
 - Contract-prescribed reviews or a minimum sufficient capability-based review plan, including an implementation-independent contract-conformance review.
 - Mode-accurate capability, dispatch, review, and PR/MR evidence. In inherited mode, fresh context can establish implementation independence, but an instruction-level no-write boundary is not described as host-enforced read-only isolation.
@@ -55,10 +56,11 @@ For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop
 
 `power-verifier` checks implementation evidence after a bounded loop has run:
 
+- The exact pinned Issue revision as the sole normative contract; the Goal, session, PR/MR text, comments, and runner summaries remain supplementary evidence.
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
-- Contract and Goal clause coverage, conflict handling, and evidence freshness against a stable implementation snapshot.
+- Contract clause coverage and evidence freshness against a snapshot containing repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time.
 - Independent validation replay when safe, with reviewer provenance and capability/risk-based review selection.
 - Loop decision justification.
 - One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
@@ -71,8 +73,10 @@ Repository installer, profile, and fixture checks described below validate this 
 - Reads issue bodies, PR/MR bodies, comments, labels, branches, and local git state.
 - Treats issue body `Curation status` as canonical lifecycle context and comments as supplementary evidence.
 - Produces a curation plan before any mutation.
+- Compares the verifier snapshot with the final PR/merge snapshot. Equal Git tree digests are reusable even across different commits; changed trees are classified as `reverified`, `human-waived`, `contract-changing`, or `unresolved` before closure.
+- Records changed paths, behavior impact, validation coverage, and any complete human waiver without presenting the old PASS as verifier coverage of the final tree. Contract-level changes return to `power-grill` and `power-loop`.
 - Applies issue body updates, comments, labels, closure, or follow-up issue creation only after explicit user confirmation.
-- Uses simple optional labels: `agent-active`, `agent-done`, `agent-follow-up`, `agent-superseded`, and `agent-curation-needed`.
+- Persists only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, or `follow-up-needed`. Runtime/verifier outcomes and freshness classifications are not persisted lifecycle states. Labels are optional, non-normative presentation aids.
 
 It does not run as a daemon, scheduler, webhook, database, persistent index, or auto-close service, and it does not replace `power-verifier` for implementation evidence review.
 
@@ -99,7 +103,7 @@ Use them by phase:
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop capability preflight -> user confirms execution mode -> Blueprint, mode-specific Dispatch Plan, and Issue Patch -> user confirms patch -> manual Codex /goal -> contract-prescribed or minimum-sufficient capability/risk-based independent review -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
+- Recommended Loop Engineering flow: `power-grill -> power-loop capability preflight -> user confirms execution mode -> Blueprint, mode-specific Dispatch Plan, and Issue Patch -> user confirms patch -> thin manual Codex /goal -> snapshot-bound verifier -> PR evidence -> power-curator final-tree reconciliation -> confirmed lifecycle mutation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -118,7 +122,7 @@ On a host classified `strict-selection-supported`, a supported model selector or
 
 On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, model-escalation, reviewer-tier, model-cost, or Initial Assignment Accuracy guarantee. It retains useful generic delegation, explicit ownership and dependencies, safe parallelism, and fresh-context independent review. Model selection and sandbox selection are evidenced independently in either mode.
 
-When checking implementation evidence, provide the complete canonical Issue or local contract and final Goal Prompt, capture a stable implementation snapshot, replay safe validation, and record review provenance. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
+When checking implementation evidence, provide the complete canonical Issue identity and body plus the thin Goal as supplementary evidence. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
 
 Restart Codex after installing or updating skills or custom agents.
 

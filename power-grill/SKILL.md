@@ -7,7 +7,7 @@ description: Turn a vague or half-clear coding task, or an existing reviewed spe
 
 ## Overview
 
-Produce a requirements-ready issue contract before implementation starts. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
+Produce a requirements-ready issue contract before implementation starts. The persisted Issue body is the sole normative contract source. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
 
 Leave exact files, private interfaces, internal flow, test seams, concrete commands, implementation order, ownership, and subagent routing to `power-loop`.
 
@@ -101,7 +101,9 @@ Search conservatively for directly related existing issues when hosted or local 
 - create a linked follow-up when the prior issue is complete or should not expand;
 - create a new issue when no candidate is a defensible canonical home.
 
-Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`.
+Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. Reserve the confirmed Execution Blueprint and Agent Dispatch Plan for runtime budget, delivery/PR, validation/review, pause/stop, ownership, and execution policy that `power-loop` derives without changing requirements. A later Goal may reference those Issue-owned obligations but may not add to them.
+
+The Task Contract identity is SHA-256 over the exact persisted UTF-8 bytes from the document start to the byte immediately before `<!-- power-loop:execution-blueprint:start -->`, with no whitespace or newline normalization. Preserve the marked planning boundaries so `power-loop` can verify this digest before and after patching.
 
 Ask the user to confirm the complete issue draft and related-issue recommendation. Do not generate `/goal`.
 
@@ -115,7 +117,7 @@ After explicit confirmation, create, update, or save the contract:
 
 Before hosted mutation, inspect project host guidance and remotes. For GitHub read [references/github-issue-creation.md](references/github-issue-creation.md); for GitLab read [references/gitlab-issue-creation.md](references/gitlab-issue-creation.md). Preserve any project-required full GitLab repository URL. Stop if the canonical host or target is unclear.
 
-Record the resulting issue URL/number or local brief path. A pasted-only contract is not sufficient for final Goal generation because the confirmed execution sections need a canonical home.
+Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for final Goal generation because the confirmed execution sections need a canonical home and the complete persisted body needs a stable identity.
 
 ### 6. Hand Off To power-loop
 

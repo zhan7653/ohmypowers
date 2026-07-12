@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
@@ -13,6 +14,28 @@ const fixturePath = path.join(root, 'tests', 'fixtures', 'power-loop', 'model-ro
 const capabilityFixturePath = path.join(root, 'tests', 'fixtures', 'power-loop', 'capability-routing-cases.json')
 const assetsDir = path.join(root, 'power-loop', 'assets')
 const unavailableSelector = 'unavailable — not independently selectable'
+const blueprintStartMarker = '<!-- power-loop:execution-blueprint:start -->'
+
+function sha256(value) {
+  return createHash('sha256').update(value, 'utf8').digest('hex')
+}
+
+function issueIdentity(body, source, hostRevision = null) {
+  const markerIndex = body.indexOf(blueprintStartMarker)
+  assert.notEqual(markerIndex, -1, 'Issue body contains the Blueprint start marker')
+  return {
+    source,
+    hostRevision,
+    bodySha256: sha256(body),
+    taskContractSha256: sha256(body.slice(0, markerIndex)),
+  }
+}
+
+function thinGoalPreflight(body, pinned) {
+  const actual = issueIdentity(body, pinned.source, pinned.hostRevision)
+  return actual.bodySha256 === pinned.bodySha256
+    && actual.taskContractSha256 === pinned.taskContractSha256
+}
 
 const expectedProfiles = {
   power_luna_worker: ['gpt-5.6-luna', 'max', 'workspace-write'],
@@ -304,9 +327,86 @@ test('shared Goal and repository guidance consistently describe dual-track mode 
   const goal = await readFile(path.join(assetsDir, 'codex-loop-goal.txt'), 'utf8')
   assert.match(goal, /Do not launch a probe when its visible schema is conclusive\./)
   assert.match(goal, /Instruction-level no-write behavior is not host-enforced isolation\./)
-  assert.match(goal, /Pause with `NEEDS_HUMAN` when execution requires an exact configuration, provider, or isolation guarantee/)
+  assert.match(goal, /Stop before implementation on any Issue identity, Task Contract, planning-status, repository-baseline, execution-mode, capability, section, or source-access drift\./)
   assert.doesNotMatch(goal, /Initial Assignment Accuracy/)
   assert.doesNotMatch(goal, /Luna Max|Sol Medium|Terra High/)
+})
+
+test('canonical Issue identity uses exact bytes and thin Goal preflight stops on body or Task Contract drift', () => {
+  const body = [
+    '# Task Contract',
+    '',
+    'Goal: preserve exact bytes.',
+    '',
+    blueprintStartMarker,
+    '# Execution Blueprint',
+    '',
+    'Planning status: `confirmed`',
+  ].join('\n')
+  const pinned = issueIdentity(body, 'https://example.test/issues/27', 'updatedAt:2026-07-12T03:45:51Z')
+
+  assert.equal(thinGoalPreflight(body, pinned), true)
+  assert.equal(thinGoalPreflight(body.replace('exact bytes', 'changed bytes'), pinned), false)
+  assert.equal(thinGoalPreflight(`${body}\n`, pinned), false, 'complete-body identity rejects newline normalization')
+  assert.equal(
+    issueIdentity(body, pinned.source, 'different-host-revision').bodySha256,
+    pinned.bodySha256,
+    'body digest remains authoritative when host revision metadata differs',
+  )
+})
+
+test('Goal template is a pinned launcher and contains no independent operational obligations', async () => {
+  const goal = await readFile(path.join(assetsDir, 'codex-loop-goal.txt'), 'utf8')
+
+  for (const required of [
+    'Pinned Issue identity:',
+    'Exact complete-body SHA-256:',
+    'Exact Task Contract SHA-256:',
+    'Required confirmed references:',
+    'Preflight:',
+    'sole normative contract',
+    'body digest is authoritative',
+    'The user must start this Goal manually',
+  ]) assert.match(goal, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+
+  for (const forbidden of [
+    /^Budget:/m,
+    /^Validation loop:/m,
+    /^Verifier gate:/m,
+    /^PR\/MR evidence:/m,
+    /^Dispatch Summary:/m,
+    /^Loop decision:/m,
+    /Max implementation iterations/,
+    /Same-failure retry limit/,
+    /Create or update a draft PR/,
+    /Require at least one reviewer/,
+    /Decision: `pr-ready/,
+  ]) assert.doesNotMatch(goal, forbidden)
+})
+
+test('Issue-owned templates persist identity, runtime, delivery, validation, review, and stop policy', async () => {
+  const [skill, blueprint, inherited, strict, patchTemplate, evidence] = await Promise.all([
+    readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8'),
+    readFile(path.join(assetsDir, 'execution-blueprint.md'), 'utf8'),
+    readFile(path.join(assetsDir, 'agent-dispatch-plan-inherited.md'), 'utf8'),
+    readFile(path.join(assetsDir, 'agent-dispatch-plan-strict.md'), 'utf8'),
+    readFile(path.join(assetsDir, 'issue-patch.md'), 'utf8'),
+    readFile(path.join(assetsDir, 'pr-evidence-template.md'), 'utf8'),
+  ])
+
+  assert.match(skill, /SHA-256 of the exact UTF-8 bytes from document start to the byte immediately before/)
+  assert.match(skill, /The complete-body digest is authoritative/)
+  assert.match(blueprint, /## Runtime budget and delivery policy/)
+  assert.match(blueprint, /Evidence invalidation:/)
+  for (const dispatch of [inherited, strict]) {
+    assert.match(dispatch, /sole normative contract/)
+    assert.match(dispatch, /Git tree digest/)
+    assert.match(dispatch, /supplementary thin Goal/)
+  }
+  assert.match(patchTemplate, /Canonical Issue identity before application:/)
+  assert.match(patchTemplate, /Do not write that digest into the body it hashes\./)
+  assert.match(evidence, /body digest authoritative/)
+  assert.match(evidence, /Git tree digest:/)
 })
 
 test('workflow guidance places capability preflight and mode confirmation before readiness gating', async () => {

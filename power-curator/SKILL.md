@@ -11,6 +11,8 @@ Curate Loop Engineering issue and PR lifecycle state after task contracts, imple
 
 `power-curator` is not an implementation verifier. Use `power-verifier` to decide whether an implementation satisfies a contract; use `power-curator` to organize, link, update, close, or split issue lifecycle records after the evidence exists.
 
+Closure evidence is snapshot-bound. A verifier result covers only the Git tree digest it records. Commit identity is provenance, but the Git tree digest controls freshness: different commits with the same tree are content-equivalent, while different trees invalidate the old result for the final tree.
+
 ## Hard Boundaries
 
 You must not:
@@ -23,7 +25,9 @@ You must not:
 - modify the `Task Contract`, `Execution Blueprint`, or `Agent Dispatch Plan` while performing lifecycle-only curation;
 - treat comments as the canonical task contract;
 - approve, merge, or retarget PRs/MRs;
-- decide implementation correctness without `power-verifier` evidence when correctness is in question.
+- decide implementation correctness without `power-verifier` evidence when correctness is in question;
+- describe a verifier result for an older tree as a PASS for the final tree;
+- use a human waiver for a change to the Task Contract, acceptance criteria, public behavior, security, permissions, or migration decisions.
 
 You may inspect repository state, hosted issue and PR/MR state, issue and PR/MR comments, labels, branch names, local git history, and local worktrees.
 
@@ -46,30 +50,36 @@ If hosted state cannot be read through `gh`, `glab`, browser access, or another 
    - Read comments only as event log and supplementary evidence.
    - Use REST API comment reads when higher-level CLI comment commands fail, such as `gh api repos/<owner>/<repo>/issues/<number>/comments`.
    - Inspect PR/MR bodies, merge state, linked issues, labels, branch names, commits, and touched files when relevant.
+   - Record the canonical Issue URL or path, host revision metadata when available, and SHA-256 of the exact full persisted body. If a historical or external Issue lacks enough metadata to establish an accurate identity, do not invent it; request evidence, a new planning pass, or an explicit human decision.
 2. Build a conservative issue/PR map.
    - Prefer candidates with concrete evidence over broad keyword matches.
    - Include open and closed issues; treat closed issues as historical context.
    - Do not collapse issues together without user confirmation.
-3. Classify each relevant issue.
+3. Assess the lifecycle position of each relevant issue.
    - `active`: still the current contract for unfinished work.
    - `implemented-but-open`: has merged PR or explicit local commit evidence and may be ready to close.
    - `needs-follow-up`: current contract is complete or partially complete, but new work belongs in a linked follow-up issue.
    - `superseded`: another issue is now the canonical contract.
    - `duplicate-or-related`: overlaps another issue but needs user confirmation.
    - `unclear`: evidence is insufficient to recommend mutation.
-4. Produce a curation plan before mutations.
+4. Reconcile verifier and final snapshots before recommending closure.
+   - Capture both snapshots as repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time.
+   - Compare Git tree digests, not commit hashes, to decide freshness.
+   - If the digests differ, inventory changed paths, summarize the diff, state behavior impact, list validations run, and identify content not covered by the old verifier result.
+   - Assign exactly one freshness classification using the protocol below.
+5. Produce a curation plan before mutations.
    - List evidence inspected.
    - List candidate links and why they match.
    - Propose exact issue body, comment, label, close, or follow-up mutations.
    - Mark every mutation as pending confirmation.
    - Ask the user to confirm the exact mutations to apply.
-5. Apply only confirmed mutations.
+6. Apply only confirmed mutations.
    - Update or append `Curation status` in the issue body.
    - Add/update issue comments only when confirmed.
    - Add/update labels only when confirmed.
    - Close issues only when confirmed and closure requirements are satisfied.
    - Create follow-up issues only when confirmed.
-6. Report final state.
+7. Report final state.
    - Include URLs, issue/PR numbers, labels changed, body sections updated, comments added, issues closed, and unresolved items.
 
 ## Matching Candidates
@@ -84,6 +94,34 @@ When deciding whether a new task should update an existing issue, become a follo
 - open issues first, then closed issues as historical context.
 
 Output candidates, not final matches. Let the user confirm whether to update an existing issue, create a linked follow-up, or create a new issue.
+
+## Snapshot Freshness Protocol
+
+Assign exactly one classification before closure:
+
+- `tree-equivalent`: verified and final Git tree digests are identical. The existing verifier result may be cited for the final content even when commit hashes differ.
+- `reverified`: the trees differ, the changed paths and impact are inventoried, and a new verifier result is explicitly bound to the final Git tree digest.
+- `human-waived`: the trees differ, the change is not contract-changing, and the user explicitly confirms a complete waiver record for the uncovered final-tree content.
+- `contract-changing`: the change affects the Task Contract, acceptance criteria, public behavior, security, permissions, or migration decisions. Stop closure, route those contract decisions to `power-grill`, and use `power-loop` to confirm the revised execution plan; a waiver cannot replace those owners.
+- `unresolved`: identity or comparison evidence is missing, trees differ without final-tree verification or a complete waiver, or another closure condition remains unmet.
+
+Evaluate `contract-changing` before accepting re-verification or waiver evidence. For `tree-equivalent`, retain the verified and final commit identities as provenance while stating that their tree digests match. For every other classification, state the smallest next action. `human-waived` permits a human closure decision; it is not a verifier PASS for the final tree.
+
+## Human Waiver Record
+
+A waiver is complete only when `Curation status` records all of the following:
+
+- verified snapshot: repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time;
+- final snapshot: the same identity fields;
+- changed paths and diff summary;
+- behavior impact;
+- validations run against the final tree, including results;
+- content not covered by the old verifier result;
+- waiver reason and exact scope;
+- confirmer and confirmation time;
+- residual risks.
+
+Show the exact proposed record and obtain explicit confirmation before applying it. The record must say that the earlier verifier result covers only the verified snapshot and that final-tree closure is human-waived. Missing identity, scope, confirmation, coverage, or risk fields yields `unresolved`.
 
 ## Canonical Issue Body
 
@@ -110,9 +148,35 @@ Follow-up issues:
 
 Closure evidence:
 - <merged PR, commit, validation, verifier, human confirmation>
+
+Snapshot reconciliation:
+- Canonical Issue: <URL/path, host revision when exposed, exact full-body SHA-256>
+- Verified snapshot: <repository/ref, commit, tree digest, dirty/generated boundary, capture time>
+- Final snapshot: <repository/ref, commit, tree digest, dirty/generated boundary, capture time>
+- Changed paths and diff summary: <none when tree-equivalent, otherwise exact inventory>
+- Behavior impact: <impact assessment>
+- Validations run: <commands/results bound to snapshot>
+- Uncovered content: <none or content outside verifier coverage>
+- Freshness classification: tree-equivalent | reverified | human-waived | contract-changing | unresolved
+
+Human waiver (only for human-waived):
+- Reason and scope: <why and exactly what is accepted>
+- Confirmer and confirmation time: <identity and timestamp>
+- Residual risks: <remaining risks>
+- Verifier coverage statement: <old result covers only verified snapshot; final tree is human-waived, not verifier PASS>
 ```
 
 Use `Change history` for contract changes. Use `Curation status` for lifecycle truth, issue linkage, closure evidence, and comment-derived context that must not remain comment-only.
+
+## Lifecycle Vocabulary and Mapping
+
+Persist only these Issue states: `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, and `follow-up-needed`.
+
+- Goal/runtime decisions such as `plan-ready`, `blocked`, or `needs-human`, verifier results such as `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`, and curator freshness classifications are evidence or gates, never persisted completion states.
+- Lifecycle assessments map as follows: `active` to `open` or `in-progress`; `implemented-but-open` to `pr-ready` or `merged` according to hosted evidence; `needs-follow-up` to `follow-up-needed`; `superseded` to `superseded`; `duplicate-or-related` and `unclear` require a human decision and do not imply a state mutation.
+- Allowed forward transitions are `open` to `in-progress` or `superseded`; `in-progress` to `pr-ready`, `follow-up-needed`, or `superseded`; `pr-ready` to `in-progress`, `merged`, `follow-up-needed`, or `superseded`; `merged` to `done` or `follow-up-needed`; and `follow-up-needed` to `done` once the current contract's closure record and follow-up linkage are confirmed. `done` and `superseded` are terminal for this curation pass.
+- `tree-equivalent`, `reverified`, and complete `human-waived` classifications can satisfy only the freshness gate. `contract-changing` and `unresolved` block closure. All other closure requirements and explicit user confirmation still apply.
+- Labels are optional, non-normative presentation aids. A missing or stale label never changes the persisted Issue state or any gate.
 
 ## Closure Recommendation
 
@@ -121,11 +185,12 @@ Recommend closing an issue only when all of these are true:
 - a merged PR/MR or explicit local commit evidence exists;
 - PR/MR evidence maps to the issue acceptance criteria;
 - no unresolved acceptance criteria, `NEEDS_HUMAN`, required follow-up, or verifier blocker remains;
+- snapshot reconciliation is `tree-equivalent`, `reverified`, or complete `human-waived`; `contract-changing` and `unresolved` block closure;
 - important context is in `Curation status`, not only comments;
 - the close comment can include closure evidence;
 - the user explicitly confirms closure.
 
-If any condition is missing, recommend `follow-up-needed`, `agent-curation-needed`, or no mutation instead of closure.
+If any condition is missing, recommend the canonical state `follow-up-needed`, the optional label `agent-curation-needed`, or no mutation instead of closure.
 
 ## Optional Labels
 
@@ -150,7 +215,10 @@ Evidence inspected:
 - <issue, PR/MR, comments, branch, commit, local files>
 
 Issue/PR map:
-- <issue>: <classification and evidence>
+- <issue>: <lifecycle assessment and evidence>
+
+Snapshot reconciliation:
+- <verified snapshot, final snapshot, changed paths/diff summary, behavior impact, validations, uncovered content, and exactly one freshness classification>
 
 Recommended mutations:
 - <exact mutation>: pending user confirmation

@@ -1,211 +1,182 @@
 {
-  "schema": "power-verifier-aggregation-cases/v1",
+  "schema": "power-verifier-aggregation-cases/v2",
   "cases": [
     {
       "id": "full-compliance",
       "input": {
-        "conflicts": [],
-        "humanDecisionRequired": false,
-        "snapshot": { "id": "tree:catalog-v3" },
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/27", "revision": "updatedAt:2026-07-12T03:45:51Z", "fullBodyDigest": "sha256:issue-27" },
+        "observedIssue": { "source": "https://example.test/issues/27", "revision": "updatedAt:2026-07-12T03:45:51Z", "fullBodyDigest": "sha256:issue-27" },
+        "snapshot": { "repositoryRef": "example/repo@develop", "commit": "commit-b", "gitTreeDigest": "tree:catalog-v3", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:00:00Z" },
         "clauses": [{ "id": "issue:AC-1", "applicable": true, "status": "satisfied" }],
-        "requiredEvidence": [{ "id": "implementation", "present": true, "snapshot": "tree:catalog-v3", "stale": false }],
-        "validationReplays": [{ "required": true, "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }],
+        "requiredEvidence": [{ "id": "implementation", "present": true, "commit": "commit-b", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
+        "validationReplays": [{ "required": true, "result": "passed", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
         "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
         "notes": []
       },
       "expected": { "result": "PASS", "smallestNextAction": "None." }
     },
     {
-      "id": "fixable-implementation-nonconformance",
+      "id": "same-tree-different-commit",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "goal:1", "applicable": true, "status": "nonconformant" }],
-        "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-1" },
+        "observedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-1" },
+        "snapshot": { "repositoryRef": "example/repo@refs/pull/30/head", "commit": "commit-new", "gitTreeDigest": "tree:same-content", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:05:00Z" },
+        "clauses": [{ "id": "issue:AC-5", "applicable": true, "status": "satisfied", "gitTreeDigest": "tree:same-content" }],
+        "requiredEvidence": [{ "id": "validation", "present": true, "commit": "commit-old", "gitTreeDigest": "tree:same-content", "stale": false }],
+        "validationReplays": [{ "required": true, "result": "passed", "gitTreeDigest": "tree:same-content", "stale": false }],
+        "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "commit": "commit-old", "gitTreeDigest": "tree:same-content", "stale": false }],
+        "notes": []
       },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Implement goal:1, then rerun its validation and review." }
+      "expected": { "result": "PASS", "smallestNextAction": "None; commits differ but Git trees are equivalent." }
     },
     {
-      "id": "missing-required-evidence",
+      "id": "host-revision-difference-same-body",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-2", "applicable": true, "status": "satisfied" }],
-        "requiredEvidence": [{ "id": "migration-output", "present": false, "snapshot": "tree:catalog-v3", "stale": false }], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-1" },
+        "observedIssue": { "source": "https://example.test/issues/27", "revision": "rev-2", "fullBodyDigest": "sha256:body-1" },
+        "snapshot": { "repositoryRef": "example/repo@develop", "commit": "commit-b", "gitTreeDigest": "tree:v3", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:10:00Z" },
+        "clauses": [{ "id": "issue:AC-4", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:v3", "stale": false }],
+        "notes": [{ "source": "Issue provenance", "text": "Host revision metadata differs, but the authoritative full-body digest matches." }]
       },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Supply migration-output for tree:catalog-v3." }
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the host revision provenance note." }
+    },
+    {
+      "id": "canonical-issue-body-mismatch",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-1" },
+        "observedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-2" },
+        "snapshot": { "repositoryRef": "example/repo@develop", "commit": "commit-b", "gitTreeDigest": "tree:v3", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:15:00Z" },
+        "clauses": [], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [], "reviews": [], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Fetch the exact persisted body and resolve the digest mismatch before verification." }
+    },
+    {
+      "id": "changed-tree-blocked",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-1" },
+        "observedIssue": { "source": "https://example.test/issues/27", "revision": "rev-1", "fullBodyDigest": "sha256:body-1" },
+        "snapshot": { "repositoryRef": "example/repo@refs/pull/30/head", "commit": "commit-b", "gitTreeDigest": "tree:final-b", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:20:00Z" },
+        "clauses": [{ "id": "issue:AC-6", "applicable": true, "status": "satisfied", "gitTreeDigest": "tree:verified-a" }],
+        "requiredEvidence": [{ "id": "validation", "present": true, "gitTreeDigest": "tree:verified-a", "stale": false }],
+        "validationReplays": [{ "required": true, "result": "passed", "gitTreeDigest": "tree:verified-a", "stale": false }],
+        "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:verified-a", "stale": false }],
+        "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Replay affected validation and independent review against tree:final-b." }
+    },
+    {
+      "id": "historical-missing-issue-identity",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/12" },
+        "observedIssue": { "source": "https://example.test/issues/12" },
+        "snapshot": { "repositoryRef": "example/repo@main", "commit": "commit-h", "gitTreeDigest": "tree:history", "dirtyGeneratedBoundary": "unknown historical state", "capturedAt": "2025-01-01T00:00:00Z" },
+        "clauses": [], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [], "reviews": [], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Supply an exact persisted body identity, replan, or request an explicit human decision." }
+    },
+    {
+      "id": "historical-missing-tree-identity",
+      "input": {
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "https://example.test/issues/12", "revision": "rev-h", "fullBodyDigest": "sha256:history" },
+        "observedIssue": { "source": "https://example.test/issues/12", "revision": "rev-h", "fullBodyDigest": "sha256:history" },
+        "snapshot": { "repositoryRef": "example/repo@main", "commit": "commit-h", "dirtyGeneratedBoundary": "unknown historical state", "capturedAt": "2025-01-01T00:00:00Z" },
+        "clauses": [], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [], "reviews": [], "notes": []
+      },
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Supply or recapture the Git tree digest before granting freshness guarantees." }
     },
     {
       "id": "missing-independent-review",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:25:00Z" },
         "clauses": [{ "id": "issue:AC-3", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "implementer", "independentFromImplementation": false, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+        "reviews": [{ "identity": "implementer", "independentFromImplementation": false, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:t1", "stale": false }], "notes": []
       },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Obtain an independent contract-conformance review for tree:catalog-v3." }
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Obtain an independent contract-conformance review for tree:t1." }
     },
     {
-      "id": "issue-goal-conflict",
+      "id": "issue-internal-conflict",
       "input": {
-        "conflicts": [{ "clauses": ["issue:retention", "goal:delete"], "reason": "The same record must both remain and be deleted." }], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
+        "conflicts": [{ "clauses": ["issue:retain", "issue:delete"], "reason": "The same canonical Issue requires retaining and deleting the record." }], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:30:00Z" },
         "clauses": [], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [], "reviews": [], "notes": []
       },
-      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Resolve the cited Issue/Goal conflict without choosing either clause." }
-    },
-    {
-      "id": "nonblocking-reviewer-notes",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-4", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }],
-        "notes": [{ "source": "external-auditor", "text": "A different label would be clearer, but no clause requires it." }]
-      },
-      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; preserve the nonblocking note." }
-    },
-    {
-      "id": "stale-evidence-after-snapshot-change",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
-        "clauses": [{ "id": "issue:AC-5", "applicable": true, "status": "satisfied" }],
-        "requiredEvidence": [{ "id": "test-output", "present": true, "snapshot": "tree:catalog-v3", "stale": true }],
-        "validationReplays": [{ "required": true, "result": "passed", "snapshot": "tree:catalog-v3", "stale": true }], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": true }], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Replay validation and independent review against tree:catalog-v4." }
-    },
-    {
-      "id": "exact-named-review-requirement",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [],
-        "reviewRequirements": [{ "id": "release-audit", "exact": { "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1" } }],
-        "reviews": [{ "identity": "external-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Obtain the exact release-auditor/audit-bot/review-model-2 release-checklist-v1 review." }
-    },
-    {
-      "id": "failed-exact-required-review",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6a", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [],
-        "reviewRequirements": [{ "id": "security-audit", "exact": { "identity": "security-auditor", "agent": "security-bot", "model": "review-model-2", "procedure": "threat-check-v1" } }],
-        "reviews": [
-          { "identity": "security-auditor", "agent": "security-bot", "model": "review-model-2", "procedure": "threat-check-v1", "independentFromImplementation": true, "capability": "security", "result": "blocked", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }
-        ], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Resolve the security-auditor finding and rerun the exact threat-check-v1 review." }
-    },
-    {
-      "id": "stale-clause-evidence",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
-        "clauses": [{ "id": "issue:AC-6b", "applicable": true, "status": "satisfied", "snapshot": "tree:catalog-v3", "stale": true }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v4", "stale": false }], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Refresh evidence for issue:AC-6b against tree:catalog-v4." }
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Resolve the cited conflict within the canonical Issue." }
     },
     {
       "id": "human-required-clause",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6c", "applicable": true, "status": "satisfied", "requiresHumanInterpretation": true }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false }], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:35:00Z" },
+        "clauses": [{ "id": "issue:decision", "applicable": true, "status": "satisfied", "requiresHumanInterpretation": true }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [], "reviews": [], "notes": []
       },
-      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Provide the required interpretation for issue:AC-6c." }
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Obtain the required human interpretation." }
     },
     {
-      "id": "selected-review-wrong-snapshot",
+      "id": "nonblocking-reviewer-notes",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
-        "clauses": [{ "id": "issue:AC-6d", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [
-          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "passed", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "passed", "snapshot": "tree:catalog-v4", "stale": false }
-        ], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:40:00Z" },
+        "clauses": [{ "id": "issue:AC-4", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:t1", "stale": false }],
+        "notes": [{ "source": "external-auditor", "text": "Optional wording improvement." }]
       },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected security review against tree:catalog-v4." }
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; preserve the nonblocking note." }
     },
     {
       "id": "selected-public-blocked-review",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6e", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [
-          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "BLOCKED", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
-        ], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:45:00Z" },
+        "clauses": [{ "id": "issue:AC-6", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "BLOCKED", "gitTreeDigest": "tree:t1", "stale": false }], "notes": []
       },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Resolve the selected security finding and rerun that review." }
+      "expected": { "result": "BLOCKED", "smallestNextAction": "Resolve the selected review blocker." }
     },
     {
       "id": "selected-public-needs-human-review",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6f", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [
-          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "BLOCKED", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
-        ], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:50:00Z" },
+        "clauses": [{ "id": "issue:AC-7", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "NEEDS_HUMAN", "gitTreeDigest": "tree:t1", "stale": false }], "notes": []
       },
-      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Provide the policy decision requested by the selected review." }
-    },
-    {
-      "id": "selected-needs-human-review-stale",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6f-stale", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [
-          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": true },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
-        ], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected policy review against tree:catalog-v3." }
-    },
-    {
-      "id": "selected-needs-human-review-wrong-snapshot",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v4" },
-        "clauses": [{ "id": "issue:AC-6f-wrong-snapshot", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [
-          { "identity": "policy-auditor", "independentFromImplementation": true, "capability": "policy", "result": "NEEDS_HUMAN", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v4", "stale": false }
-        ], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Rerun the selected policy review against tree:catalog-v4." }
+      "expected": { "result": "NEEDS_HUMAN", "smallestNextAction": "Resolve the selected review's human decision." }
     },
     {
       "id": "selected-public-pass-with-notes-review",
       "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6g", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "snapshot": "tree:catalog-v3", "stale": false, "notes": "Clarify the example in a future change." }], "notes": []
+        "conflicts": [], "humanDecisionRequired": false,
+        "pinnedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
+        "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:55:00Z" },
+        "clauses": [{ "id": "issue:AC-8", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "gitTreeDigest": "tree:t1", "stale": false }], "notes": []
       },
-      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the selected reviewer note." }
-    },
-    {
-      "id": "selected-public-pending-review",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6h", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [
-          { "identity": "security-auditor", "independentFromImplementation": true, "capability": "security", "result": "pending", "snapshot": "tree:catalog-v3", "stale": false },
-          { "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "snapshot": "tree:catalog-v3", "stale": false }
-        ], "notes": []
-      },
-      "expected": { "result": "BLOCKED", "smallestNextAction": "Complete the selected security review." }
-    },
-    {
-      "id": "exact-review-pass-with-notes",
-      "input": {
-        "conflicts": [], "humanDecisionRequired": false, "snapshot": { "id": "tree:catalog-v3" },
-        "clauses": [{ "id": "issue:AC-6i", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [],
-        "reviewRequirements": [{ "id": "release-audit", "exact": { "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1" } }],
-        "reviews": [{ "identity": "release-auditor", "agent": "audit-bot", "model": "review-model-2", "procedure": "release-checklist-v1", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "snapshot": "tree:catalog-v3", "stale": false, "notes": "Optional follow-up retained." }], "notes": []
-      },
-      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the exact-review note." }
+      "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the review note." }
     }
   ]
 }
