@@ -145,9 +145,38 @@ test('candidate guards derive evidence fields and enforce repetition, scope, and
   assert.deepEqual(insights.automationCandidates.map(item => item.id), ['repeated-automation'])
   assert.deepEqual(insights.globalInstructionCandidates.map(item => item.id), ['cross-project-global'])
   assert.equal(insights.globalInstructionCandidates[0].confirmationStatus, 'unconfirmed')
-  assert.equal(insights.projectInstructionCandidates.length, 1)
-  assert.equal(insights.projectInstructionCandidates[0].provenance, 'user_nominated')
-  assert.equal(insights.projectInstructionCandidates[0].confirmationStatus, 'unconfirmed')
+  assert.deepEqual(insights.projectInstructionCandidates.map(item => item.id), [
+    'memo-nomination',
+    'single-project-global',
+  ])
+  const reclassified = insights.projectInstructionCandidates.find(item => item.id === 'single-project-global')
+  assert.equal(reclassified.type, 'project_instruction')
+  assert.equal(reclassified.scope, '/workspace/alpha')
+  const nominated = insights.projectInstructionCandidates.find(item => item.id === 'memo-nomination')
+  assert.equal(nominated.provenance, 'user_nominated')
+  assert.equal(nominated.confirmationStatus, 'unconfirmed')
+})
+
+test('forbidden English and Chinese instruction content is removed before display', async () => {
+  const fixture = JSON.parse(
+    await fs.readFile(path.join(fixtureDir, 'forbidden-instructions.json'), 'utf8'),
+  )
+  const input = {
+    skillCandidates: [],
+    automationCandidates: [],
+    globalInstructionCandidates: [],
+    projectInstructionCandidates: [],
+    warnings: [],
+  }
+  for (const item of [...fixture.forbiddenInstructions, ...fixture.nonInstructionControls]) {
+    input[groupForFixtureType(item.type)].push(candidateForFixture(item))
+  }
+
+  const insights = normalizeReusableInsights(input, { rawSummary: summary() })
+  assert.deepEqual(insights.globalInstructionCandidates, [])
+  assert.deepEqual(insights.projectInstructionCandidates, [])
+  assert.deepEqual(insights.skillCandidates.map(item => item.id), ['skill-control'])
+  assert.deepEqual(insights.automationCandidates.map(item => item.id), ['automation-control'])
 })
 
 test('draft normalization adds the frozen report fields and keeps missing-history warnings', async () => {
@@ -167,7 +196,7 @@ test('draft normalization adds the frozen report fields and keeps missing-histor
   })
   assert.ok(report.reusableInsights.warnings.includes('Missing finalized report 2026-07-10.'))
   assert.equal(report.reusableInsights.skillCandidates.length, 1)
-  assert.equal(report.reusableInsights.projectInstructionCandidates.length, 1)
+  assert.equal(report.reusableInsights.projectInstructionCandidates.length, 2)
 })
 
 test('codex_failed normalization never retains fallback candidates as evidence', async () => {
@@ -238,4 +267,41 @@ function summary() {
       warnings: ['Missing finalized report 2026-07-10.'],
     },
   }
+}
+
+function candidateForFixture(item) {
+  const global = item.type === 'global_instruction'
+  return {
+    ...item,
+    scope: global ? 'global' : '/workspace/alpha',
+    evidence: [
+      {
+        date: '2026-07-11',
+        project: '/workspace/alpha',
+        sourceType: 'report',
+        sourceRef: '/reports/2026-07-11/final/report.json',
+        summary: 'Historical evidence.',
+      },
+      {
+        date: '2026-07-12',
+        project: global ? '/workspace/beta' : '/workspace/alpha',
+        sourceType: 'session',
+        sourceRef: 'today-session',
+        summary: 'Current evidence.',
+      },
+    ],
+    rationale: 'Fixture rationale.',
+    expectedBenefit: 'Fixture benefit.',
+    provenance: 'automatic',
+    confirmationStatus: 'unconfirmed',
+  }
+}
+
+function groupForFixtureType(type) {
+  return {
+    skill: 'skillCandidates',
+    automation: 'automationCandidates',
+    global_instruction: 'globalInstructionCandidates',
+    project_instruction: 'projectInstructionCandidates',
+  }[type]
 }

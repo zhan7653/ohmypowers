@@ -38,14 +38,25 @@ export function normalizeReusableInsights(value, options = {}) {
   const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {}
   const allowedEvidence = evidenceAllowlist(options.rawSummary, options.personalReflection)
   const warnings = textList(input.warnings)
-  const result = { warnings }
+  const result = {
+    skillCandidates: [],
+    automationCandidates: [],
+    globalInstructionCandidates: [],
+    projectInstructionCandidates: [],
+    warnings,
+  }
 
   for (const [group, type] of Object.entries(CANDIDATE_GROUPS)) {
     const candidates = Array.isArray(input[group]) ? input[group] : []
-    result[group] = candidates
-      .map(candidate => normalizeCandidate(candidate, type, allowedEvidence))
-      .filter(Boolean)
-      .sort((a, b) => a.id.localeCompare(b.id))
+    for (const candidate of candidates) {
+      const normalized = normalizeCandidate(candidate, type, allowedEvidence)
+      if (!normalized) continue
+      result[groupForType(normalized.type)].push(normalized)
+    }
+  }
+
+  for (const group of Object.keys(CANDIDATE_GROUPS)) {
+    result[group].sort((a, b) => a.id.localeCompare(b.id))
   }
 
   return {
@@ -84,6 +95,7 @@ function normalizeCandidate(value, type, allowedEvidence) {
   const recommendation = boundedText(value.recommendation, TEXT_LIMIT)
   const scope = boundedText(value.scope, TEXT_LIMIT)
   if (!recommendation || !scope) return null
+  if (isInstructionType(type) && isForbiddenInstructionRecommendation(recommendation)) return null
 
   const provenance = value.provenance === 'user_nominated' ? 'user_nominated' : 'automatic'
   const evidence = uniqueEvidence(
@@ -97,18 +109,24 @@ function normalizeCandidate(value, type, allowedEvidence) {
 
   const dates = unique(evidence.map(item => item.date))
   const projects = unique(evidence.map(item => item.project))
-  if (type === 'global_instruction' && provenance === 'automatic' && projects.length < 2) return null
+  let normalizedType = type
+  let normalizedScope = scope
+  if (type === 'global_instruction' && provenance === 'automatic' && projects.length < 2) {
+    if (projects.length !== 1) return null
+    normalizedType = 'project_instruction'
+    normalizedScope = projects[0]
+  }
 
   const rationale = boundedText(value.rationale, TEXT_LIMIT)
   const expectedBenefit = boundedText(value.expectedBenefit, TEXT_LIMIT)
   const confirmationStatus = 'unconfirmed'
-  const id = boundedText(value.id, 160) || stableCandidateId(type, recommendation, scope)
+  const id = boundedText(value.id, 160) || stableCandidateId(normalizedType, recommendation, normalizedScope)
 
   return {
     id,
-    type,
+    type: normalizedType,
     recommendation,
-    scope,
+    scope: normalizedScope,
     evidenceCount: evidence.length,
     dates,
     projects,
@@ -118,6 +136,27 @@ function normalizeCandidate(value, type, allowedEvidence) {
     provenance,
     confirmationStatus,
   }
+}
+
+function groupForType(type) {
+  return Object.entries(CANDIDATE_GROUPS).find(([, candidateType]) => candidateType === type)?.[0]
+}
+
+function isInstructionType(type) {
+  return type === 'global_instruction' || type === 'project_instruction'
+}
+
+function isForbiddenInstructionRecommendation(value) {
+  const text = String(value || '').trim()
+  if (/^(?:todo|to[- ]?do|待办|明天|tomorrow\b|follow[- ]?up\b)/i.test(text)) return true
+  if (/^(?:today\b|currently\b|this (?:week|sprint)\b|temporary\b|今日|今天|当前|目前|本周|临时|暂时)/i.test(text)) return true
+  if (
+    /(?:\b(?:issue|pr|pull request)\s*#?\d+\b|(?:Issue|PR|合并请求|问题)\s*#?\d+)/i.test(text) &&
+    /(?:\b(?:done|complete|completed|closed|merged|open|in progress|blocked)\b|已完成|完成了?|已关闭|已合并|进行中|阻塞)/i.test(text)
+  ) return true
+  if (/(?:\b(?:maybe|perhaps|possibly|probably|might|could be|guess|speculation)\b|也许|可能|大概|猜测|推测|似乎)/i.test(text)) return true
+  if (/^(?:(?:we|i|the team|previously|historically)\b.*\b(?:used|did|completed|fixed|ran|was|were)\b|(?:我们|我|团队|之前|过去|历史上).*(?:已经|曾经|完成了|修复了|运行了|做了))/i.test(text)) return true
+  return false
 }
 
 function normalizeEvidence(value, allowedEvidence) {

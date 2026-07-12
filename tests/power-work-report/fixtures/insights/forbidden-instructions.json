@@ -1,0 +1,16 @@
+{
+  "forbiddenInstructions": [
+    { "id": "todo-en", "type": "project_instruction", "recommendation": "TODO: update the dependency tomorrow." },
+    { "id": "progress-en", "type": "global_instruction", "recommendation": "Currently Issue #29 is in progress." },
+    { "id": "guess-en", "type": "project_instruction", "recommendation": "Maybe this validation is useful." },
+    { "id": "history-en", "type": "global_instruction", "recommendation": "We previously completed the migration." },
+    { "id": "todo-zh", "type": "project_instruction", "recommendation": "待办：明天修复测试。" },
+    { "id": "progress-zh", "type": "global_instruction", "recommendation": "PR #42 已合并。" },
+    { "id": "guess-zh", "type": "project_instruction", "recommendation": "也许这个验证方式更好。" },
+    { "id": "history-zh", "type": "global_instruction", "recommendation": "我们之前已经完成了迁移。" }
+  ],
+  "nonInstructionControls": [
+    { "id": "skill-control", "type": "skill", "recommendation": "Today package this repeated workflow as a skill." },
+    { "id": "automation-control", "type": "automation", "recommendation": "待办：自动化这组机械检查。" }
+  ]
+}
