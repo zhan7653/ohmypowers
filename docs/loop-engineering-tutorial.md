@@ -94,7 +94,7 @@ Add a minimal batch-gradient-descent linear-regression optimizer that trains on 
 
 ## Current context
 
-This repository includes small examples and favors minimal, reviewable changes.
+This repository favors minimal, reviewable changes.
 
 ## External API / data contracts
 

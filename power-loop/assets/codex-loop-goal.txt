@@ -53,8 +53,8 @@ Validation loop:
 
 Budget:
 - Max implementation iterations: 5.
-- Same-failure retry limit: 3.
-- Stop after 3 consecutive no-progress iterations.
+- Same-failure retry limit: 5.
+- Stop after 5 consecutive no-progress iterations.
 - Pause on scope expansion, material plan drift, missing validation, forbidden paths, unapproved high-risk operations, unavailable delegation, or an unavailable exact capability requirement.
 
 Verifier gate:
