@@ -170,7 +170,7 @@
           "project": "/workspace/alpha",
           "sourceType": "user_memo",
           "sourceRef": "user-memo:2026-07-12",
-          "summary": "The user explicitly nominated the smoke-test rule."
+          "summary": "Nominate the smoke-test rule"
         }
       ],
       "rationale": "User requested persistence.",

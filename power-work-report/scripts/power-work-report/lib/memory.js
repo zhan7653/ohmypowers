@@ -31,7 +31,8 @@ export async function readMemorySnapshot(filePath) {
 }
 
 export async function writeMemoryAtomically(filePath, memory, options = {}) {
-  await fs.mkdir(path.dirname(filePath), { recursive: true })
+  const io = options.fs || fs
+  await io.mkdir(path.dirname(filePath), { recursive: true })
   const serializedBytes = Buffer.from(`${JSON.stringify(normalizeMemory(memory), null, 2)}\n`, 'utf8')
   const nonce = options.nonce || crypto.randomBytes(6).toString('hex')
   const tempPath = path.join(
@@ -44,79 +45,154 @@ export async function writeMemoryAtomically(filePath, memory, options = {}) {
   )
   let quarantined = false
   try {
-    await fs.writeFile(tempPath, serializedBytes, { flag: 'wx' })
+    await io.writeFile(tempPath, serializedBytes, { flag: 'wx' })
     if (options.expectedMode !== null && options.expectedMode !== undefined) {
-      await fs.chmod(tempPath, options.expectedMode)
+      await io.chmod(tempPath, options.expectedMode)
     }
     if (options.beforeCommit) await options.beforeCommit({ tempPath, filePath })
 
     if (options.expectedExists) {
       try {
-        await fs.rename(filePath, quarantinePath)
+        await io.rename(filePath, quarantinePath)
         quarantined = true
       } catch (error) {
         if (error?.code === 'ENOENT') throw memoryWriteError('memory_drift', 'Memory disappeared before the audit could be committed.')
         throw memoryWriteError('memory_atomic_write_failed', `Could not quarantine memory before commit: ${error.message}`)
       }
-      const currentBytes = await fs.readFile(quarantinePath)
+      const currentBytes = await io.readFile(quarantinePath)
+      const quarantineMode = (await io.stat(quarantinePath)).mode
       if (!Buffer.isBuffer(options.expectedBytes) || !currentBytes.equals(options.expectedBytes)) {
-        await restoreQuarantinedMemory(quarantinePath, filePath)
+        try {
+          await restoreQuarantinedMemory(io, quarantinePath, filePath, currentBytes, quarantineMode)
+        } catch (recoveryError) {
+          throw memoryRecoveryError('Memory changed and its quarantined bytes could not be safely restored.', {
+            installError: errorEvidence(memoryWriteError('memory_drift', 'Quarantined memory differs from expected bytes.')),
+            recoveryError: errorEvidence(recoveryError),
+            quarantinePath,
+            expectedSha256: digest(currentBytes),
+            currentSha256: await currentDigest(io, filePath),
+          })
+        }
         quarantined = false
         throw memoryWriteError('memory_drift', 'Memory changed before the audit could be committed.')
       }
-    } else if (await pathExists(filePath)) {
+    } else if (await pathExists(io, filePath)) {
       throw memoryWriteError('memory_drift', 'Memory was created before the audit could be committed.')
     }
 
     try {
-      await fs.link(tempPath, filePath)
-    } catch (error) {
-      if (error?.code === 'EEXIST') {
-        throw memoryWriteError('memory_drift', 'Memory changed while the audit was being committed.', {
-          quarantinePath: quarantined ? quarantinePath : undefined,
+      await installMemoryNoReplace(io, tempPath, filePath, serializedBytes, options.expectedMode)
+    } catch (installError) {
+      if (installError?.code === 'memory_drift') throw installError
+      if (quarantined) {
+        try {
+          const quarantineMode = (await io.stat(quarantinePath)).mode
+          await restoreQuarantinedMemory(io, quarantinePath, filePath, options.expectedBytes, quarantineMode)
+          quarantined = false
+        } catch (recoveryError) {
+          throw memoryRecoveryError('Memory install failed and the prior quarantined bytes could not be safely restored.', {
+            installError: errorEvidence(installError),
+            recoveryError: errorEvidence(recoveryError),
+            quarantinePath,
+            expectedSha256: digest(options.expectedBytes),
+            currentSha256: await currentDigest(io, filePath),
+          })
+        }
+        throw memoryWriteError('memory_atomic_write_failed', 'Memory install failed; the exact prior bytes were restored.', {
+          installError: errorEvidence(installError),
+          targetRestored: true,
+          beforeSha256: digest(options.expectedBytes),
         })
       }
-      throw memoryWriteError('memory_atomic_write_failed', `Could not install committed memory: ${error.message}`, {
-        quarantinePath: quarantined ? quarantinePath : undefined,
+      throw memoryWriteError('memory_atomic_write_failed', 'Memory no-replace install failed.', {
+        installError: errorEvidence(installError),
       })
     }
     if (options.afterInstall) await options.afterInstall({ tempPath, filePath })
-    const installedBytes = await fs.readFile(filePath)
+    const installedBytes = await io.readFile(filePath)
     if (!installedBytes.equals(serializedBytes)) {
       throw memoryWriteError('memory_drift', 'Memory changed immediately after the audit was installed.', {
         quarantinePath: quarantined ? quarantinePath : undefined,
       })
     }
-    await fs.unlink(tempPath)
+    await io.unlink(tempPath)
     if (quarantined) {
-      await fs.unlink(quarantinePath)
+      await io.unlink(quarantinePath)
       quarantined = false
     }
   } finally {
     try {
-      await fs.unlink(tempPath)
+      await io.unlink(tempPath)
     } catch (error) {
       if (error?.code !== 'ENOENT') throw error
     }
   }
 }
 
-async function restoreQuarantinedMemory(quarantinePath, filePath) {
+async function restoreQuarantinedMemory(io, quarantinePath, filePath, rawBytes, mode) {
+  await installMemoryNoReplace(io, quarantinePath, filePath, rawBytes, mode)
+  const restored = await io.readFile(filePath)
+  if (!restored.equals(rawBytes)) throw memoryWriteError('memory_atomic_write_failed', 'Restored memory bytes failed verification.')
+  await io.unlink(quarantinePath)
+}
+
+async function installMemoryNoReplace(io, sourcePath, filePath, rawBytes, mode) {
+  let linkError
   try {
-    await fs.link(quarantinePath, filePath)
-    await fs.unlink(quarantinePath)
+    await io.link(sourcePath, filePath)
+    return
   } catch (error) {
-    throw memoryWriteError(
-      'memory_atomic_write_failed',
-      'Concurrent memory bytes were quarantined but could not be restored without overwriting another file.',
-      { causeCode: error?.code, quarantinePath },
-    )
+    if (error?.code === 'EEXIST') throw memoryWriteError('memory_drift', 'A concurrent memory file appeared and was preserved.')
+    linkError = error
+  }
+  try {
+    await io.writeFile(filePath, rawBytes, { flag: 'wx', mode })
+    const installed = await io.readFile(filePath)
+    if (!installed.equals(rawBytes)) throw Object.assign(new Error('Exclusive memory copy verification failed.'), { code: 'EVERIFY' })
+  } catch (copyError) {
+    if (copyError?.code === 'EEXIST') throw memoryWriteError('memory_drift', 'A concurrent memory file appeared during exclusive-copy commit and was preserved.')
+    const error = new Error('Memory hard-link and exclusive-copy installation both failed.')
+    error.name = 'MemoryNoReplaceInstallError'
+    error.code = 'MEMORY_NO_REPLACE_INSTALL_FAILED'
+    error.details = { linkError: errorEvidence(linkError), copyError: errorEvidence(copyError) }
+    throw error
   }
 }
 
-async function pathExists(filePath) {
+function memoryRecoveryError(message, details) {
+  return memoryWriteError('memory_recovery_failed', message, details)
+}
+
+function errorEvidence(error) {
+  return {
+    name: error?.name || 'Error',
+    code: error?.code || null,
+    message: error?.message || String(error),
+    details: safeJson(error?.details),
+  }
+}
+
+function safeJson(value) {
+  if (value == null) return null
+  try { return JSON.parse(JSON.stringify(value)) } catch { return String(value) }
+}
+
+function digest(value) {
+  if (!Buffer.isBuffer(value)) return null
+  return crypto.createHash('sha256').update(value).digest('hex')
+}
+
+async function currentDigest(io, filePath) {
   try {
-    await fs.stat(filePath)
+    return digest(await io.readFile(filePath))
+  } catch (error) {
+    return error?.code === 'ENOENT' ? null : `unreadable:${error?.code || 'error'}`
+  }
+}
+
+async function pathExists(io, filePath) {
+  try {
+    await io.stat(filePath)
     return true
   } catch (error) {
     if (error?.code === 'ENOENT') return false

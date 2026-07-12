@@ -204,6 +204,7 @@ async function instructionApplyCommand({ paths, hooks }) {
     persistAudit: async value => {
       const nextMemory = appendInstructionChange(memorySnapshot.memory, value)
       await writeMemoryAtomically(paths.memoryFile, nextMemory, {
+        fs: hooks.memoryFs,
         expectedExists: memorySnapshot.exists,
         expectedBytes: memorySnapshot.rawBytes,
         expectedMode: memorySnapshot.mode,

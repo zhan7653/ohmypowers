@@ -85,8 +85,8 @@ const report = {
         dates: ['2026-07-01'],
         projects: ['/workspace/alpha', '/workspace/beta'],
         evidence: [
-          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: 'Alpha used the review workflow.' },
-          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: 'Beta used the review workflow.' },
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: '修复日报生成的边界' },
+          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: '增加 fallback 报告' },
         ],
         rationale: 'The workflow repeats across report tasks.',
         expectedBenefit: 'Consistent report review.',
@@ -104,8 +104,8 @@ const report = {
         dates: ['2026-07-01'],
         projects: ['/workspace/alpha', '/workspace/beta'],
         evidence: [
-          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: 'Alpha ran deterministic checks.' },
-          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: 'Beta ran deterministic checks.' },
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: '修复日报生成的边界' },
+          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: '增加 fallback 报告' },
         ],
         rationale: 'The checks are mechanical.',
         expectedBenefit: 'Faster consistent validation.',
@@ -123,8 +123,8 @@ const report = {
         dates: ['2026-07-01'],
         projects: ['/workspace/alpha', '/workspace/beta'],
         evidence: [
-          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: 'Alpha required focused validation.' },
-          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: 'Beta required focused validation.' },
+          { date: '2026-07-01', project: '/workspace/alpha', sourceType: 'session', sourceRef: '2026-07-01T09-00-00-session-a', summary: '修复日报生成的边界' },
+          { date: '2026-07-01', project: '/workspace/beta', sourceType: 'session', sourceRef: '2026-07-01T10-00-00-session-b', summary: '增加 fallback 报告' },
         ],
         rationale: 'The validation rule applies across repositories.',
         expectedBenefit: 'More reliable completion claims.',
@@ -162,6 +162,15 @@ let prompt = ''
 process.stdin.setEncoding('utf8')
 process.stdin.on('data', chunk => { prompt += chunk })
 process.stdin.on('end', () => {
+  const memo = prompt.match(/Normalized personal memo state:\n([\s\S]*?)\n\nRaw summary:/)?.[1]
+  if (memo) {
+    try {
+      const normalizedMemo = JSON.parse(memo)
+      if (normalizedMemo.status === 'provided' && normalizedMemo.summary) {
+        report.reusableInsights.projectInstructionCandidates[0].evidence[0].summary = normalizedMemo.summary
+      }
+    } catch {}
+  }
   console.log(JSON.stringify({
     type: 'item.completed',
     item: {

@@ -252,6 +252,72 @@ test('fabricated evidence is rejected when no authoritative sources exist', () =
   assert.deepEqual(insights.projectInstructionCandidates, [])
 })
 
+test('genuine lunch and weather refs cannot support fabricated database-failure summaries', () => {
+  const rawSummary = summary()
+  rawSummary.sessions = [
+    evidenceSession('lunch-session', '/workspace/alpha', 'Lunch was pasta and salad.'),
+    evidenceSession('weather-session', '/workspace/beta', 'The weather was rainy all afternoon.'),
+  ]
+  rawSummary.projects = [{ project: '/workspace/alpha' }, { project: '/workspace/beta' }]
+  rawSummary.context.finalizedReports = []
+  const fabricated = automaticCandidate('fabricated-database-failure', 'skill', [
+    { ...evidence('session', 'lunch-session', '2026-07-12', '/workspace/alpha'), summary: 'Database connection failed.' },
+    { ...evidence('session', 'weather-session', '2026-07-12', '/workspace/beta'), summary: 'Database connection failed again.' },
+  ])
+  const matching = automaticCandidate('matching-excerpts', 'skill', [
+    { ...evidence('session', 'lunch-session', '2026-07-12', '/workspace/alpha'), summary: 'lunch was pasta' },
+    { ...evidence('session', 'weather-session', '2026-07-12', '/workspace/beta'), summary: 'weather was rainy' },
+  ])
+  const insights = normalizeReusableInsights({
+    skillCandidates: [fabricated, matching],
+    automationCandidates: [],
+    globalInstructionCandidates: [],
+    projectInstructionCandidates: [],
+    warnings: [],
+  }, { rawSummary })
+
+  assert.deepEqual(insights.skillCandidates.map(item => item.id), ['matching-excerpts'])
+  assert.deepEqual(insights.skillCandidates[0].evidence.map(item => item.summary), [
+    'lunch was pasta',
+    'weather was rainy',
+  ])
+})
+
+test('report and reviewed memo summaries must be matching source excerpts', () => {
+  const rawSummary = summary()
+  const personalReflection = normalizeMemoInput('Review private notes before sharing the report.')
+  const validReport = automaticCandidate('valid-report-excerpt', 'skill', [
+    { ...evidence('report', '/reports/2026-07-11/final/report.json', '2026-07-11', '/workspace/alpha'), summary: 'report records the test rule' },
+    { ...evidence('session', 'today-session', '2026-07-12', '/workspace/alpha'), summary: 'same project used the rule' },
+  ])
+  const invalidReport = automaticCandidate('invalid-report-summary', 'skill', [
+    { ...evidence('report', '/reports/2026-07-11/final/report.json', '2026-07-11', '/workspace/alpha'), summary: 'database failure was diagnosed' },
+    { ...evidence('session', 'today-session', '2026-07-12', '/workspace/alpha'), summary: 'same project used the rule' },
+  ])
+  const validMemo = {
+    ...automaticCandidate('valid-memo-excerpt', 'project_instruction', [
+      { ...evidence('user_memo', 'user-memo:2026-07-12', '2026-07-12', '/workspace/alpha'), summary: 'private notes before sharing' },
+    ]),
+    provenance: 'user_nominated',
+  }
+  const invalidMemo = {
+    ...automaticCandidate('invalid-memo-summary', 'project_instruction', [
+      { ...evidence('user_memo', 'user-memo:2026-07-12', '2026-07-12', '/workspace/alpha'), summary: 'database failure' },
+    ]),
+    provenance: 'user_nominated',
+  }
+  const insights = normalizeReusableInsights({
+    skillCandidates: [validReport, invalidReport],
+    automationCandidates: [],
+    globalInstructionCandidates: [],
+    projectInstructionCandidates: [validMemo, invalidMemo],
+    warnings: [],
+  }, { rawSummary, personalReflection })
+
+  assert.deepEqual(insights.skillCandidates.map(item => item.id), ['valid-report-excerpt'])
+  assert.deepEqual(insights.projectInstructionCandidates.map(item => item.id), ['valid-memo-excerpt'])
+})
+
 test('session aliases and invented metadata cannot create repeated or cross-project evidence', () => {
   const rawSummary = summary()
   rawSummary.sessions = [rawSummary.sessions[0]]
@@ -321,7 +387,7 @@ test('draft normalization adds the frozen report fields and keeps missing-histor
   })
   assert.ok(report.reusableInsights.warnings.includes('Missing finalized report 2026-07-10.'))
   assert.equal(report.reusableInsights.skillCandidates.length, 1)
-  assert.equal(report.reusableInsights.projectInstructionCandidates.length, 2)
+  assert.equal(report.reusableInsights.projectInstructionCandidates.length, 1)
 })
 
 test('codex_failed normalization never retains fallback candidates as evidence', async () => {
@@ -391,12 +457,33 @@ function summary() {
         id: 'today-session',
         filePath: '/codex/sessions/today-session.jsonl',
         cwd: '/workspace/alpha',
+        title: 'Alpha evidence session',
+        userMessages: [{
+          text: [
+            'The review routine was used once.',
+            'The same routine was used today.',
+            'The mechanical checks were repeated today.',
+            'The same project used the rule again.',
+            'Current evidence.',
+            'Evidence summary.',
+          ].join(' '),
+        }],
+        assistantMessages: [],
+        commands: [],
+        todos: [],
+        ideas: [],
         malformedLines: 0,
       },
       {
         id: 'beta-session',
         filePath: '/codex/sessions/beta-session.jsonl',
         cwd: '/workspace/beta',
+        title: 'Beta evidence session',
+        userMessages: [{ text: 'Beta used the same focused-test rule. Current evidence. Evidence summary.' }],
+        assistantMessages: [],
+        commands: [],
+        todos: [],
+        ideas: [],
         malformedLines: 0,
       },
     ],
@@ -418,6 +505,14 @@ function summary() {
             status: 'finalized',
             date: '2026-07-11',
             projectSections: [{ project: 'alpha', path: '/workspace/alpha' }],
+            evidenceAnchors: [
+              'The finalized report records the review routine.',
+              'The finalized report records the same mechanical checks.',
+              'The finalized report records the test rule.',
+              'Alpha used the focused-test rule.',
+              'Historical evidence.',
+              'Evidence summary.',
+            ],
           },
         },
       ],
@@ -481,4 +576,18 @@ function automaticCandidate(id, type, candidateEvidence) {
 
 function evidence(sourceType, sourceRef, date, project) {
   return { sourceType, sourceRef, date, project, summary: 'Evidence summary.' }
+}
+
+function evidenceSession(id, cwd, text) {
+  return {
+    id,
+    filePath: `/codex/sessions/${id}.jsonl`,
+    cwd,
+    title: `${id} title`,
+    userMessages: [{ text }],
+    assistantMessages: [],
+    commands: [],
+    todos: [],
+    ideas: [],
+  }
 }

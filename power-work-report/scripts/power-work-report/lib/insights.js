@@ -186,6 +186,7 @@ function normalizeEvidence(value, evidenceRecords) {
   if (sourceType === 'report' && /(?:^|[/\\])draft(?:[/\\]|$)/i.test(sourceRef)) return null
   const record = evidenceRecords[sourceType].get(sourceRef)
   if (!record || !record.date) return null
+  if (!matchesAnchor(summary, record.anchors)) return null
   const suppliedDate = boundedText(value.date, 32)
   if (suppliedDate && suppliedDate !== record.date) return null
   const project = canonicalProject(record, boundedText(value.project, 1000))
@@ -217,6 +218,7 @@ function evidenceCatalog(rawSummary, personalReflection) {
       date: boundedText(rawSummary?.date, 32),
       projects: unique([boundedText(session.cwd, 1000)]),
       allowBlankProject: false,
+      anchors: sessionAnchors(session),
     }
     registerAlias(catalog.session, id, record)
     registerAlias(catalog.session, filePath, record)
@@ -230,6 +232,7 @@ function evidenceCatalog(rawSummary, personalReflection) {
       date: boundedText(report.body?.date || report.date, 32),
       projects: reportProjects(report.body),
       allowBlankProject: false,
+      anchors: normalizedAnchors(textualLeaves(report.body)),
     }
     registerAlias(catalog.report, sourceRef, record)
   }
@@ -242,6 +245,7 @@ function evidenceCatalog(rawSummary, personalReflection) {
       date,
       projects: currentProjects(rawSummary),
       allowBlankProject: true,
+      anchors: normalizedAnchors([personalReflection.summary]),
     }
     registerAlias(catalog.user_memo, sourceRef, record)
   }
@@ -279,6 +283,37 @@ function currentProjects(rawSummary) {
     ...(rawSummary?.projects || []).map(project => boundedText(project?.project, 1000)),
     ...(rawSummary?.sessions || []).map(session => boundedText(session?.cwd, 1000)),
   ])
+}
+
+function sessionAnchors(session) {
+  return normalizedAnchors([
+    ...textualLeaves(session?.title),
+    ...textualLeaves(session?.userMessages),
+    ...textualLeaves(session?.assistantMessages),
+    ...textualLeaves(session?.commands),
+    ...textualLeaves(session?.todos),
+    ...textualLeaves(session?.ideas),
+  ])
+}
+
+function textualLeaves(value) {
+  if (typeof value === 'string') return [value]
+  if (Array.isArray(value)) return value.flatMap(textualLeaves)
+  if (value && typeof value === 'object') return Object.values(value).flatMap(textualLeaves)
+  return []
+}
+
+function normalizedAnchors(values) {
+  return unique(values.map(normalizeForMatch))
+}
+
+function matchesAnchor(summary, anchors) {
+  const normalized = normalizeForMatch(summary)
+  return Boolean(normalized) && anchors.some(anchor => anchor.includes(normalized))
+}
+
+function normalizeForMatch(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 function stableCandidateId(type, recommendation, scope) {

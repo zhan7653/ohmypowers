@@ -217,6 +217,83 @@ test('absent proposal rejects even a concurrently created empty target', async t
   assert.equal(await fs.readFile(target, 'utf8'), '')
 })
 
+test('generic hard-link failure falls back to an exclusive verified copy', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  await fs.writeFile(target, 'human\n', { mode: 0o640 })
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  const noLinksFs = { ...fs, link: async () => { throw fsError('EOPNOTSUPP', 'hard links unsupported') } }
+  const audit = await applyInstructionChange({ proposal, fs: noLinksFs, atomicNonce: 'copy-fallback' })
+  assert.equal(audit.afterSha256, proposal.afterSha256)
+  assert.equal(await fs.readFile(target, 'utf8'), proposal.afterContent)
+  assert.equal((await fs.stat(target)).mode & 0o777, 0o640)
+})
+
+test('failed link and install copy restore the exact original through quarantine link', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const original = 'human exact bytes  \n'
+  await fs.writeFile(target, original)
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  const injectedFs = {
+    ...fs,
+    link: async (from, to) => from.endsWith('.tmp') ? Promise.reject(fsError('EOPNOTSUPP', 'install link failed')) : fs.link(from, to),
+    writeFile: async (file, data, options) => file === target && data === proposal.afterContent
+      ? Promise.reject(fsError('EIO', 'install copy failed'))
+      : fs.writeFile(file, data, options),
+  }
+  await assert.rejects(applyInstructionChange({ proposal, fs: injectedFs, atomicNonce: 'restore-link' }), value => {
+    assert.equal(value?.code, 'atomic_write_failed')
+    assert.equal(value.details.targetRestored, true)
+    return true
+  })
+  assert.equal(await fs.readFile(target, 'utf8'), original)
+})
+
+test('restore uses exclusive copy when both install and recovery hard links fail', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const original = 'original\n'
+  await fs.writeFile(target, original)
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  const injectedFs = {
+    ...fs,
+    link: async () => { throw fsError('EOPNOTSUPP', 'all hard links failed') },
+    writeFile: async (file, data, options) => file === target && data === proposal.afterContent
+      ? Promise.reject(fsError('EIO', 'install copy failed'))
+      : fs.writeFile(file, data, options),
+  }
+  await assert.rejects(applyInstructionChange({ proposal, fs: injectedFs, atomicNonce: 'restore-copy' }), error('atomic_write_failed'))
+  assert.equal(await fs.readFile(target, 'utf8'), original)
+})
+
+test('total no-replace recovery failure is typed and retains quarantine evidence', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  await fs.writeFile(target, 'original\n')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  const injectedFs = {
+    ...fs,
+    link: async () => { throw fsError('EOPNOTSUPP', 'all hard links failed') },
+    writeFile: async (file, data, options) => file === target
+      ? Promise.reject(fsError('EIO', 'all exclusive copies failed'))
+      : fs.writeFile(file, data, options),
+  }
+  await assert.rejects(applyInstructionChange({ proposal, fs: injectedFs, atomicNonce: 'recovery-total' }), value => {
+    assert.equal(value?.code, 'recovery_failed')
+    assert.equal(value.details.installError.code, 'NO_REPLACE_INSTALL_FAILED')
+    assert.equal(value.details.recoveryError.code, 'NO_REPLACE_INSTALL_FAILED')
+    assert.match(value.details.quarantinePath, /recovery-total\.before$/)
+    return true
+  })
+  await assert.rejects(fs.stat(target), value => value?.code === 'ENOENT')
+  assert.equal(await fs.readFile(`${target}.power-work-report-recovery-total.before`, 'utf8'), 'original\n')
+})
+
 test('managed entry intervals cannot nest or cross', async t => {
   const tmp = await sandbox(t)
   const repo = await gitRepo(tmp)
@@ -386,4 +463,8 @@ async function gitRepo(tmp) {
 
 function error(code) {
   return value => value?.code === code
+}
+
+function fsError(code, message) {
+  return Object.assign(new Error(message), { code })
 }

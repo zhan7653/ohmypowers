@@ -7,6 +7,7 @@ import { promisify } from 'node:util'
 import test from 'node:test'
 import { runCli } from '../../power-work-report/scripts/power-work-report/lib/cli.js'
 import { buildCodexArgs } from '../../power-work-report/scripts/power-work-report/lib/codex-draft.js'
+import { writeMemoryAtomically } from '../../power-work-report/scripts/power-work-report/lib/memory.js'
 
 const execFileAsync = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -1038,6 +1039,87 @@ test('concurrent absent-memory creator is preserved and rolls the instruction ta
   assert.deepEqual((await fs.readdir(tmp)).filter(name => name.includes('.memory.json.power-work-report-')), [])
 })
 
+test('memory atomic writer falls back from generic hard-link failure to exclusive copy', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-copy-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const memoryPath = path.join(tmp, 'memory.json')
+  const original = Buffer.from('{"schemaVersion":1,"todos":[],"ideas":[],"reports":[],"instructionChanges":[]}\n')
+  await fs.writeFile(memoryPath, original, { mode: 0o640 })
+  const mode = (await fs.stat(memoryPath)).mode
+  const noLinksFs = { ...fs, link: async () => { throw fsError('EOPNOTSUPP', 'links unavailable') } }
+  await writeMemoryAtomically(memoryPath, { todos: [{ text: 'new memory' }] }, {
+    fs: noLinksFs, nonce: 'copy-success', expectedExists: true, expectedBytes: original, expectedMode: mode,
+  })
+  assert.equal((await fs.stat(memoryPath)).mode & 0o777, 0o640)
+  assert.equal((await readJson(memoryPath)).todos[0].text, 'new memory')
+})
+
+test('memory install exhaustion restores prior bytes through quarantine link', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-restore-link-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const memoryPath = path.join(tmp, 'memory.json')
+  const original = Buffer.from('{"legacy":"exact bytes"}\n')
+  await fs.writeFile(memoryPath, original)
+  const injectedFs = {
+    ...fs,
+    link: async (from, to) => from.endsWith('.tmp') ? Promise.reject(fsError('EOPNOTSUPP', 'install link failed')) : fs.link(from, to),
+    writeFile: async (file, data, options) => file === memoryPath
+      ? Promise.reject(fsError('EIO', 'install copy failed'))
+      : fs.writeFile(file, data, options),
+  }
+  await assert.rejects(writeMemoryAtomically(memoryPath, { todos: [{ text: 'new' }] }, {
+    fs: injectedFs, nonce: 'restore-link', expectedExists: true, expectedBytes: original, expectedMode: (await fs.stat(memoryPath)).mode,
+  }), value => value?.code === 'memory_atomic_write_failed' && value.details.targetRestored === true)
+  assert.deepEqual(await fs.readFile(memoryPath), original)
+})
+
+test('memory recovery uses exclusive copy when restore hard-link is unsupported', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-restore-copy-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const memoryPath = path.join(tmp, 'memory.json')
+  const original = Buffer.from('{"legacy":"copy restore"}\n')
+  await fs.writeFile(memoryPath, original)
+  let targetWrites = 0
+  const injectedFs = {
+    ...fs,
+    link: async () => { throw fsError('EOPNOTSUPP', 'all links unavailable') },
+    writeFile: async (file, data, options) => {
+      if (file === memoryPath && targetWrites++ === 0) throw fsError('EIO', 'install copy failed')
+      return fs.writeFile(file, data, options)
+    },
+  }
+  await assert.rejects(writeMemoryAtomically(memoryPath, { todos: [{ text: 'new' }] }, {
+    fs: injectedFs, nonce: 'restore-copy', expectedExists: true, expectedBytes: original, expectedMode: (await fs.stat(memoryPath)).mode,
+  }), error => error?.code === 'memory_atomic_write_failed')
+  assert.deepEqual(await fs.readFile(memoryPath), original)
+})
+
+test('total memory recovery failure is typed and retains quarantine without false success', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-recovery-fail-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const memoryPath = path.join(tmp, 'memory.json')
+  const original = Buffer.from('{"legacy":"quarantine"}\n')
+  await fs.writeFile(memoryPath, original)
+  const injectedFs = {
+    ...fs,
+    link: async () => { throw fsError('EOPNOTSUPP', 'all links unavailable') },
+    writeFile: async (file, data, options) => file === memoryPath
+      ? Promise.reject(fsError('EIO', 'all target copies failed'))
+      : fs.writeFile(file, data, options),
+  }
+  await assert.rejects(writeMemoryAtomically(memoryPath, { todos: [{ text: 'new' }] }, {
+    fs: injectedFs, nonce: 'recovery-fail', expectedExists: true, expectedBytes: original, expectedMode: (await fs.stat(memoryPath)).mode,
+  }), value => {
+    assert.equal(value?.code, 'memory_recovery_failed')
+    assert.equal(value.details.installError.code, 'MEMORY_NO_REPLACE_INSTALL_FAILED')
+    assert.equal(value.details.recoveryError.code, 'MEMORY_NO_REPLACE_INSTALL_FAILED')
+    assert.match(value.details.quarantinePath, /recovery-fail\.previous$/)
+    return true
+  })
+  await assert.rejects(fs.stat(memoryPath), value => value?.code === 'ENOENT')
+  assert.deepEqual(await fs.readFile(path.join(tmp, '.memory.json.power-work-report-recovery-fail.previous')), original)
+})
+
 test('project instruction planning requires the explicit temporary repository and remains proposal-only', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-project-plan-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
@@ -1230,6 +1312,10 @@ function event(timestamp, rest) {
 
 function patchFor(filePath) {
   return `*** Begin Patch\n*** Update File: ${filePath}\n+changed\n*** End Patch`
+}
+
+function fsError(code, message) {
+  return Object.assign(new Error(message), { code })
 }
 
 function assertMarkdownOrder(markdown, headings) {

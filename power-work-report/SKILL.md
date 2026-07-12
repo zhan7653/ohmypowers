@@ -74,7 +74,7 @@ The draft report also includes a reviewed personal reflection and evidence-backe
    - 项目 Codex 指令候选
    - 洞察警告
    - finalize 前必须确认
-7. Ask the user to confirm or provide oral edits for reflection wording, todos, completion candidates, ideas, and insight candidates. Review each candidate's explicit `conflict`, `nestedScope`, `scopePath`, and `safetyReasons` signals. If conflict or nested-scope signals are present, pause for human scope/rule resolution instead of offering `instruction-plan`. These fields carry explicit or detected safety signals; they do not prove automatic semantic understanding of every possible conflict.
+7. Ask the user to confirm or provide oral edits for reflection wording, todos, completion candidates, ideas, and insight candidates. Candidate evidence summaries are exact source-bound excerpts from the cited session, finalized report, or reviewed memo, not paraphrases; review them for privacy before sharing. Review each candidate's explicit `conflict`, `nestedScope`, `scopePath`, and `safetyReasons` signals. If conflict or nested-scope signals are present, pause for human scope/rule resolution instead of offering `instruction-plan`. These fields carry explicit or detected safety signals; they do not prove automatic semantic understanding of every possible conflict.
 8. If the user gives edits, update the draft JSON/proposal files, especially `memory-update.proposed.json`.
    - Keep unconfirmed historical completion candidates in `review`, not `todoUpdates`.
    - Add confirmed completions to `todoUpdates` with `status: "done"` and enough identity to match the memory todo (`id`, or `text` plus `project`).
@@ -130,6 +130,8 @@ If Codex draft generation fails, the CLI writes a fallback draft with status `co
 
 If instruction audit persistence fails after a target write, success depends on rollback. This includes concurrent memory changes detected by memory compare-and-commit: preserve the concurrent memory, roll the instruction target back, and require fresh review/planning/confirmation. `audit_persistence_failed` means rollback restored the exact prior target bytes or absence. `rollback_failed` means the final target state requires human inspection using the error evidence; pause without automatic retry.
 
+Ordinary hard-link unavailability falls back to an exclusive, verified no-replace copy. If installation fails but exact prior bytes are verified as restored, report failure and claim neither success nor rollback success beyond that verified restoration. `recovery_failed` and `memory_recovery_failed` are hard pauses: the live target or memory file may be unavailable while exact prior bytes remain at the named quarantine/recovery path in the error evidence. Inspect the live path, quarantine path, and complete error evidence; never retry automatically or claim that apply, audit persistence, or rollback succeeded.
+
 ## Privacy
 
-Reports and personal memos may contain local project paths, thread content, commands, todos, ideas, and private reflections. Use reviewed memo wording in the report and remind the user to inspect every generated file before sharing it.
+Reports and personal memos may contain local project paths, thread content, commands, todos, ideas, private reflections, and exact evidence excerpts. Use reviewed memo wording and remind the user to inspect every generated file and source-bound excerpt before sharing it.

@@ -39,6 +39,7 @@ export const INSTRUCTION_ERROR_CODES = Object.freeze([
   'candidate_integrity',
   'target_drift',
   'atomic_write_failed',
+  'recovery_failed',
   'audit_persistence_failed',
   'rollback_failed',
 ])
@@ -197,8 +198,14 @@ async function rollbackInstructionChange({ fs, proposal, options }) {
   }
   try {
     if (proposal.target.exists) {
-      await fs.writeFile(restorePath, proposal.beforeContent, { encoding: 'utf8', flag: 'wx' })
-      await fs.link(restorePath, proposal.target.path)
+      const appliedStat = await statOptional(fs, quarantinePath)
+      await fs.writeFile(restorePath, proposal.beforeContent, { encoding: 'utf8', flag: 'wx', mode: appliedStat?.mode })
+      await installNoReplace(fs, {
+        sourcePath: restorePath,
+        targetPath: proposal.target.path,
+        content: proposal.beforeContent,
+        mode: appliedStat?.mode,
+      })
       await fs.unlink(restorePath)
       if (await readOptional(fs, proposal.target.path) !== proposal.beforeContent) {
         fail('atomic_write_failed', 'Rollback did not restore the exact prior AGENTS.md bytes.')
@@ -221,14 +228,18 @@ async function rollbackInstructionChange({ fs, proposal, options }) {
 }
 
 async function restoreQuarantinedTarget(fs, quarantinePath, targetPath) {
+  const content = await readOptional(fs, quarantinePath)
+  const stat = await statOptional(fs, quarantinePath)
   try {
-    await fs.link(quarantinePath, targetPath)
+    await installNoReplace(fs, {
+      sourcePath: quarantinePath,
+      targetPath,
+      content: content ?? '',
+      mode: stat?.mode,
+    })
     await fs.unlink(quarantinePath)
   } catch (error) {
-    fail('atomic_write_failed', 'Concurrent target bytes were quarantined but could not be restored without overwriting another file.', {
-      causeCode: error?.code,
-      quarantinePath,
-    })
+    throw error
   }
 }
 
@@ -450,7 +461,7 @@ async function atomicWrite(fs, targetPath, expectedExists, beforeContent, conten
     if ((latest !== null) !== expectedExists || (latest ?? '') !== beforeContent) fail('target_drift', 'AGENTS.md changed while applying the proposal; generate and confirm a new diff.')
     if (!expectedExists) {
       if (options.beforeInstallLink) await options.beforeInstallLink({ tempPath, targetPath, quarantinePath: null })
-      await linkNoReplace(fs, tempPath, targetPath, null)
+      await installNoReplace(fs, { sourcePath: tempPath, targetPath, content, mode: existingStat?.mode })
       if (await readOptional(fs, targetPath) !== content) fail('atomic_write_failed', 'Installed AGENTS.md bytes changed before commit verification.')
       await fs.unlink(tempPath)
       return
@@ -459,15 +470,40 @@ async function atomicWrite(fs, targetPath, expectedExists, beforeContent, conten
     await fs.rename(targetPath, quarantinePath)
     const quarantined = await readOptional(fs, quarantinePath)
     if (quarantined !== beforeContent) {
-      await restoreQuarantinedTarget(fs, quarantinePath, targetPath)
+      try {
+        await restoreQuarantinedTarget(fs, quarantinePath, targetPath)
+      } catch (recoveryError) {
+        fail('recovery_failed', 'Concurrent AGENTS.md bytes were quarantined but could not be safely restored.', {
+          installError: { name: 'TargetDrift', code: 'target_drift', message: 'Quarantined bytes differ from the planned target.' },
+          recoveryError: errorEvidence(recoveryError),
+          quarantinePath,
+          expectedSha256: sha256(quarantined ?? ''),
+          currentSha256: await currentDigest(fs, targetPath),
+        })
+      }
       fail('target_drift', 'AGENTS.md changed during compare-and-commit; concurrent bytes were preserved.')
     }
     if (options.beforeInstallLink) await options.beforeInstallLink({ tempPath, targetPath, quarantinePath })
     try {
-      await linkNoReplace(fs, tempPath, targetPath, quarantinePath)
-    } catch (error) {
-      if (error instanceof InstructionChangeError) throw error
-      throw error
+      await installNoReplace(fs, { sourcePath: tempPath, targetPath, content, mode: existingStat?.mode })
+    } catch (installError) {
+      if (installError instanceof InstructionChangeError) throw installError
+      try {
+        await restoreQuarantinedTarget(fs, quarantinePath, targetPath)
+      } catch (recoveryError) {
+        fail('recovery_failed', 'AGENTS.md install failed and the quarantined prior target could not be safely restored.', {
+          installError: errorEvidence(installError),
+          recoveryError: errorEvidence(recoveryError),
+          quarantinePath,
+          expectedSha256: sha256(beforeContent),
+          currentSha256: await currentDigest(fs, targetPath),
+        })
+      }
+      fail('atomic_write_failed', 'AGENTS.md install failed; the exact prior target was restored.', {
+        installError: errorEvidence(installError),
+        targetRestored: true,
+        beforeSha256: sha256(beforeContent),
+      })
     }
     if (await readOptional(fs, targetPath) !== content) {
       fail('atomic_write_failed', 'Installed AGENTS.md bytes changed before commit verification.', { quarantinePath })
@@ -481,16 +517,31 @@ async function atomicWrite(fs, targetPath, expectedExists, beforeContent, conten
   }
 }
 
-async function linkNoReplace(fs, sourcePath, targetPath, quarantinePath) {
+async function installNoReplace(fs, { sourcePath, targetPath, content, mode }) {
+  let linkError
   try {
     await fs.link(sourcePath, targetPath)
+    return 'link'
   } catch (error) {
     if (error?.code === 'EEXIST') {
-      fail('target_drift', 'A concurrent AGENTS.md appeared before commit; it was preserved.', { quarantinePath })
+      fail('target_drift', 'A concurrent AGENTS.md appeared before commit; it was preserved.')
     }
-    if (quarantinePath && await readOptional(fs, targetPath) === null) {
-      try { await restoreQuarantinedTarget(fs, quarantinePath, targetPath) } catch {}
+    linkError = error
+  }
+  try {
+    await fs.writeFile(targetPath, content, { encoding: 'utf8', flag: 'wx', mode })
+    if (await readOptional(fs, targetPath) !== content) {
+      throw Object.assign(new Error('Exclusive copy verification failed.'), { code: 'EVERIFY' })
     }
+    return 'copy'
+  } catch (copyError) {
+    if (copyError?.code === 'EEXIST') {
+      fail('target_drift', 'A concurrent AGENTS.md appeared before exclusive-copy commit; it was preserved.')
+    }
+    const error = new Error('No-replace hard-link and exclusive-copy installation both failed.')
+    error.name = 'NoReplaceInstallError'
+    error.code = 'NO_REPLACE_INSTALL_FAILED'
+    error.details = { linkError: errorEvidence(linkError), copyError: errorEvidence(copyError) }
     throw error
   }
 }
@@ -639,7 +690,13 @@ function errorEvidence(error) {
     name: error?.name || 'Error',
     code: error?.code || null,
     message: error?.message || String(error),
+    details: safeJson(error?.details),
   }
+}
+
+function safeJson(value) {
+  if (value == null) return null
+  try { return JSON.parse(JSON.stringify(value)) } catch { return String(value) }
 }
 
 function fail(code, message, details) {

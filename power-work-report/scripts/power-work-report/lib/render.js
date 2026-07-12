@@ -1093,7 +1093,7 @@ function appendCandidateGroupMarkdown(lines, title, candidates) {
     lines.push(`- 建议作用域路径: ${candidate.scopePath || '无。'}`)
     lines.push(`- 安全原因: ${formatInlineList(candidate.safetyReasons)}`)
     lines.push(`- 建议下一步: ${candidateNextStep(candidate)}`)
-    lines.push('- 证据:')
+    lines.push('- 证据（精确来源摘录）:')
     const evidence = candidate.evidence || []
     if (!evidence.length) {
       lines.push('  - 无。')
@@ -1248,7 +1248,7 @@ function candidateHtml(candidate) {
     <p><strong>建议作用域路径：</strong>${escapeHtml(candidate.scopePath || '无。')}</p>
     <p><strong>安全原因：</strong>${escapeHtml(formatInlineList(candidate.safetyReasons))}</p>
     <p><strong>建议下一步：</strong>${escapeHtml(candidateNextStep(candidate))}</p>
-    <h4>证据</h4>
+    <h4>证据（精确来源摘录）</h4>
     ${evidence.length ? `<ul class="file-list">${evidence.map(item => `<li>${escapeHtml(formatEvidenceText(item))}</li>`).join('')}</ul>` : '<p class="empty">无。</p>'}
   </div>`
 }
