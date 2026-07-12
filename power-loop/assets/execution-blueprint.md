@@ -93,6 +93,17 @@ Stable interface gates:
 
 ## Runtime budget and delivery policy
 
+- Host concurrent-agent slots: `<observed count or unavailable>`
+- Reliable agent retire/close capability: `<supported with evidence | unavailable>`
+- Total distinct subagent-thread ceiling: `<budget that preserves required review capacity>`
+- Implementation subagent ceiling: `<0 for LIGHT by default | 0-1 for STANDARD | at most 1 for HIGH>`
+- Reserved review slots: `<at least 1; 2 for HIGH when justified>`
+- Per-agent substantive follow-up limit: `2`
+- wait_agent warning threshold: `8`
+- wait_agent hard stop: `<12 for STANDARD | 20 for HIGH | lower LIGHT budget>`
+- Consecutive no-information timeout stop: `3`
+- Wait polling rule: `no 1-, 10-, 20-, or 30-second polling; use at least 60 seconds or the longest permitted interaction timeout`
+- Coordination telemetry: `<wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and token ratios when available>`
 - Max implementation iterations: `<confirmed limit>`
 - Same-failure retry limit: `<confirmed limit>`
 - No-progress stop: `<confirmed threshold>`

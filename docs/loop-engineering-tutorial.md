@@ -212,7 +212,7 @@ Under `strict-model-routing`, a plausible routing is:
 
 Under `inherited-model-routing`, subagents inherit the parent configuration. The plan still specifies independent roles, objectives, allowed write paths, dependencies, deliverables, validation responsibilities, parallelization constraints, and fresh-context reviews, but it does not select or guarantee a subagent model, reasoning effort, custom profile, reviewer tier, sandbox, model escalation, or model-cost outcome. An instruction such as “do not write files” is a behavioral boundary, not host-enforced read-only isolation.
 
-Do not combine independently useful tasks merely to reduce agent count. Do not run write tasks concurrently when they own overlapping paths or unstable interfaces.
+Delegate only when an independent deliverable and wall-clock benefit justify coordination cost. `LIGHT` defaults to direct main-agent work; `STANDARD` uses at most one implementation subagent by default; `HIGH` preserves slots for justified independent reviewers. Do not run write tasks concurrently when they own overlapping paths or unstable interfaces.
 
 ## Step 4: Review And Confirm The Planning References
 
@@ -228,7 +228,10 @@ Check that:
 - in `strict-model-routing`, each model, profile, reasoning, and sandbox field is backed by its corresponding selector evidence; when all required selectors are supported, implementation follows the full Luna/Sol policy, replacement is bounded, and the reviewer profile policy is preserved;
 - in `inherited-model-routing`, the plan contains none of the unsupported model, reasoning, profile, sandbox, escalation, cost, reviewer-tier, or assignment-accuracy fields or claims;
 - independent review capabilities are selected from the contract and implementation risks; fresh context is required where independence matters, while read-only isolation is claimed only if the host separately exposes and verifies it;
-- the main agent remains the orchestrator rather than the normal implementation worker.
+- the main agent implements or integrates directly when delegation would consume review capacity or cost more coordination than it saves;
+- every subagent receives a minimal explicit packet, preferably `fork_turns: none`, and no agent has more than two substantive follow-ups;
+- the plan records slot capacity, retire/close support, implementation-thread ceiling, reserved review slots, and `wait_agent` thresholds;
+- no 1-, 10-, 20-, or 30-second polling loop is planned, three consecutive no-information timeouts trigger replanning, and `STANDARD`/`HIGH` stop at 12/20 waits respectively.
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
 
@@ -271,6 +274,8 @@ The Dispatch Summary should record:
 - the confirmed execution mode and capability evidence;
 - planned and actual tasks;
 - parallel/sequential execution waves;
+- `wait_agent` calls, timeouts, useful waits, cumulative wait duration, maximum consecutive timeouts, circuit-breaker events, and per-agent follow-up counts;
+- `useful_wait_ratio`, `wait_token_ratio`, and total coordination-token ratio when reliable telemetry is available, or an explicit unavailable value;
 - ownership conflicts;
 - incomplete tasks and pause reasons.
 

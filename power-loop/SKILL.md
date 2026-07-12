@@ -155,7 +155,38 @@ Use these installed profiles as selectable capabilities only when the host expos
 - `power_sol_reviewer`: default ordinary-review route; call the resolved configuration Sol Medium only when the profile and Medium reasoning effect are both evidenced.
 - `power_sol_high_reviewer`: high-risk or semantically complex review route; call the resolved configuration Sol High only when the profile and High reasoning effect are both evidenced.
 
-Do not minimize agent count as a cost target. Preserve useful parallel work with independent deliverables and non-overlapping ownership. Serialize overlapping paths, unstable interfaces, and unresolved dependencies. Keep the main agent as orchestrator rather than a normal implementation writer.
+Use delegation only when its independent deliverable and wall-clock benefit justify the context, integration, and coordination cost. `LIGHT` work defaults to direct main-agent implementation. `STANDARD` work uses the main agent or at most one implementation subagent unless the host exposes enough lifecycle-controlled capacity for a clearly beneficial split. `HIGH` work may use one implementation subagent while preserving capacity for required independent review. The main agent may implement and integrate within the confirmed Task Contract; it is not forced into an orchestration-only role.
+
+Inspect both the concurrent slot count and whether the host exposes a reliable retire/close operation. Do not assume a completed thread releases capacity. On a four-slot host without thread retirement, budget the entire Goal as follows:
+
+- root/main agent: one slot;
+- implementation: at most one subagent slot;
+- independent review reserve: one slot for `LIGHT` or `STANDARD`, two slots for `HIGH` when two review capabilities are justified;
+- total distinct subagent threads: never exceed the capacity that still preserves the review reserve.
+
+Do not create separate agents for integration, documentation, validation, or evidence packaging when the main agent can perform that bounded work safely.
+
+Default every subagent to a minimal explicit task packet and `fork_turns: none` when exposed. Include only the Task Contract clauses needed for that task, owned paths, stable interfaces, validation responsibility, deliverable, and stop conditions. Do not copy the full main-session history or unrelated tool output. Allow at most two substantive follow-up turns per subagent: one clarification/correction and one repair request. A third follow-up means the task boundary or packet failed; end that collaboration path, preserve a concise handoff, and let the main agent take over or replan.
+
+### Coordination And `wait_agent` Budget
+
+Treat model-driven waiting as a metered orchestration operation, not a free sleep. Every `wait_agent` result may trigger another model turn over the accumulated context.
+
+- Do useful main-agent work before waiting: inspect interfaces, prepare integration, review existing diffs, or run safe independent checks.
+- Use mailbox-driven completion and one wait for any agent update. After an update, drain and consolidate all available agent results before deciding on follow-up work.
+- Do not use 1-, 10-, 20-, or 30-second polling loops. Use a timeout of at least 60 seconds, or the longest timeout permitted by the current interaction/update policy, unless completion is known to be imminent.
+- After a timeout with no new information, do not immediately issue another wait. Perform useful local work, provide any required user update, or reassess the task boundary first.
+- Three consecutive no-information timeouts trigger a coordination replan; a fourth immediate wait is forbidden.
+- Warn internally at eight total waits. `STANDARD` execution stops its delegation path at twelve waits. `HIGH` execution stops and replans at twenty waits.
+- Do not send “status?” messages merely to provoke activity. Agents must return one complete handoff proactively when their bounded task finishes.
+
+The runtime or final Dispatch Summary must record `wait_agent` calls, timeouts, useful waits, consecutive-timeout maximum, cumulative wait duration, per-agent follow-up count, and coordination circuit-breaker events. When token telemetry can be attributed reliably, also record wait-related input/total tokens, `useful_wait_ratio`, and `wait_token_ratio`. Never fabricate unavailable token attribution.
+
+Targets:
+
+- `useful_wait_ratio = useful waits / all waits >= 0.60`;
+- `wait_token_ratio = wait-related tokens / main-session tokens <= 0.10`;
+- all agent-coordination tokens <= 0.30 of main-session tokens when attribution is available.
 
 Classify implementation directly into the two supported tiers. Use the lower implementation route when the task has clear requirements, stable interfaces, bounded ownership, deterministic validation, and no unresolved architecture, security, permission, migration, compatibility, concurrency, or complex-state decision. Use its fully evidenced Luna Max label only when Max reasoning is separately supported or its profile-configured effect is demonstrably applied. Use the higher implementation route initially when any of those conditions are absent or the task needs complex diagnosis or cross-module design; use its fully evidenced Sol Medium label only when Medium reasoning is separately supported.
 

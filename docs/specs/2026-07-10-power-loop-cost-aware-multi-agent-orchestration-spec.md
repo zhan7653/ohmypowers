@@ -132,13 +132,18 @@ If the Task Contract requires an exact model, custom profile, provider, reasonin
 
 ### Orchestration, Ownership, And Parallelism
 
-- The main agent owns interfaces, dispatch, dependency coordination, conflict handling, validation, and consolidation.
+- The main agent owns interfaces, dispatch, dependency coordination, conflict handling, validation, consolidation, and metered waiting. It may implement or integrate directly when delegation would consume review capacity or cost more coordination than it saves.
 - Every delegated task has an independent objective and deliverable; tasks are not combined merely to reduce agent count.
 - The implementation loop uses one task-level branch or worktree rather than one worktree per subagent.
 - Read-only or instruction-level no-write exploration may run concurrently when it does not depend on unstable state.
 - Write-capable tasks may run concurrently only with non-overlapping ownership and stable interfaces.
 - Tasks with overlapping files, unstable shared interfaces, or unresolved dependencies are serialized.
-- Useful generic delegation, ownership, dependencies, parallelism, stable-snapshot review, and fresh-context review are preserved in both modes.
+- Bounded generic delegation, ownership, dependencies, capacity-aware parallelism, stable-snapshot review, and fresh-context review are preserved in both modes.
+- `LIGHT` defaults to direct main-agent work. `STANDARD` uses at most one implementation subagent by default. `HIGH` uses at most one implementation subagent while preserving two reviewer slots when two independent capabilities are justified.
+- On a four-slot host without reliable thread retirement, the total distinct-thread budget is root plus at most one implementation worker plus the required review reserve; completed threads are not assumed to release capacity.
+- Subagents default to minimal explicit task packets with `fork_turns: none` when exposed and receive at most two substantive follow-ups.
+- `wait_agent` is metered: no 1-, 10-, 20-, or 30-second polling loops; three consecutive no-information timeouts trigger replanning; warn at eight waits; stop standard delegation at twelve waits and high-risk execution at twenty waits.
+- Dispatch evidence reports wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and wait/coordination token ratios when reliable telemetry is available.
 
 ### Compact Planning Reference Patch And Goal Protocol
 
@@ -304,7 +309,7 @@ Then dual-track tests and all relevant existing tests pass, and documentation, s
 - Can inherited mode record the parent model? -> Only as observable inherited provenance, never as an independently selected subagent configuration.
 - Does a no-write instruction prove read-only isolation? -> No. Host-enforced isolation requires separate observable evidence.
 - What happens to exact model, provider, profile, reasoning, sandbox, or isolation requirements in inherited mode? -> Planning pauses for a human decision.
-- Is reducing agent count a goal? -> No. Preserve independently useful work and safe parallelism.
+- Is reducing agent count a goal? -> Agent count is not minimized blindly, but every delegation must justify its coordination cost and preserve required review capacity. Use the delivery-lane budgets and wait circuit breakers.
 - When is the final Goal Prompt generated? -> Only after mode confirmation and successful persistence of the separately confirmed planning artifacts and compact reference patch.
 
 ## Premises

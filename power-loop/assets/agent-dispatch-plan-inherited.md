@@ -34,7 +34,7 @@ Repeat this section for every implementation, integration, validation, and selec
 - Objective: `<one independently useful objective>`
 - Role: `<implementation | tests | integration | validation | selected review capability>`
 - Spawn mechanism: `<generic current-host subagent>`
-- Context policy: `<inherited planning context, fork_turns: none for fresh-context review when exposed, or another supported policy>`
+- Context policy: `<minimal explicit task packet with fork_turns: none when exposed; state and justify any broader inherited context>`
 - Instruction boundary: `<allowed writes, or no writes for review; state that this is instruction-level unless host enforcement is separately observable>`
 - Allowed write paths: `<exact paths/modules, or None>`
 - Interface responsibility: `<owned interface, or None>`
@@ -51,7 +51,22 @@ Repeat this section for every implementation, integration, validation, and selec
 |---|---|---|---|---|
 | `WAVE-1` | `<TASK-IDs>` | `<parallel | sequential>` | `<condition>` | `<stable deliverable/interface>` |
 
-Keep independently useful work split when safe parallelism improves throughput. Do not split work that lacks an independent deliverable or creates overlapping write ownership.
+Use the fewest subagents that preserve a clear wall-clock benefit and required implementation independence. `LIGHT` defaults to direct main-agent work. `STANDARD` uses at most one implementation subagent by default. `HIGH` preserves capacity for its justified independent review capabilities. Do not split work that lacks an independent deliverable or creates overlapping write ownership.
+
+## Agent capacity and coordination budget
+
+- Host concurrent slots: `<observed count or unavailable>`
+- Reliable thread retire/close operation: `<supported with evidence | unavailable>`
+- Root slot: `1`
+- Implementation subagent budget: `<0 for LIGHT by default | 0-1 for STANDARD | at most 1 for HIGH>`
+- Reserved review slots: `<at least 1; 2 for HIGH when two review capabilities are justified>`
+- Total distinct subagent-thread ceiling: `<value that preserves the review reserve; never assume completed threads release capacity>`
+- Per-agent substantive follow-up limit: `2`
+- `wait_agent` warning threshold: `8`
+- `wait_agent` hard stop: `<12 for STANDARD | 20 for HIGH | lower explicit LIGHT budget>`
+- Consecutive no-information timeout stop: `3`
+- Polling rule: `no 1-, 10-, 20-, or 30-second loops; use at least 60 seconds or the longest permitted interaction timeout`
+- Context rule: `minimal explicit packet; fork_turns: none when exposed; no full-session history by default`
 
 ## Ownership conflict rules
 
@@ -72,13 +87,13 @@ Keep independently useful work split when safe parallelism improves throughput. 
 
 ## Main orchestrator responsibilities
 
-- Own capability recheck, mode enforcement, interfaces, dependencies, task packets, waiting, steering, conflict resolution, validation coordination, snapshot capture, review coordination, and result consolidation.
-- Do not normally edit implementation files.
+- Own capability recheck, mode enforcement, interfaces, dependencies, minimal task packets, metered waiting, steering, conflict resolution, validation coordination, snapshot capture, review coordination, and result consolidation.
+- Implement or integrate directly when delegation would consume review capacity or cost more coordination than it saves.
 - Use only fields exposed by the current host contract.
 - Do not reinterpret inherited configuration as selected routing.
 - Stop on material capability drift, mode conflict, ambiguous ownership, or an unavailable exact requirement.
 
-Narrow main-agent implementation exception: `<None, or exact paths and reason explicitly approved by the user>`
+Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact integration paths; explain any HIGH-risk delegation boundary>`
 
 ## Verification and review plan
 
@@ -112,4 +127,7 @@ At completion or stop, report:
 - incomplete tasks and pause reasons;
 - validation and reviewer snapshot identities.
 - pinned canonical Issue identity and final Git tree digest.
+- wait_agent calls, timeout count, useful waits, maximum consecutive timeouts, cumulative wait duration, and circuit-breaker events;
+- each agent's substantive follow-up count;
+- useful_wait_ratio, wait-related tokens, wait_token_ratio, and total coordination-token ratio when reliable telemetry is available; otherwise explicitly unavailable.
 <!-- power-loop:agent-dispatch-plan:end -->

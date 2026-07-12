@@ -1,0 +1,87 @@
+{
+  "schema": "agent-coordination-budget-cases/v1",
+  "cases": [
+    {
+      "id": "light-four-slots-no-retire",
+      "input": {
+        "deliveryLane": "LIGHT",
+        "hostSlots": 4,
+        "reliableRetire": false,
+        "requiredReviewers": 1
+      },
+      "expected": {
+        "implementationSubagents": 0,
+        "reservedReviewSlots": 1,
+        "totalDistinctSubagents": 1,
+        "waitHardStop": 8
+      }
+    },
+    {
+      "id": "standard-four-slots-one-reviewer",
+      "input": {
+        "deliveryLane": "STANDARD",
+        "hostSlots": 4,
+        "reliableRetire": false,
+        "requiredReviewers": 1
+      },
+      "expected": {
+        "implementationSubagents": 1,
+        "reservedReviewSlots": 1,
+        "totalDistinctSubagents": 2,
+        "waitHardStop": 12
+      }
+    },
+    {
+      "id": "standard-four-slots-two-reviewers",
+      "input": {
+        "deliveryLane": "STANDARD",
+        "hostSlots": 4,
+        "reliableRetire": false,
+        "requiredReviewers": 2
+      },
+      "expected": {
+        "implementationSubagents": 1,
+        "reservedReviewSlots": 2,
+        "totalDistinctSubagents": 3,
+        "waitHardStop": 12
+      }
+    },
+    {
+      "id": "high-four-slots-two-reviewers",
+      "input": {
+        "deliveryLane": "HIGH",
+        "hostSlots": 4,
+        "reliableRetire": false,
+        "requiredReviewers": 2
+      },
+      "expected": {
+        "implementationSubagents": 1,
+        "reservedReviewSlots": 2,
+        "totalDistinctSubagents": 3,
+        "waitHardStop": 20
+      }
+    },
+    {
+      "id": "high-three-slots-two-reviewers",
+      "input": {
+        "deliveryLane": "HIGH",
+        "hostSlots": 3,
+        "reliableRetire": false,
+        "requiredReviewers": 2
+      },
+      "expected": {
+        "implementationSubagents": 0,
+        "reservedReviewSlots": 2,
+        "totalDistinctSubagents": 2,
+        "waitHardStop": 20
+      }
+    }
+  ],
+  "issue29Baseline": {
+    "waitAgentCalls": 179,
+    "waitTokenRatio": 0.40,
+    "expectedHighRiskHardStop": 20,
+    "targetWaitTokenRatio": 0.10,
+    "targetUsefulWaitRatio": 0.60
+  }
+}

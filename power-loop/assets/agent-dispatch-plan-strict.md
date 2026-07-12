@@ -61,6 +61,7 @@ Repeat this section for every implementation, integration, validation, and selec
 - Initial model: `<exact selected model when separately supported | unavailable — not independently selectable>`
 - Reasoning effort: `<Medium | High | Max when separately supported | unavailable — not independently selectable>`
 - Sandbox or permission mode: `<host-enforced mode when separately observable | instruction-level boundary only; host enforcement unavailable>`
+- Context policy: `<minimal explicit task packet with fork_turns: none when exposed; state and justify any broader inherited context>`
 - Allowed write paths: `<exact paths/modules, or None for read-only tasks>`
 - Interface responsibility: `<owned interface, or None>`
 - Dependencies: `<TASK-IDs or None>`
@@ -76,7 +77,22 @@ Repeat this section for every implementation, integration, validation, and selec
 |---|---|---|---|---|
 | `WAVE-1` | `<TASK-IDs>` | `<parallel | sequential>` | `<condition>` | `<stable deliverable/interface>` |
 
-Agent count is not a cost metric. Keep independently useful work split when safe parallelism improves throughput. Do not split work that lacks an independent deliverable or creates overlapping write ownership.
+Use the fewest subagents that preserve a clear wall-clock benefit and required implementation independence. `LIGHT` defaults to direct main-agent work. `STANDARD` uses at most one implementation subagent by default. `HIGH` preserves capacity for its justified independent review capabilities. Do not split work that lacks an independent deliverable or creates overlapping write ownership.
+
+## Agent capacity and coordination budget
+
+- Host concurrent slots: `<observed count or unavailable>`
+- Reliable thread retire/close operation: `<supported with evidence | unavailable>`
+- Root slot: `1`
+- Implementation subagent budget: `<0 for LIGHT by default | 0-1 for STANDARD | at most 1 for HIGH>`
+- Reserved review slots: `<at least 1; 2 for HIGH when two review capabilities are justified>`
+- Total distinct subagent-thread ceiling: `<value that preserves the review reserve; never assume completed threads release capacity>`
+- Per-agent substantive follow-up limit: `2`
+- `wait_agent` warning threshold: `8`
+- `wait_agent` hard stop: `<12 for STANDARD | 20 for HIGH | lower explicit LIGHT budget>`
+- Consecutive no-information timeout stop: `3`
+- Polling rule: `no 1-, 10-, 20-, or 30-second loops; use at least 60 seconds or the longest permitted interaction timeout`
+- Context rule: `minimal explicit packet; fork_turns: none when exposed; no full-session history by default`
 
 ## Ownership conflict rules
 
@@ -101,11 +117,11 @@ Agent count is not a cost metric. Keep independently useful work split when safe
 
 ## Main orchestrator responsibilities
 
-- Own interfaces, dependency coordination, conflict resolution, dispatch, waiting, steering, escalation decisions, and result consolidation.
-- Do not normally edit implementation files.
+- Own interfaces, dependency coordination, conflict resolution, dispatch, metered waiting, steering, escalation decisions, and result consolidation.
+- Implement or integrate directly when delegation would consume review capacity or cost more coordination than it saves.
 - Pause when delegation or a required custom agent is unavailable unless this confirmed plan explicitly documents a narrow exception.
 
-Narrow main-agent implementation exception: `<None, or exact paths and reason explicitly approved by the user>`
+Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact integration paths; explain any HIGH-risk delegation boundary>`
 
 ## Verification and review plan
 
@@ -138,6 +154,9 @@ At completion or stop, report:
 - incomplete tasks and pause reasons;
 - Initial Assignment Accuracy.
 - pinned canonical Issue identity and final Git tree digest.
+- wait_agent calls, timeout count, useful waits, maximum consecutive timeouts, cumulative wait duration, and circuit-breaker events;
+- each agent's substantive follow-up count;
+- useful_wait_ratio, wait-related tokens, wait_token_ratio, and total coordination-token ratio when reliable telemetry is available; otherwise explicitly unavailable.
 
 Calculate Initial Assignment Accuracy as:
 

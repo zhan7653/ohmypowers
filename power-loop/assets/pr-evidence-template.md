@@ -129,6 +129,21 @@ Pause reasons:
 
 - <reason, or None>
 
+Coordination metrics:
+
+- `wait_agent` calls: `<count>`
+- Timeouts: `<count>`
+- Useful waits: `<count>`
+- Maximum consecutive no-information timeouts: `<count>`
+- Cumulative wait duration: `<duration>`
+- Circuit-breaker events: `<none or exact threshold/action>`
+- Per-agent substantive follow-ups: `<agent -> count>`
+- `useful_wait_ratio`: `<value or unavailable>`
+- Wait-related input/total tokens: `<value or unavailable>`
+- `wait_token_ratio`: `<value or unavailable>`
+- Total coordination-token ratio: `<value or unavailable>`
+- Telemetry provenance: `<exact source or unavailable; never inferred>`
+
 Validation and reviewer snapshot identities:
 
 - <snapshot references>
