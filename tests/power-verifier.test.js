@@ -12,6 +12,8 @@ const fixedTopologyPaths = [
   'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
   'power-loop/SKILL.md',
   'power-loop/assets/agent-dispatch-plan.md',
+  'power-loop/assets/agent-dispatch-plan-strict.md',
+  'power-loop/assets/agent-dispatch-plan-inherited.md',
   'power-loop/assets/codex-loop-goal.txt',
   'power-loop/assets/execution-blueprint.md',
   'power-loop/assets/issue-patch.md',
@@ -191,7 +193,7 @@ test('repository guidance does not reintroduce fixed Sol High review topology', 
 test('semantic packages are replay-ready evidence, not deterministic LLM assertions', async () => {
   const fixture = await readFixture('semantic-cases.json')
 
-  assert.equal(fixture.schema, 'power-verifier-semantic-cases/v1')
+  assert.equal(fixture.schema, 'power-verifier-semantic-cases/v2')
   assert.equal(fixture.evaluation, 'manual-read-only-replay')
   assert.ok(fixture.packages.some(item => item.project.portable), 'includes an arbitrary project')
   for (const item of fixture.packages) {
@@ -200,13 +202,114 @@ test('semantic packages are replay-ready evidence, not deterministic LLM asserti
     assert.ok(item.contract.goal.clauses.length)
     assert.ok(item.snapshot.id)
     assert.ok(item.clauseEvidence.length)
-    assert.ok(item.reviewerProvenance.length)
+    assert.match(item.executionModeEvidence.confirmedMode, /^(strict-model-routing|inherited-model-routing)$/)
+    assert.match(item.executionModeEvidence.classification, /^(strict-selection-supported|inherited-model-only|indeterminate)$/)
+    assert.ok(item.executionModeEvidence.evidenceInspected)
+    assert.ok(item.executionModeEvidence.userConfirmation)
+    const selectable = item.executionModeEvidence.selectableCapabilities
+    assert.deepEqual(Object.keys(selectable).sort(), ['model', 'profile', 'reasoning', 'sandbox'])
+    assert.ok(Object.values(selectable).every(value => typeof value === 'boolean'))
+    if (item.executionModeEvidence.confirmedMode === 'strict-model-routing') {
+      assert.ok(selectable.model || selectable.profile, `${item.id} strict mode has a model or profile selector`)
+    } else {
+      assert.equal(selectable.model, false, `${item.id} inherited mode has no model selector`)
+      assert.equal(selectable.profile, false, `${item.id} inherited mode has no profile selector`)
+      assert.equal(selectable.reasoning, false, `${item.id} inherited mode has no reasoning selector`)
+    }
     for (const review of item.reviewerProvenance) {
-      assert.ok(review.model, `${item.id} reviewer exposes model provenance`)
-      assert.ok(review.reasoningEffort, `${item.id} reviewer exposes reasoning provenance`)
-      assert.ok(review.selectionRationale, `${item.id} reviewer explains tier selection`)
+      assert.equal(review.confirmedMode, item.executionModeEvidence.confirmedMode)
+      assert.ok(review.configurationProvenance, `${item.id} reviewer records configuration provenance`)
+      assert.equal(typeof review.independentFromImplementation, 'boolean')
+      assert.ok(review.instructionBoundary)
+      assert.ok(review.observableHostIsolationEvidence)
+      if (review.confirmedMode === 'strict-model-routing') {
+        if (selectable.model) assert.ok(review.model, `${item.id} strict reviewer exposes selected model`)
+        else assert.equal('model' in review, false, `${item.id} strict reviewer omits unavailable model`)
+        if (selectable.reasoning) {
+          assert.ok(review.reasoningEffort, `${item.id} strict reviewer records exposed reasoning provenance`)
+        } else {
+          assert.equal('reasoningEffort' in review, false, `${item.id} strict reviewer omits unavailable reasoning`)
+        }
+        assert.ok(review.selectionRationale, `${item.id} strict reviewer explains selection`)
+        if (!selectable.sandbox) {
+          assert.equal(review.observableHostIsolationEvidence, 'none observed', `${item.id} does not fabricate host isolation`)
+        }
+      } else {
+        assert.equal('model' in review, false, `${item.id} inherited reviewer does not invent a model`)
+        assert.equal('reasoningEffort' in review, false, `${item.id} inherited reviewer does not invent reasoning effort`)
+        assert.equal('selectionRationale' in review, false, `${item.id} inherited reviewer has no model-tier rationale`)
+      }
     }
     assert.ok(item.validationReplay.assessment)
     assert.ok(item.replayAssessment)
   }
+
+  const fullySupportedStrict = fixture.packages.filter(item => {
+    const capabilities = item.executionModeEvidence.selectableCapabilities
+    return item.executionModeEvidence.confirmedMode === 'strict-model-routing' && Object.values(capabilities).every(Boolean)
+  })
+  assert.ok(fullySupportedStrict.length, 'retains fully supported strict evidence packages')
+  assert.ok(fullySupportedStrict.every(item => item.reviewerProvenance.every(review => review.model && review.reasoningEffort)))
+})
+
+test('partial strict verifier evidence keeps selected model and omits unavailable reasoning', async () => {
+  const fixture = await readFixture('semantic-cases.json')
+  const partial = fixture.packages.find(item => item.id === 'partial-strict-model-without-reasoning')
+  const review = partial.reviewerProvenance[0]
+
+  assert.deepEqual(partial.executionModeEvidence.selectableCapabilities, {
+    model: true,
+    profile: false,
+    reasoning: false,
+    sandbox: false,
+  })
+  assert.equal(review.model, 'review-model-2')
+  assert.equal('reasoningEffort' in review, false)
+  assert.match(review.configurationProvenance, /reasoning unavailable/)
+  assert.equal(review.observableHostIsolationEvidence, 'none observed')
+  assert.equal(partial.expected.result, 'PASS')
+})
+
+test('inherited verifier evidence records provenance honestly and pauses for unavailable exact requirements', async () => {
+  const fixture = await readFixture('semantic-cases.json')
+  const packages = new Map(fixture.packages.map(item => [item.id, item]))
+  const inherited = packages.get('inherited-review-provenance')
+  const exact = packages.get('inherited-exact-model-unavailable')
+
+  assert.equal(inherited.executionModeEvidence.configurationProvenance, 'inherited from parent')
+  assert.equal(inherited.executionModeEvidence.hostIsolationEvidence, 'none observed')
+  assert.equal(inherited.reviewerProvenance[0].contextPolicy, 'fork_turns: none')
+  assert.equal(inherited.reviewerProvenance[0].observableHostIsolationEvidence, 'none observed')
+  assert.equal(exact.expected.result, 'NEEDS_HUMAN')
+  assert.deepEqual(exact.executionModeEvidence.unavailableExactRequirements, ['review-model-2', 'provider-x'])
+  assert.equal(exact.reviewerProvenance.length, 0, 'execution pauses before substituting a reviewer')
+})
+
+test('verifier guidance requires mode evidence and rejects unsupported inherited guarantees', async () => {
+  const files = [
+    'power-verifier/SKILL.md',
+    'power-verifier/assets/implementation-verifier-checklist.md',
+    'power-verifier/assets/verifier-result-template.md',
+  ]
+
+  for (const relativePath of files) {
+    const content = await readFile(path.join(root, relativePath), 'utf8')
+    assert.match(content, /Confirmed execution mode|confirmed execution mode/)
+    assert.match(content, /Capability classification|capability classification/)
+    assert.match(content, /Configuration provenance|configuration provenance/)
+    assert.match(content, /host-isolation|host isolation/i)
+  }
+
+  const skill = await readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8')
+  for (const unsupported of [
+    'per-subagent model or reasoning assignments',
+    'custom profiles',
+    'sandbox or host-isolation guarantees',
+    'model escalation',
+    'reviewer tiers',
+    'assignment-accuracy claims',
+    'model-cost savings',
+  ]) assert.match(skill, new RegExp(unsupported))
+  assert.match(skill, /return `NEEDS_HUMAN`/)
+  assert.match(skill, /Record model or reasoning only when the host directly exposes it; never infer either value\./)
 })

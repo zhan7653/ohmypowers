@@ -10,6 +10,14 @@ Task Contract preservation check: `<unchanged at generation time>`
 
 Curation status preservation check: `<unchanged at generation time>`
 
+Capability classification: `<strict-selection-supported | inherited-model-only | indeterminate>`
+
+Capability evidence: `<inspected host contract evidence>`
+
+Confirmed execution mode: `<strict-model-routing | inherited-model-routing>`
+
+Mode-template consistency check: `<the replacement Dispatch block was generated from the template matching the confirmed mode>`
+
 This patch changes only the two marked execution-planning blocks below. The `Planning status: confirmed` values describe the state that will exist after the user confirms and the patch is applied.
 
 ## Replacement block: Execution Blueprint
@@ -42,6 +50,7 @@ Planning status: `confirmed`
 - If the markers do not exist, insert both complete marked blocks immediately before `# Curation status`; append them at the end only when no curation section exists.
 - Do not edit, reformat, reorder, or normalize any Task Contract or Curation status content.
 - Re-read the target after applying the patch and compare both replacement blocks exactly.
+- Verify that the persisted Blueprint and Dispatch block record the same confirmed mode and capability evidence used to generate this patch.
 - A revised patch requires new explicit confirmation.
 
 Confirmation request:

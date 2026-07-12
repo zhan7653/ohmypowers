@@ -5,6 +5,7 @@ This tutorial exercises the full `ohmypowers` flow on a small linear-regression 
 ```text
 power-grill
 -> confirmed requirements issue/local brief
+-> capability preflight and confirmed execution mode
 -> power-loop repository inspection
 -> Execution Blueprint
 -> Agent Dispatch Plan
@@ -50,7 +51,7 @@ Confirm requirement-level boundaries:
 - Validation expectations: prove convergence, reproducibility, unsafe-learning-rate handling, and documented usage.
 - Stop condition: required behavior exists and every acceptance criterion has evidence.
 
-Do not require the user to select exact files, function signatures, internal control flow, test seams, validation commands, task ownership, or models. `power-loop` derives those details after inspecting the repository.
+Do not require the user to select exact files, function signatures, internal control flow, test seams, validation commands, task ownership, or models. `power-loop` derives repository details after capability preflight and execution-mode confirmation. An exact model, profile, provider, reasoning, sandbox, or isolation requirement is still a binding contract constraint.
 
 ## Step 2: Persist The Task Contract
 
@@ -93,7 +94,7 @@ Add a minimal batch-gradient-descent linear-regression optimizer that trains on 
 
 ## Current context
 
-This repository includes small examples and favors minimal, reviewable changes.
+This repository favors minimal, reviewable changes.
 
 ## External API / data contracts
 
@@ -166,19 +167,29 @@ Use $power-loop on <issue-url-or-local-brief>.
 
 `power-loop` should:
 
-1. Return `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
-2. Inspect the repository and record its source branch and commit.
-3. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, isolation, and integration order in the Execution Blueprint.
-4. Split independently useful work into an Agent Dispatch Plan with explicit ownership and models.
-5. Display an exact Issue Patch whose replacement blocks say `Planning status: confirmed`.
-6. Withhold the Goal Prompt and ask for confirmation.
+1. Inspect the visible subagent-spawn schema or equivalent host contract. Do not launch a probe agent when that evidence is conclusive.
+2. Report the classification, evidence inspected, relevant uncertainty, and recommended mode:
+   - `strict-selection-supported` recommends `strict-model-routing` when a supported model or custom-profile selector is demonstrably available;
+   - `inherited-model-only` recommends `inherited-model-routing` when no supported model, reasoning, or custom-profile selector is exposed;
+   - `indeterminate` asks the user for more evidence instead of guessing.
+3. Ask the user to confirm the execution mode. Do not run readiness/risk gating or generate a mode-specific Agent Dispatch Plan or final Goal Prompt before confirmation.
+4. Run readiness and risk gating; for this example, return `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
+5. Inspect the repository and record its source branch and commit.
+6. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, instruction boundaries, and integration order in the Execution Blueprint.
+7. Split independently useful work into the separate Agent Dispatch Plan template for the confirmed mode.
+8. Display an exact Issue Patch whose replacement blocks say `Planning status: confirmed`.
+9. Withhold the Goal Prompt and ask for confirmation of the exact patch.
 
-A plausible initial routing is:
+The supported model-or-profile selector establishes the strict recommendation; it does not prove reasoning, profile, model, or sandbox selection that the evidence did not show. Record those capabilities independently. Preserve the full Luna/Sol/Terra profile routing only when the selectors it requires are demonstrably supported, and pause if a required strict configuration is unavailable.
+
+Under `strict-model-routing`, a plausible routing is:
 
 - Luna Max for the README update and any optimizer/test task classified as simple through lower-medium.
 - Sol Medium initially for any implementation task already slightly complex or above, and as the only direct replacement for an underestimated Luna task.
 - Terra High only for an explicitly simple review, Sol Medium for ordinary review, and Sol High for the most complex or high-risk review.
 - An implementation-independent contract-conformance capability, plus any code, security, compatibility, migration, test, or domain capability justified by the final diff and risks. Reviewer capabilities are dynamic, and contract-prescribed reviewers are honored exactly.
+
+Under `inherited-model-routing`, subagents inherit the parent configuration. The plan still specifies independent roles, objectives, allowed write paths, dependencies, deliverables, validation responsibilities, parallelization constraints, and fresh-context reviews, but it does not select or guarantee a subagent model, reasoning effort, custom profile, reviewer tier, sandbox, model escalation, or model-cost outcome. An instruction such as “do not write files” is a behavioral boundary, not host-enforced read-only isolation.
 
 Do not combine independently useful tasks merely to reduce agent count. Do not run write tasks concurrently when they own overlapping paths or unstable interfaces.
 
@@ -187,12 +198,13 @@ Do not combine independently useful tasks merely to reduce agent count. Do not r
 Check that:
 
 - the Task Contract is unchanged;
+- the capability classification, inspected evidence, recommended mode, and confirmed mode are recorded consistently;
 - the Blueprint reflects the actual repository;
 - every write task has exact non-overlapping ownership;
 - dependencies and integration order are credible;
-- each implementation task is classified directly as Luna Max or Sol Medium under the two-tier policy;
-- a Luna task has at most one direct replacement by Sol Medium;
-- independent review capabilities and the Terra High, Sol Medium, or Sol High reviewer tier are selected from the contract and implementation risks, with contract-prescribed reviewers honored exactly;
+- in `strict-model-routing`, each model, profile, reasoning, and sandbox field is backed by its corresponding selector evidence; when all required selectors are supported, implementation follows the full Luna/Sol policy, replacement is bounded, and the reviewer profile policy is preserved;
+- in `inherited-model-routing`, the plan contains none of the unsupported model, reasoning, profile, sandbox, escalation, cost, reviewer-tier, or assignment-accuracy fields or claims;
+- independent review capabilities are selected from the contract and implementation risks; fresh context is required where independence matters, while read-only isolation is claimed only if the host separately exposes and verifies it;
 - the main agent remains the orchestrator rather than the normal implementation worker.
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
@@ -204,17 +216,18 @@ After confirmation, `power-loop` applies only the two marked blocks, re-reads th
 The user starts the returned prompt manually. The orchestrator should:
 
 1. Re-read the confirmed issue/local brief.
-2. Check for material drift from the recorded branch and commit.
-3. Confirm every named custom agent is available with the expected model, reasoning effort, and sandbox.
-4. Create or enter the one task-level branch/worktree.
-5. Dispatch tasks according to dependency waves and ownership.
-6. Run targeted and full validation.
-7. Capture the stable implementation snapshot, replay safe contract-required validation, and run the selected independent reviews over that snapshot. Give the contract-conformance reviewer the complete Issue/local contract, final Goal Prompt, clause evidence, validation replay, provenance, scope, risks, and non-goals; tailor additional reviewers to their capabilities, and record each reviewer's model, reasoning effort, and selection rationale.
-8. Repair fixable blockers within budget.
-9. Prepare draft PR/MR evidence.
-10. Produce the Dispatch Summary and loop decision.
+2. Reinspect the spawn contract without a probe when its schema is conclusive, and verify that it still supports the confirmed execution mode.
+3. Check for material drift from the recorded branch and commit.
+4. In strict mode, verify each required selector and configuration independently. In inherited mode, verify generic delegation remains available and do not add per-agent configuration claims.
+5. Create or enter the one task-level branch/worktree.
+6. Dispatch tasks according to dependency waves and ownership.
+7. Run targeted and full validation.
+8. Capture the stable implementation snapshot, replay safe contract-required validation, and run selected independent reviews over that snapshot. Give the contract-conformance reviewer the complete Issue/local contract, final Goal Prompt, clause evidence, validation replay, provenance, scope, risks, and non-goals. Record only model, reasoning, profile, or isolation evidence that the host actually exposes.
+9. Repair fixable blockers within budget.
+10. Prepare draft PR/MR evidence.
+11. Produce the mode-accurate Dispatch Summary and loop decision.
 
-If a required custom agent is missing, do not inherit the parent Sol Ultra model. Pause and report the missing profile or ask for explicit approval of a named alternative.
+If runtime capability evidence has materially changed, pause for renewed mode confirmation and replanning. Also pause when the confirmed mode cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement; do not silently weaken the contract.
 
 ## Step 6: Review Evidence
 
@@ -232,25 +245,27 @@ The PR/MR evidence should map every acceptance criterion:
 
 The Dispatch Summary should record:
 
+- the confirmed execution mode and capability evidence;
 - planned and actual tasks;
-- initial and final model for every implementation task;
-- escalation and reason;
 - parallel/sequential execution waves;
 - ownership conflicts;
-- incomplete tasks and pause reasons;
-- Initial Assignment Accuracy.
+- incomplete tasks and pause reasons.
 
-Calculate Initial Assignment Accuracy as tasks completed without escalation divided by completed or attempted implementation tasks that received an initial assignment.
+In `strict-model-routing`, also record supported initial/final model assignments, bounded escalation, reviewer configuration, and Initial Assignment Accuracy. In `inherited-model-routing`, omit those strict-only metrics and do not describe the inherited parent configuration as a selected subagent assignment.
 
 ## Expected Failure Handling
 
 - Missing requirement-level behavior or acceptance criteria -> `NEEDS_GRILL`.
 - Missing exact files or commands that repository inspection can safely discover -> derive them; do not grill again solely for that reason.
 - Unresolved public API, schema, security, permission, migration, compatibility, or business decision -> `NEEDS_GRILL` or `NEEDS_HUMAN`.
+- Conclusive schema lacks model/profile selectors -> recommend `inherited-model-routing`; do not spawn a model-specific probe.
+- Incomplete or contradictory capability evidence -> classify `indeterminate` and ask; do not choose a mode silently.
+- Execution mode not explicitly confirmed -> no mode-specific Dispatch Plan or Goal Prompt.
 - Patch not confirmed, rejected, changed, or not applied -> no Goal Prompt.
-- Missing custom agent -> pause; no silent parent-model fallback.
-- Permission, environment, dependency, validation-infrastructure, or interface-conflict failure -> no model escalation.
-- Evidence-backed Luna capability mismatch -> at most one direct replacement by Sol Medium.
+- Strict selector/configuration missing at planning or runtime -> pause for a human decision; no silent inherited fallback.
+- Exact model, profile, provider, reasoning, sandbox, or isolation constraint unavailable in inherited mode -> pause for a human decision.
+- Strict-mode permission, environment, dependency, validation-infrastructure, or interface-conflict failure -> no model escalation.
+- Strict-mode evidence-backed Luna capability mismatch -> at most one direct replacement by Sol Medium.
 - Missing the implementation-independent contract-conformance review -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; additional review capabilities are required only when contract or risk justifies them.
 - Material repository drift -> stop for a new `power-loop` pass or confirmed plan revision.
 
@@ -260,10 +275,11 @@ Calculate Initial Assignment Accuracy as tasks completed without escalation divi
 1. Use $power-grill to draft a requirements-focused Task Contract.
 2. Confirm and persist the issue or local brief.
 3. Use $power-loop on that persisted source.
-4. Review the Blueprint, Dispatch Plan, and exact Issue Patch.
-5. Confirm the exact patch.
-6. Receive the ready-to-run Goal Prompt.
-7. Manually start the Goal Prompt.
-8. Review the independent contract-conformance result and any additional capability-specific review results.
-9. Review the draft PR/MR and Dispatch Summary. Do not merge until a human is satisfied.
+4. Review the capability evidence and confirm `strict-model-routing` or `inherited-model-routing`.
+5. Review the Blueprint, mode-specific Dispatch Plan, and exact Issue Patch.
+6. Confirm the exact patch.
+7. Receive the ready-to-run Goal Prompt.
+8. Manually start the Goal Prompt.
+9. Review the independent contract-conformance result and any additional capability-specific review results.
+10. Review the draft PR/MR and mode-accurate Dispatch Summary. Do not merge until a human is satisfied.
 ```

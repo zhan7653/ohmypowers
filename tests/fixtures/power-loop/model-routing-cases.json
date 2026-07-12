@@ -1,5 +1,6 @@
 {
   "schema": "power-loop-model-routing-cases/v1",
+  "executionMode": "strict-model-routing",
   "cases": [
     {
       "id": "simple-through-lower-medium-implementation",

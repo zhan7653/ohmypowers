@@ -2,6 +2,14 @@
 
 Use this checklist before repository-aware execution planning.
 
+## Capability And Mode Gate
+
+Complete the subagent capability preflight and obtain explicit user confirmation of `strict-model-routing` or `inherited-model-routing` before applying this checklist. Capability evidence is not a Task Contract field and its absence must not return `NEEDS_GRILL`.
+
+- Use `strict-selection-supported`, `inherited-model-only`, or `indeterminate` as the classification.
+- Do not generate a mode-specific Agent Dispatch Plan, Issue Patch, or Goal Prompt before confirmation.
+- Return `NEEDS_HUMAN` when strict mode is requested without usable selector evidence, or when the confirmed mode cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement.
+
 ## Required Task Contract Fields
 
 - Problem or background: explains why the change exists and the current problem or workaround.

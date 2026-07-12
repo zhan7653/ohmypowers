@@ -4,7 +4,7 @@ Codex ecosystem skills for Loop Engineering.
 
 `ohmypowers` is a collection of Codex skills and supporting tools that turn agentic coding work into explicit loops: clarify the task, contract the work, execute within boundaries, verify the evidence, and keep reviewable artifacts.
 
-The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex, with explicit custom-agent templates for cost-aware implementation workers, read-only reviewers, and critics.
+The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex. It includes custom-agent templates for hosts that can select them, plus generic role-based delegation for hosts where subagents inherit the parent configuration.
 
 ## What It Does
 
@@ -33,21 +33,23 @@ It does not write implementation code or implementation plans.
 
 It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
 
-`power-loop` converts a requirements-ready persisted contract into a confirmed, cost-aware Codex implementation loop:
+`power-loop` converts a requirements-ready persisted contract into a confirmed Codex implementation loop:
 
-- Loop readiness check over a hosted issue, local brief, or pasted task contract.
+- Low-cost inspection of the exposed subagent-spawn contract. Conclusive schema evidence avoids a probe spawn and produces one of `strict-selection-supported`, `inherited-model-only`, or `indeterminate`.
+- A reported capability conclusion, supporting evidence, uncertainty, recommended execution mode, and mandatory user confirmation before mode-specific planning.
+- Loop readiness check over a hosted issue, local brief, or pasted task contract after execution-mode confirmation.
 - Risk level and execution decision.
 - Repository inspection with source branch and commit baseline.
-- Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, isolation, test seams, validation commands, and staleness rules.
-- Fixed-shape Agent Dispatch Plan with exact per-task Luna Max or Sol Medium implementation assignments, useful parallelism, allowed write paths, dependency waves, one bounded Luna-to-Sol replacement, and risk-based Terra/Sol review tiers; the issue does not repeat the static routing table.
+- Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
+- Exactly one separate Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Luna/Sol/Terra profiles and their routing policy, while `inherited-model-routing` assigns roles, objectives, ownership, dependencies, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, escalation, or model-cost control.
 - Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
 - Final Goal Prompt only after the confirmed patch is applied and verified; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
 - Contract-prescribed reviews or a minimum sufficient capability-based review plan, including an implementation-independent contract-conformance review.
-- Final Dispatch Summary with model assignments, escalation evidence, parallelism, ownership conflicts, pause reasons, and Initial Assignment Accuracy.
+- Mode-accurate capability, dispatch, review, and PR/MR evidence. In inherited mode, fresh context can establish implementation independence, but an instruction-level no-write boundary is not described as host-enforced read-only isolation.
 - PR/MR evidence requirements and loop decision rules.
 
-Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement code directly, mutate requirements, or automatically run `/goal`. Ultra is a recommended user-selected runtime, while the orchestration artifacts are generated for every loop-ready contract.
+Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement code directly, mutate requirements, or automatically run `/goal`. Ultra is a recommended user-selected runtime. Execution-mode selection instead depends on visible spawn capabilities and explicit user confirmation. If capability evidence is incomplete or contradictory, or if inherited routing cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement, planning pauses for a human decision.
 
 For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, manual Goal execution, validation, dispatch reporting, and review.
 
@@ -87,7 +89,7 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
 
-For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. Generic Terra High, Sol Medium, and Sol High reviewer profiles provide cost/risk tiers for those dynamically selected capabilities; they do not impose a universal reviewer identity or topology.
+For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. In strict mode, selectable Terra High, Sol Medium, and Sol High reviewer profiles provide risk tiers for those capabilities. In inherited mode, verification records fresh-context independence and only the configuration or isolation provenance actually exposed by the host. Neither mode imposes a universal reviewer identity or topology.
 
 Use them by phase:
 
@@ -97,7 +99,7 @@ Use them by phase:
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop plan and Issue Patch -> user confirmation -> manual Codex /goal -> contract-prescribed or minimum-sufficient capability/risk-based independent review -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
+- Recommended Loop Engineering flow: `power-grill -> power-loop capability preflight -> user confirms execution mode -> Blueprint, mode-specific Dispatch Plan, and Issue Patch -> user confirms patch -> manual Codex /goal -> contract-prescribed or minimum-sufficient capability/risk-based independent review -> PR evidence -> human review -> power-curator when lifecycle state needs curation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -112,7 +114,9 @@ The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed
 
 The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
 
-The implementation profiles pin Luna Max for simple through lower-medium work and Sol Medium for anything more complex; a Luna task may be replaced directly by Sol Medium at most once. Terra is excluded from implementation. The generic read-only reviewer profiles pin Terra High for explicitly simple checks, Sol Medium as the default, and Sol High for the most complex or high-risk reviews. Review capabilities remain contract- and risk-driven, so the verifier does not require a fixed profile count, identity, specialization, or topology unless the contract specifies one. The critic custom-agent installation remains independent from implementation review.
+On a host classified `strict-selection-supported`, a supported model selector or custom-profile selector is enough to recommend `strict-model-routing`. Model, profile, reasoning, and sandbox selection are still independent capabilities: each field or guarantee requires its own evidence and must not be inferred from another selector. When the required selectors are demonstrably supported, the template preserves the full installed profile policy: Luna Max for simple through lower-medium implementation, Sol Medium for anything more complex, at most one direct Luna-to-Sol replacement, no Terra implementation, and Terra High/Sol Medium/Sol High reviewer tiers selected by contract and risk. If a strict plan requires a configuration the host cannot select, planning pauses instead of fabricating that guarantee.
+
+On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, model-escalation, reviewer-tier, model-cost, or Initial Assignment Accuracy guarantee. It retains useful generic delegation, explicit ownership and dependencies, safe parallelism, and fresh-context independent review. Model selection and sandbox selection are evidenced independently in either mode.
 
 When checking implementation evidence, provide the complete canonical Issue or local contract and final Goal Prompt, capture a stable implementation snapshot, replay safe validation, and record review provenance. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
 
@@ -190,6 +194,8 @@ power-loop/
   assets/
     execution-blueprint.md
     agent-dispatch-plan.md
+    agent-dispatch-plan-strict.md
+    agent-dispatch-plan-inherited.md
     issue-patch.md
     codex-loop-goal.txt
     loop-readiness-checklist.md
