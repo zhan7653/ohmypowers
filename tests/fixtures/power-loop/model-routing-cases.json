@@ -7,9 +7,8 @@
       "type": "implementation",
       "implementationClass": "lower-medium-or-below",
       "expected": {
-        "profile": "power_luna_worker",
-        "model": "gpt-5.6-luna",
-        "reasoningEffort": "max"
+        "executor": "main-agent",
+        "subagent": null
       }
     },
     {
@@ -17,9 +16,8 @@
       "type": "implementation",
       "implementationClass": "slightly-complex-or-above",
       "expected": {
-        "profile": "power_sol_worker",
-        "model": "gpt-5.6-sol",
-        "reasoningEffort": "medium"
+        "executor": "main-agent",
+        "subagent": null
       }
     },
     {
@@ -28,10 +26,9 @@
       "fromProfile": "power_luna_worker",
       "failureClass": "capability-underclassification",
       "expected": {
-        "profile": "power_sol_worker",
-        "model": "gpt-5.6-sol",
-        "reasoningEffort": "medium",
-        "transitions": 1
+        "executor": "main-agent",
+        "subagent": null,
+        "replacement": false
       }
     },
     {

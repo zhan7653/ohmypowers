@@ -27,12 +27,12 @@ Configuration provenance: `Subagents inherit the parent configuration; this is p
 
 ## Task graph
 
-Repeat this section for every implementation, integration, validation, and selected review-capability task.
+Repeat this section only for selected final review-capability tasks. Implementation, tests, integration, validation, documentation, evidence packaging, and repair remain main-agent work.
 
 ### `<TASK-ID>`: `<short task name>`
 
 - Objective: `<one independently useful objective>`
-- Role: `<implementation | tests | integration | validation | selected review capability>`
+- Role: `selected final review capability`
 - Spawn mechanism: `<generic current-host subagent>`
 - Context policy: `<minimal explicit task packet with fork_turns: none when exposed; state and justify any broader inherited context>`
 - Instruction boundary: `<allowed writes, or no writes for review; state that this is instruction-level unless host enforcement is separately observable>`
@@ -51,35 +51,34 @@ Repeat this section for every implementation, integration, validation, and selec
 |---|---|---|---|---|
 | `WAVE-1` | `<TASK-IDs>` | `<parallel | sequential>` | `<condition>` | `<stable deliverable/interface>` |
 
-Use the fewest subagents that preserve a clear wall-clock benefit and required implementation independence. `LIGHT` defaults to direct main-agent work. `STANDARD` uses at most one implementation subagent by default. `HIGH` preserves capacity for its justified independent review capabilities. Do not split work that lacks an independent deliverable or creates overlapping write ownership.
+Use no implementation subagents. Launch final reviewers in one parallel wave only when their scopes are decoupled: no reviewer depends on another, their capabilities do not duplicate each other, and all inspect the same frozen tree and evidence package. Use one reviewer for `LIGHT` or `STANDARD`; use at most two for `HIGH`.
 
 ## Agent capacity and coordination budget
 
 - Host concurrent slots: `<observed count or unavailable>`
 - Reliable thread retire/close operation: `<supported with evidence | unavailable>`
 - Root slot: `1`
-- Implementation subagent budget: `<0 for LIGHT by default | 0-1 for STANDARD | at most 1 for HIGH>`
-- Reserved review slots: `<at least 1; 2 for HIGH when two review capabilities are justified>`
+- Implementation subagent budget: `0`
+- Reserved review slots: `<1 for LIGHT or STANDARD | 1-2 for HIGH when two decoupled review capabilities are justified>`
 - Total distinct subagent-thread ceiling: `<value that preserves the review reserve; never assume completed threads release capacity>`
-- Per-agent substantive follow-up limit: `2`
-- `wait_agent` warning threshold: `8`
-- `wait_agent` hard stop: `<12 for STANDARD | 20 for HIGH | lower explicit LIGHT budget>`
-- Consecutive no-information timeout stop: `3`
+- Per-agent substantive follow-up limit: `0`
+- `wait_agent` warning threshold: `<1 for LIGHT or STANDARD | 2 for HIGH>`
+- `wait_agent` hard stop per review wave: `<1 for LIGHT or STANDARD | number of launched reviewers, maximum 2 for HIGH>`
+- No-information timeout stop: `the first no-information timeout terminates the remaining reviewer wave`
 - Polling rule: `no 1-, 10-, 20-, or 30-second loops; use at least 60 seconds or the longest permitted interaction timeout`
 - Context rule: `minimal explicit packet; fork_turns: none when exposed; no full-session history by default`
 
 ## Ownership conflict rules
 
 - Use one task-level branch or worktree for the loop.
-- Start write-capable subagents only after assigning non-overlapping paths and interface responsibilities.
-- Serialize overlapping paths, unstable interfaces, and unresolved dependencies.
-- Let exploration and evidence verification run in parallel when they inspect stable inputs and obey their task instructions.
-- Stop and replan when ownership becomes ambiguous; do not let subagents race on the same files.
+- Do not start write-capable subagents.
+- Final reviewers are instruction-level no-write tasks over one frozen tree.
+- Parallelize reviewers only when their capability scopes are non-duplicative and neither reviewer consumes another's result.
+- If reviewer scopes cannot be decoupled, combine them into one review packet or serialize the work in the main agent instead of creating a reviewer chain.
 
 ## Failure and redispatch protocol
 
-- A replacement or retry remains in the confirmed inherited execution mode.
-- Retry only after diagnosing a concrete transient or task-packet problem.
+- Do not replace or retry a reviewer after a no-information timeout.
 - Do not retry permission, environment, dependency, validation-infrastructure, or ownership failures as capability failures.
 - Stop when the inherited capability cannot complete a task within the confirmed contract.
 - Return `NEEDS_HUMAN` when completion requires an exact unavailable model, profile, provider, reasoning level, sandbox, or isolation guarantee.
@@ -87,19 +86,18 @@ Use the fewest subagents that preserve a clear wall-clock benefit and required i
 
 ## Main orchestrator responsibilities
 
-- Own capability recheck, mode enforcement, interfaces, dependencies, minimal task packets, metered waiting, steering, conflict resolution, validation coordination, snapshot capture, review coordination, and result consolidation.
-- Implement or integrate directly when delegation would consume review capacity or cost more coordination than it saves.
+- Own all exploration, implementation, tests, integration, validation, documentation, evidence packaging, repair, capability recheck, snapshot capture, review coordination, metered waiting, and result consolidation.
 - Use only fields exposed by the current host contract.
 - Do not reinterpret inherited configuration as selected routing.
 - Stop on material capability drift, mode conflict, ambiguous ownership, or an unavailable exact requirement.
 
-Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact integration paths; explain any HIGH-risk delegation boundary>`
+Main-agent implementation scope: `all implementation and repair paths for every delivery lane`
 
 ## Verification and review plan
 
 - Development failure matrix: `<complete HIGH-risk matrix before implementation, or not applicable>`
 - Validation layers: `<V0 focused; V1 integration; V2 final deterministic; V3 external after V2 and before final review>`
-- Concentrated adversarial review: `<one development-feedback wave returning one batched finding set, or not applicable>`
+- Concentrated adversarial review: `<main-agent self-review returning one batched finding set, or not applicable>`
 - Concentrated repair budget: `<0 or 1; same-risk systemic recurrence stops for replanning>`
 - Candidate snapshot ceiling: `3`
 - Final certification wave budget: `<planned 1; maximum 2 only for one unexpected blocker repair/recertification cycle>`
@@ -109,7 +107,7 @@ Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact
 - Stable snapshot: `<repository/ref, commit, Git tree digest, dirty/generated boundary, capture time, and validation evidence; tree digest controls freshness>`
 - Contract-prescribed reviews: `<exact required identities or procedures, or None; unavailable exact requirements require NEEDS_HUMAN>`
 - Selection basis: `<contract obligations; final diff; affected interfaces/data; validation; and material risks>`
-- Minimum sufficient capabilities: `<one or more independent capabilities, including contract-conformance review>`
+- Minimum sufficient capabilities: `<one for LIGHT/STANDARD; one or two decoupled capabilities for HIGH, including contract-conformance review>`
 - Independent contract-conformance reviewer: `<distinct non-implementing subagent identity/source; required for PASS or PASS_WITH_NOTES>`
 - Additional review capabilities: `<code, test, security, compatibility, migration, data, or domain review only when justified, or None>`
 - Configuration provenance: `<inherited from the parent; not independently selected>`
@@ -119,7 +117,7 @@ Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact
 - Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
 - Contract-conformance packet: `<pinned Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and thin Goal, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
 - Other review packets: `<tailored to each selected capability and scope>`
-- Execution: `<after V0/V1 and any concentrated adversarial repair, freeze one candidate; run V2, then V3 once, then independent fresh-context final reviews in one wave over that same snapshot and evidence package; use fork_turns: none when exposed>`
+- Execution: `<after main-agent V0/V1, adversarial self-review, and any repair, freeze one candidate; run V2, then V3 once, then launch all decoupled fresh-context final reviewers concurrently over that same snapshot and evidence package; use fork_turns: none when exposed>`
 
 ## Dispatch Summary requirements
 

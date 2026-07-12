@@ -197,22 +197,20 @@ Use $power-loop on <issue-url-or-local-brief>.
 4. Run readiness, delivery-lane, split, and residual-risk gating; for this example, confirm `LIGHT`, no split needed, `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
 5. Inspect the repository and record its source branch and commit.
 6. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, instruction boundaries, and integration order in a separately persisted, non-normative Execution Blueprint artifact.
-7. Split independently useful work into a separately persisted, non-normative Agent Dispatch Plan artifact for the confirmed mode.
+7. Keep implementation work on the main agent and describe only the bounded final reviewer wave in the separately persisted, non-normative Agent Dispatch Plan artifact.
 8. Display a short decision summary and exact compact reference patch whose blocks contain artifact paths, digests, and `Planning status: confirmed`.
 9. Withhold the Goal Prompt and ask for confirmation of the decision summary and exact compact patch.
 
-The supported model-or-profile selector establishes the strict recommendation; it does not prove reasoning, profile, model, or sandbox selection that the evidence did not show. Record those capabilities independently. Preserve the full Luna/Sol/Terra profile routing only when the selectors it requires are demonstrably supported, and pause if a required strict configuration is unavailable.
+The supported model-or-profile selector establishes the strict recommendation; it does not prove reasoning, profile, model, or sandbox selection that the evidence did not show. Record those capabilities independently. Use strict selection only for final reviewers on this branch, and pause if a required reviewer configuration is unavailable.
 
-Under `strict-model-routing`, a plausible routing is:
+Under `strict-model-routing`, a plausible final-review routing is:
 
-- Luna Max for the README update and any optimizer/test task classified as simple through lower-medium.
-- Sol Medium initially for any implementation task already slightly complex or above, and as the only direct replacement for an underestimated Luna task.
 - Terra High only for an explicitly simple review, Sol Medium for ordinary review, and Sol High for the most complex or high-risk review.
 - An implementation-independent contract-conformance capability, plus any code, security, compatibility, migration, test, or domain capability justified by the final diff and risks. Reviewer capabilities are dynamic, and contract-prescribed reviewers are honored exactly.
 
-Under `inherited-model-routing`, subagents inherit the parent configuration. The plan still specifies independent roles, objectives, allowed write paths, dependencies, deliverables, validation responsibilities, parallelization constraints, and fresh-context reviews, but it does not select or guarantee a subagent model, reasoning effort, custom profile, reviewer tier, sandbox, model escalation, or model-cost outcome. An instruction such as “do not write files” is a behavioral boundary, not host-enforced read-only isolation.
+Under `inherited-model-routing`, review subagents inherit the parent configuration. The plan specifies review roles, scopes, evidence packets, batched deliverables, parallelization constraints, and fresh-context boundaries, but it does not select or guarantee a subagent model, reasoning effort, custom profile, reviewer tier, sandbox, escalation, or model-cost outcome. An instruction such as “do not write files” is a behavioral boundary, not host-enforced read-only isolation.
 
-Delegate only when an independent deliverable and wall-clock benefit justify coordination cost. `LIGHT` defaults to direct main-agent work; `STANDARD` uses at most one implementation subagent by default; `HIGH` preserves slots for justified independent reviewers. Do not run write tasks concurrently when they own overlapping paths or unstable interfaces.
+Keep exploration, implementation, tests, integration, validation, and repair on the main agent for every lane. Delegate only final review: `LIGHT` and `STANDARD` use one reviewer, while `HIGH` may use at most two decoupled reviewers concurrently over the same frozen tree and evidence package.
 
 ## Step 4: Review And Confirm The Planning References
 
@@ -228,10 +226,10 @@ Check that:
 - in `strict-model-routing`, each model, profile, reasoning, and sandbox field is backed by its corresponding selector evidence; when all required selectors are supported, implementation follows the full Luna/Sol policy, replacement is bounded, and the reviewer profile policy is preserved;
 - in `inherited-model-routing`, the plan contains none of the unsupported model, reasoning, profile, sandbox, escalation, cost, reviewer-tier, or assignment-accuracy fields or claims;
 - independent review capabilities are selected from the contract and implementation risks; fresh context is required where independence matters, while read-only isolation is claimed only if the host separately exposes and verifies it;
-- the main agent implements or integrates directly when delegation would consume review capacity or cost more coordination than it saves;
-- every subagent receives a minimal explicit packet, preferably `fork_turns: none`, and no agent has more than two substantive follow-ups;
-- the plan records slot capacity, retire/close support, implementation-thread ceiling, reserved review slots, and `wait_agent` thresholds;
-- no 1-, 10-, 20-, or 30-second polling loop is planned, three consecutive no-information timeouts trigger replanning, and `STANDARD`/`HIGH` stop at 12/20 waits respectively.
+- the main agent performs all implementation and repair; implementation subagent ceiling is zero;
+- every final reviewer receives a minimal explicit packet, preferably `fork_turns: none`, and receives no substantive follow-up;
+- the plan records slot capacity, a one-reviewer ceiling for `LIGHT`/`STANDARD`, a two-reviewer ceiling for `HIGH`, and per-wave `wait_agent` thresholds;
+- decoupled reviewers launch concurrently, no 1-, 10-, 20-, or 30-second polling loop is planned, and the first no-information timeout terminates the remaining wave.
 - validation is layered into V0 focused, V1 integration, V2 final deterministic, and V3 external checks;
 - high-risk work has a complete failure matrix before implementation, one batched adversarial review, at most one concentrated repair, and at most three candidate snapshots;
 - V2, V3, and final reviewers use one frozen tree; V3 runs once after V2 and the final reviewers inspect that unchanged evidence package without replaying V3 by default.
@@ -249,11 +247,11 @@ The user starts the returned prompt manually. The orchestrator should:
 3. Check for material drift from the recorded branch and commit.
 4. In strict mode, verify each required selector and configuration independently. In inherited mode, verify generic delegation remains available and do not add per-agent configuration claims.
 5. Create or enter the one task-level branch/worktree.
-6. Dispatch tasks according to dependency waves and ownership.
+6. Execute implementation, tests, integration, and validation in the main agent; do not dispatch implementation subagents.
 7. Run V0 focused checks during implementation and V1 integration checks on the integrated candidate.
-8. For high-risk work, run one concentrated adversarial review over the complete failure matrix and return one batched finding set; perform at most one concentrated repair.
+8. For high-risk work, the main agent runs one concentrated adversarial self-review over the complete failure matrix and records one batched finding set; perform at most one concentrated repair.
 9. Freeze a certification candidate, capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time, then run V2 full deterministic checks on that tree.
-10. After V2 passes, run V3 external/network/authentication/discovery checks once, then run selected independent final reviewers over the same unchanged tree and complete evidence package. Give the contract-conformance reviewer the exact Task Contract bytes/digest and complete Issue identity/lifecycle context, with planning artifacts, the thin Goal, session, PR text, and runner summaries only as supplementary evidence. The verifier inspects valid V3 primary evidence rather than replaying it by default.
+10. After V2 passes, run V3 external/network/authentication/discovery checks once, then launch all decoupled independent final reviewers concurrently over the same unchanged tree and complete evidence package. Give the contract-conformance reviewer the exact Task Contract bytes/digest and complete Issue identity/lifecycle context, with planning artifacts, the thin Goal, session, PR text, and runner summaries only as supplementary evidence. The verifier inspects valid V3 primary evidence rather than replaying it by default.
 11. Prepare draft PR/MR evidence and produce the mode-accurate Dispatch Summary and loop decision.
 
 If runtime capability evidence has materially changed, pause for renewed mode confirmation and replanning. Also pause when the confirmed mode cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement; do not silently weaken the contract.
@@ -283,7 +281,7 @@ The Dispatch Summary should record:
 - incomplete tasks and pause reasons.
 - V0/V1 development checks, the batched adversarial finding set, concentrated repair count, frozen certification tree, V2 result, final reviewer wave, V3 ordering/result, and candidate snapshot count.
 
-In `strict-model-routing`, also record supported initial/final model assignments, bounded escalation, reviewer configuration, and Initial Assignment Accuracy. In `inherited-model-routing`, omit those strict-only metrics and do not describe the inherited parent configuration as a selected subagent assignment.
+In `strict-model-routing`, record only the supported final-reviewer configuration and selection rationale. In `inherited-model-routing`, do not describe the inherited parent configuration as a selected subagent assignment.
 
 ## Step 7: Reconcile The Final Tree
 

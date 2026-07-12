@@ -13,7 +13,8 @@
         "implementationSubagents": 0,
         "reservedReviewSlots": 1,
         "totalDistinctSubagents": 1,
-        "waitHardStop": 8
+        "waitHardStop": 1,
+        "needsHuman": false
       }
     },
     {
@@ -25,10 +26,11 @@
         "requiredReviewers": 1
       },
       "expected": {
-        "implementationSubagents": 1,
+        "implementationSubagents": 0,
         "reservedReviewSlots": 1,
-        "totalDistinctSubagents": 2,
-        "waitHardStop": 12
+        "totalDistinctSubagents": 1,
+        "waitHardStop": 1,
+        "needsHuman": false
       }
     },
     {
@@ -40,10 +42,11 @@
         "requiredReviewers": 2
       },
       "expected": {
-        "implementationSubagents": 1,
-        "reservedReviewSlots": 2,
-        "totalDistinctSubagents": 3,
-        "waitHardStop": 12
+        "implementationSubagents": 0,
+        "reservedReviewSlots": 0,
+        "totalDistinctSubagents": 0,
+        "waitHardStop": 0,
+        "needsHuman": true
       }
     },
     {
@@ -55,10 +58,11 @@
         "requiredReviewers": 2
       },
       "expected": {
-        "implementationSubagents": 1,
+        "implementationSubagents": 0,
         "reservedReviewSlots": 2,
-        "totalDistinctSubagents": 3,
-        "waitHardStop": 20
+        "totalDistinctSubagents": 2,
+        "waitHardStop": 2,
+        "needsHuman": false
       }
     },
     {
@@ -73,15 +77,16 @@
         "implementationSubagents": 0,
         "reservedReviewSlots": 2,
         "totalDistinctSubagents": 2,
-        "waitHardStop": 20
+        "waitHardStop": 2,
+        "needsHuman": false
       }
     }
   ],
   "issue29Baseline": {
     "waitAgentCalls": 179,
     "waitTokenRatio": 0.40,
-    "expectedHighRiskHardStop": 20,
-    "targetWaitTokenRatio": 0.10,
-    "targetUsefulWaitRatio": 0.60
+    "expectedHighRiskHardStop": 2,
+    "targetWaitTokenRatio": 0.05,
+    "targetUsefulWaitRatio": 0.80
   }
 }

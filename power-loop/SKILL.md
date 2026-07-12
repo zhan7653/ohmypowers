@@ -149,44 +149,42 @@ For `strict-model-routing`, preserve the following routing policy. A usable mode
 
 Use these installed profiles as selectable capabilities only when the host exposes a usable profile selector and every claimed profile-configured effect is separately evidenced. With a model-only selector, preserve the routing tier through the selected model while marking profile, reasoning, and sandbox fields unavailable unless independently supported. A contract may require a different exact reviewer, agent, model, provider, or procedure; do not substitute it silently.
 
-- `power_luna_worker`: lower implementation route for stable, bounded work; call the resolved configuration Luna Max only when the profile and Max reasoning effect are both evidenced.
-- `power_sol_worker`: higher implementation route and the only direct replacement for the lower route; call the resolved configuration Sol Medium only when the profile and Medium reasoning effect are both evidenced.
+- `power_luna_worker` and `power_sol_worker`: installed compatibility profiles only. Under the minimum-subagent policy, do not spawn either profile for implementation; the main agent owns implementation regardless of delivery lane.
 - `power_terra_reviewer`: explicitly simple, low-risk, highly structured review route; call the resolved configuration Terra High only when the profile and High reasoning effect are both evidenced.
 - `power_sol_reviewer`: default ordinary-review route; call the resolved configuration Sol Medium only when the profile and Medium reasoning effect are both evidenced.
 - `power_sol_high_reviewer`: high-risk or semantically complex review route; call the resolved configuration Sol High only when the profile and High reasoning effect are both evidenced.
 
-Use delegation only when its independent deliverable and wall-clock benefit justify the context, integration, and coordination cost. `LIGHT` work defaults to direct main-agent implementation. `STANDARD` work uses the main agent or at most one implementation subagent unless the host exposes enough lifecycle-controlled capacity for a clearly beneficial split. `HIGH` work may use one implementation subagent while preserving capacity for required independent review. The main agent may implement and integrate within the confirmed Task Contract; it is not forced into an orchestration-only role.
+Use no subagents for exploration, implementation, tests, integration, validation, documentation, evidence packaging, or repair. The main agent owns that entire path for `LIGHT`, `STANDARD`, and `HIGH` work. Subagents are reserved for final independent review of a frozen candidate.
 
 Inspect both the concurrent slot count and whether the host exposes a reliable retire/close operation. Do not assume a completed thread releases capacity. On a four-slot host without thread retirement, budget the entire Goal as follows:
 
 - root/main agent: one slot;
-- implementation: at most one subagent slot;
-- independent review reserve: one slot for `LIGHT` or `STANDARD`, two slots for `HIGH` when two review capabilities are justified;
+- implementation: zero subagent slots;
+- independent review reserve: one slot for `LIGHT` or `STANDARD`, and up to two slots for `HIGH` when two genuinely decoupled review capabilities are justified;
 - total distinct subagent threads: never exceed the capacity that still preserves the review reserve.
 
-Do not create separate agents for integration, documentation, validation, or evidence packaging when the main agent can perform that bounded work safely.
+Do not create separate agents for implementation, integration, documentation, validation, evidence packaging, repair, exploration, or status monitoring.
 
-Default every subagent to a minimal explicit task packet and `fork_turns: none` when exposed. Include only the Task Contract clauses needed for that task, owned paths, stable interfaces, validation responsibility, deliverable, and stop conditions. Do not copy the full main-session history or unrelated tool output. Allow at most two substantive follow-up turns per subagent: one clarification/correction and one repair request. A third follow-up means the task boundary or packet failed; end that collaboration path, preserve a concise handoff, and let the main agent take over or replan.
+Default every review subagent to a minimal explicit task packet and `fork_turns: none` when exposed. Include only its review capability, the pinned Task Contract, frozen tree identity, complete evidence package, expected batched report, and stop conditions. Do not copy the full main-session history or unrelated tool output. The substantive follow-up limit is `0`: the reviewer must return one complete report, and any clarification or repair is handled by the main agent in a new frozen-candidate cycle rather than an open-ended conversation.
 
 ### Coordination And `wait_agent` Budget
 
 Treat model-driven waiting as a metered orchestration operation, not a free sleep. Every `wait_agent` result may trigger another model turn over the accumulated context.
 
-- Do useful main-agent work before waiting: inspect interfaces, prepare integration, review existing diffs, or run safe independent checks.
-- Use mailbox-driven completion and one wait for any agent update. After an update, drain and consolidate all available agent results before deciding on follow-up work.
+- Start all decoupled reviewers in one parallel wave over the same frozen tree and evidence package. Reviewers are decoupled only when none depends on another's findings and their assigned capabilities do not duplicate each other.
+- Use mailbox-driven completion. Each reviewer may account for at most one useful `wait_agent` return; after any return, drain and consolidate every result already available before waiting for another unfinished reviewer.
 - Do not use 1-, 10-, 20-, or 30-second polling loops. Use a timeout of at least 60 seconds, or the longest timeout permitted by the current interaction/update policy, unless completion is known to be imminent.
-- After a timeout with no new information, do not immediately issue another wait. Perform useful local work, provide any required user update, or reassess the task boundary first.
-- Three consecutive no-information timeouts trigger a coordination replan; a fourth immediate wait is forbidden.
-- Warn internally at eight total waits. `STANDARD` execution stops its delegation path at twelve waits. `HIGH` execution stops and replans at twenty waits.
+- The first no-information timeout terminates the remaining reviewer wave. Interrupt unfinished reviewers and do not spawn replacements merely to obtain a review result.
+- Per review wave, the `wait_agent` hard stop equals the number of launched reviewers: one for `LIGHT` or `STANDARD`, and at most two for `HIGH`. A permitted blocker repair/recertification cycle receives a fresh wave budget, so the whole Goal has an absolute maximum of two waits for `LIGHT`/`STANDARD` or four for `HIGH`.
 - Do not send “status?” messages merely to provoke activity. Agents must return one complete handoff proactively when their bounded task finishes.
 
 The runtime or final Dispatch Summary must record `wait_agent` calls, timeouts, useful waits, consecutive-timeout maximum, cumulative wait duration, per-agent follow-up count, and coordination circuit-breaker events. When token telemetry can be attributed reliably, also record wait-related input/total tokens, `useful_wait_ratio`, and `wait_token_ratio`. Never fabricate unavailable token attribution.
 
 Targets:
 
-- `useful_wait_ratio = useful waits / all waits >= 0.60`;
-- `wait_token_ratio = wait-related tokens / main-session tokens <= 0.10`;
-- all agent-coordination tokens <= 0.30 of main-session tokens when attribution is available.
+- `useful_wait_ratio = useful waits / all waits >= 0.80`;
+- `wait_token_ratio = wait-related tokens / main-session tokens <= 0.05`;
+- all agent-coordination tokens <= 0.15 of main-session tokens when attribution is available.
 
 ### Validation And Review Lifecycle
 
@@ -203,33 +201,31 @@ Use this order:
 
 1. implement with `V0` checks;
 2. form one integrated candidate and run `V1`;
-3. run at most one concentrated adversarial review over the complete applicable failure matrix; reviewers must continue through the packet and return one batched finding set unless continuing would perform an unsafe mutation;
+3. the main agent runs at most one concentrated adversarial self-review over the complete applicable failure matrix and records one batched finding set;
 4. perform at most one concentrated repair round, rerun `V0`/`V1`, and stop for replanning if the same risk domain still exposes a new systemic defect;
 5. freeze a certification candidate and capture its Git tree digest;
 6. run `V2` on that tree;
 7. if `V2` passes, run `V3` once on the unchanged tree;
-8. run all selected final independent reviewers in one wave over the same tree and the complete V2/V3 evidence package. The contract-conformance verifier inspects existing V3 primary evidence and does not replay it by default.
+8. run selected final independent reviewers concurrently in one wave over the same tree and complete V2/V3 evidence package. Their scopes must be decoupled, and the contract-conformance reviewer inspects existing V3 primary evidence without replaying it by default.
 
 Do not call an intermediate commit or tree a final snapshot merely because ordinary tests pass. Do not run `V3`, installed-runtime discovery, or hosted authentication checks before the concentrated adversarial review, repair boundary, freeze, and V2 gate. Final reviewers certify; they do not steer implementation one finding at a time.
 
 Normal execution has one integrated candidate, one concentrated repair candidate when needed, and one final certified tree. Set a hard ceiling of three recorded candidate snapshots. Plan one final reviewer wave. If final certification unexpectedly finds a blocker, allow one unfreeze/repair/recertification cycle; a second blocking certification wave stops for replanning instead of creating another rolling snapshot.
 
-Classify implementation directly into the two supported tiers. Use the lower implementation route when the task has clear requirements, stable interfaces, bounded ownership, deterministic validation, and no unresolved architecture, security, permission, migration, compatibility, concurrency, or complex-state decision. Use its fully evidenced Luna Max label only when Max reasoning is separately supported or its profile-configured effect is demonstrably applied. Use the higher implementation route initially when any of those conditions are absent or the task needs complex diagnosis or cross-module design; use its fully evidenced Sol Medium label only when Medium reasoning is separately supported.
-
-Allow at most one direct implementation replacement from the Luna route to the Sol route, backed by concrete capability or reasoning mismatch evidence. Use `power_luna_worker` to `power_sol_worker` when profile selection and the claimed configuration effects are supported; use the corresponding direct model selection when only model selection is supported. Do not claim a reasoning change unless reasoning is independently supported. Do not use a model ladder or escalate for permission, environment, dependency, validation-infrastructure, or ownership failures. The Sol route is the implementation ceiling.
+Do not classify, route, replace, or escalate implementation subagents. The main agent performs implementation and repair; strict capability selection is used only for the bounded final reviewer wave.
 
 Plan final certification only after the final implementation diff, affected interfaces/data, validation requirements, and material risks are known. The earlier concentrated adversarial review is development feedback and cannot satisfy the independent final certification requirement. Preserve the final review-plan record with the stable snapshot:
 
 - If the contract names reviewers, agents, models, providers, or procedures, assign and verify those requirements exactly. Record an unavailable prescribed capability as a blocker or `NEEDS_HUMAN` decision; do not substitute it silently.
-- Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Capability names and reviewer count remain dynamic; apply the reviewer tier policy below instead of imposing a fixed identity or specialization.
+- Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Use one reviewer for `LIGHT` or `STANDARD`; use at most two concurrently for `HIGH`, and only when their capabilities are non-duplicative and neither depends on the other's output.
 - Require at least one reviewer independent from implementation to check contract conformance before a `PASS` or `PASS_WITH_NOTES` result. Add a separate code-review capability only when the contract or final-diff risk justifies it.
 - Select the default Sol reviewer route for ordinary review. Use the Terra reviewer route only when the review is demonstrably small, low risk, highly structured, and does not require deep cross-source reasoning or security, permission, migration, compatibility, concurrency, or complex lifecycle analysis. Use the higher-complexity Sol reviewer route for those high-risk areas, large cross-module diffs, conflicting evidence, or other semantically complex verification. Use Medium or High effort labels only when that reasoning effect is separately evidenced. Populate `power_sol_reviewer`, `power_terra_reviewer`, or `power_sol_high_reviewer` only when profile selection is supported; otherwise use a supported model selector and mark the custom-agent field unavailable.
 - For every selected reviewer, record identity/source, supported configuration evidence, model-selection rationale, implementation independence, capability, scope, boundary provenance, evidence inspected, result, and snapshot identity. Record model, reasoning effort, and host-enforced isolation only when each is separately evidenced. Tailor packets to that scope; give the contract-conformance reviewer the exact Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and Goal, clause evidence, snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals.
 - A reviewer that cannot produce a reliable conclusion within its assigned tier must return `BLOCKED` with reclassification evidence. The orchestrator may select a higher appropriate reviewer directly; do not silently walk every tier.
 
-Run independent selected final reviews in one parallel wave over the same stable snapshot and complete V2/V3 evidence package when possible. They may cover different capabilities but do not substitute for any contract-prescribed review. Do not replay V3 merely to create reviewer independence.
+Run selected final reviews in one parallel wave over the same stable snapshot and complete V2/V3 evidence package. Do not serialize reviewers whose scopes are decoupled. If the Task Contract prescribes more reviewers than the lane ceiling or available slots, return `NEEDS_HUMAN` instead of partially executing or silently dropping a reviewer. Do not replay V3 merely to create reviewer independence.
 
-For `inherited-model-routing`, subagents inherit the parent configuration. Do not specify or report an independently selected model, reasoning effort, custom profile, profile-specific sandbox, model escalation, reviewer tier, assignment accuracy, or model-cost guarantee. Plan generic subagents by role, objective, spawn/context policy, ownership, dependencies, deliverable, validation responsibility, parallelism, and failure behavior. A retry remains in the same inherited mode and is not a model upgrade.
+For `inherited-model-routing`, review subagents inherit the parent configuration. Do not specify or report an independently selected model, reasoning effort, custom profile, profile-specific sandbox, reviewer tier, assignment accuracy, or model-cost guarantee. Plan only the bounded final review roles, scopes, evidence packets, parallelism, and failure behavior. Do not use inherited-mode subagents for implementation or retry a timed-out reviewer.
 
 Inherited-mode independent review may require a distinct non-implementing subagent and `fork_turns: none` when exposed. A no-write or read-only instruction is an instruction-level boundary unless the host separately exposes verifiable enforcement; never call it a host-enforced sandbox or isolation guarantee without that evidence.
 

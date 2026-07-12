@@ -47,15 +47,11 @@ const expectedProfiles = {
 
 function route(input) {
   if (input.type === 'implementation') {
-    return input.implementationClass === 'lower-medium-or-below'
-      ? { profile: 'power_luna_worker', model: 'gpt-5.6-luna', reasoningEffort: 'max' }
-      : { profile: 'power_sol_worker', model: 'gpt-5.6-sol', reasoningEffort: 'medium' }
+    return { executor: 'main-agent', subagent: null }
   }
 
   if (input.type === 'implementation-replacement') {
-    assert.equal(input.fromProfile, 'power_luna_worker')
-    assert.equal(input.failureClass, 'capability-underclassification')
-    return { profile: 'power_sol_worker', model: 'gpt-5.6-sol', reasoningEffort: 'medium', transitions: 1 }
+    return { executor: 'main-agent', subagent: null, replacement: false }
   }
 
   assert.equal(input.type, 'review')
@@ -138,15 +134,15 @@ function strictPlanningFields(input) {
       sandbox: supports('sandbox_mode') ? 'supported' : unavailableSelector,
     },
     task: {
-      customAgent: supports('agent_type') || supports('profile') ? 'power_luna_worker' : unavailableSelector,
-      initialModel: supports('model') ? 'gpt-5.6-luna' : unavailableSelector,
-      reasoningEffort: supports('reasoning_effort') ? 'max' : unavailableSelector,
-      sandboxMode: supports('sandbox_mode') ? 'workspace-write' : 'instruction-level boundary only; host enforcement unavailable',
+      customAgent: supports('agent_type') || supports('profile') ? 'power_sol_reviewer' : unavailableSelector,
+      initialModel: supports('model') ? 'gpt-5.6-sol' : unavailableSelector,
+      reasoningEffort: supports('reasoning_effort') ? 'medium' : unavailableSelector,
+      sandboxMode: supports('sandbox_mode') ? 'read-only' : 'instruction-level no-write boundary; host enforcement unavailable',
     },
   }
 }
 
-test('routing cases encode the two implementation tiers and three reviewer tiers', async () => {
+test('routing cases keep implementation on the main agent and preserve three reviewer tiers', async () => {
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
 
   assert.equal(fixture.schema, 'power-loop-model-routing-cases/v1')
@@ -211,7 +207,7 @@ test('confirmed modes select separate templates and exact unavailable requiremen
   assert.equal(selectPlanningArtifacts(cases.get('contradictory-user-and-schema-evidence'), 'strict-model-routing').status, 'needs-human')
 })
 
-test('model-only strict planning selects the model while marking profile, reasoning, and sandbox guarantees unavailable', async () => {
+test('model-only strict review planning selects the model while marking profile, reasoning, and sandbox guarantees unavailable', async () => {
   const fixture = JSON.parse(await readFile(capabilityFixturePath, 'utf8'))
   const cases = new Map(fixture.cases.map(scenario => [scenario.id, scenario]))
   const modelOnly = cases.get('strict-model-selector-with-independent-omissions')
@@ -227,9 +223,9 @@ test('model-only strict planning selects the model while marking profile, reason
     },
     task: {
       customAgent: unavailableSelector,
-      initialModel: 'gpt-5.6-luna',
+      initialModel: 'gpt-5.6-sol',
       reasoningEffort: unavailableSelector,
-      sandboxMode: 'instruction-level boundary only; host enforcement unavailable',
+      sandboxMode: 'instruction-level no-write boundary; host enforcement unavailable',
     },
   })
 
@@ -241,15 +237,15 @@ test('model-only strict planning selects the model while marking profile, reason
       sandbox: 'supported',
     },
     task: {
-      customAgent: 'power_luna_worker',
-      initialModel: 'gpt-5.6-luna',
-      reasoningEffort: 'max',
-      sandboxMode: 'workspace-write',
+      customAgent: 'power_sol_reviewer',
+      initialModel: 'gpt-5.6-sol',
+      reasoningEffort: 'medium',
+      sandboxMode: 'read-only',
     },
   })
 })
 
-test('strict template preserves selectable profile routing and inherited template preserves orchestration without unsupported fields', async () => {
+test('strict and inherited templates reserve subagents for bounded final review', async () => {
   const strict = await readFile(path.join(assetsDir, 'agent-dispatch-plan-strict.md'), 'utf8')
   const inherited = await readFile(path.join(assetsDir, 'agent-dispatch-plan-inherited.md'), 'utf8')
   const router = await readFile(path.join(assetsDir, 'agent-dispatch-plan.md'), 'utf8')
@@ -261,19 +257,20 @@ test('strict template preserves selectable profile routing and inherited templat
     'Custom agent:',
     'Initial model:',
     'Reasoning effort:',
-    'power_luna_worker',
-    'power_sol_worker',
     'power_terra_reviewer',
     'power_sol_reviewer',
     'power_sol_high_reviewer',
-    'Initial Assignment Accuracy',
+    'Implementation subagent budget: `0`',
+    'launch all decoupled selected final reviewers concurrently',
   ]) assert.match(strict, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
 
   assert.match(strict, /Custom agent: `<exact installed agent name when profile selection is supported \| unavailable — not independently selectable>`/)
   assert.match(strict, /Initial model: `<exact selected model when separately supported \| unavailable — not independently selectable>`/)
   assert.match(strict, /Reasoning effort: `<Medium \| High \| Max when separately supported \| unavailable — not independently selectable>`/)
   assert.match(strict, /Sandbox or permission mode: `<host-enforced mode when separately observable \| instruction-level boundary only; host enforcement unavailable>`/)
-  assert.match(strict, /With model-only selection, use the corresponding direct model transition and mark the custom-agent field unavailable\./)
+  assert.doesNotMatch(strict, /power_luna_worker|power_sol_worker/)
+  assert.doesNotMatch(strict, /Initial Assignment Accuracy/)
+  assert.match(strict, /Do not replace, escalate, or retry a reviewer after launch/)
 
   for (const required of [
     'Execution mode: `inherited-model-routing`',
@@ -287,6 +284,8 @@ test('strict template preserves selectable profile routing and inherited templat
     'fork_turns: none',
     'distinct non-implementing subagent',
     'instruction-level no-write boundary',
+    'Implementation subagent budget: `0`',
+    'Launch final reviewers in one parallel wave',
   ]) assert.match(inherited, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
 
   for (const forbidden of [

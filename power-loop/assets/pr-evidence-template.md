@@ -99,7 +99,7 @@ Minimum sufficient capability coverage: `<capabilities selected and why>`
 
 Development adversarial review is supplementary feedback and does not count as final independent certification: `<not applicable or evidence>`
 
-Final reviewer wave identity: `<one shared frozen Git tree digest>`
+Final reviewer wave identity: `<one shared frozen Git tree digest; all decoupled reviewers launched concurrently>`
 
 | Reviewer identity/source | Confirmed mode | Configuration provenance | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Snapshot |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -159,6 +159,8 @@ Coordination metrics:
 - `wait_token_ratio`: `<value or unavailable>`
 - Total coordination-token ratio: `<value or unavailable>`
 - Telemetry provenance: `<exact source or unavailable; never inferred>`
+- Review-wave budget: `<launched reviewer count; wait hard stop equals this count, maximum 2>`
+- No-information timeout action: `<none, or remaining reviewer wave interrupted after the first timeout>`
 
 Validation and reviewer snapshot identities:
 

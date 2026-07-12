@@ -6,7 +6,7 @@
 
 `power-loop` originally described one universally selectable custom-agent routing design. That assumption is not portable. A host can install Luna, Sol, and Terra profile declarations while exposing a `spawn_agent` contract that cannot select a model, reasoning effort, custom profile, or sandbox. Installed configuration files alone are therefore not evidence that strict routing is executable.
 
-The orchestration protocol must retain strict routing where the current host demonstrably supports it and provide a complete inherited-model workflow where generic subagents inherit the parent configuration. Pausing all delegation would discard useful roles, ownership, dependency handling, safe parallelism, and fresh-context independent review.
+The orchestration protocol retains strict reviewer routing where the current host demonstrably supports it and provides an inherited-model review workflow where generic subagents inherit the parent configuration. Implementation delegation is disabled because its coordination and waiting cost is not reliably offset by wall-clock savings; fresh-context final review remains the bounded use of subagents.
 
 ## Normative Terminology
 
@@ -93,19 +93,17 @@ Both templates include:
 
 #### Strict Model Routing
 
-The `strict-model-routing` template preserves the existing custom-profile design when the selectors needed for those guarantees are demonstrably available. A supported model selector or custom-profile selector is sufficient for the strict recommendation, but does not establish any other selector. The template may include a per-task profile, model, reasoning effort, host-verified sandbox, or bounded model replacement only when the corresponding capability is evidenced.
+The `strict-model-routing` template preserves selectable custom profiles for final review when the selectors needed for those guarantees are demonstrably available. A supported model selector or custom-profile selector is sufficient for the strict recommendation, but does not establish any other selector. The template may include a reviewer profile, model, reasoning effort, or host-verified sandbox only when the corresponding capability is evidenced.
 
 The default strict routing policy is:
 
 | Work class | Initial model | Reasoning | Notes |
 |---|---|---|---|
-| Simple through lower-medium implementation | `gpt-5.6-luna` | Max | Default for most bounded implementation, tests, docs, and fixes |
-| Slightly complex or harder implementation | `gpt-5.6-sol` | Medium | Initial assignment above Luna and implementation ceiling |
 | Explicitly simple review | `gpt-5.6-terra` | High | Selected sparingly when supported |
 | Ordinary review | `gpt-5.6-sol` | Medium | Default strict reviewer tier |
 | Most complex or high-risk review | `gpt-5.6-sol` | High | Requires contract or material-risk justification |
 
-Terra is not an implementation tier. A Luna implementation task may be replaced directly by Sol Medium at most once, and only after evidence shows a capability or reasoning mismatch. Permission, environment, dependency, validation-infrastructure, or interface failures do not trigger model replacement. A replacement receives useful findings, failure evidence, artifacts, and current state. Failure at Sol Medium pauses the task.
+Installed Luna and Sol worker profiles are not dispatched by the minimum-subagent policy. Implementation and repair remain main-agent work.
 
 Every strict field remains conditional on evidence for the corresponding selector. If a required strict configuration is unavailable, the workflow pauses; it does not silently switch to inherited behavior or use undocumented arguments.
 
@@ -124,7 +122,7 @@ The inherited template must not require, populate, calculate, or guarantee:
 - Model-cost optimization or savings.
 - Initial Assignment Accuracy or any equivalent model-assignment metric.
 
-Inherited mode still assigns explicit roles, objectives, ownership boundaries, dependencies, deliverables, validation responsibility, parallelization constraints, and failure behavior. Generic delegation remains useful even though configuration is inherited.
+Inherited mode assigns explicit final-review roles, objectives, scopes, evidence packets, parallelization constraints, and failure behavior. Generic delegation is not used for implementation.
 
 Independent review in inherited mode uses fresh context, such as `fork_turns: none` when exposed, and must not have participated in implementation. Review tasks may carry an instruction-level no-write boundary. This supports behavioral independence, but it is not a claim of host-enforced read-only isolation.
 
@@ -143,17 +141,15 @@ If the Task Contract requires an exact model, custom profile, provider, reasonin
 
 ### Orchestration, Ownership, And Parallelism
 
-- The main agent owns interfaces, dispatch, dependency coordination, conflict handling, validation, consolidation, and metered waiting. It may implement or integrate directly when delegation would consume review capacity or cost more coordination than it saves.
-- Every delegated task has an independent objective and deliverable; tasks are not combined merely to reduce agent count.
+- The main agent owns exploration, implementation, tests, integration, validation, repair, consolidation, final-review dispatch, and metered waiting.
+- Every delegated review has an independent, non-duplicative capability and one batched deliverable.
 - The implementation loop uses one task-level branch or worktree rather than one worktree per subagent.
-- Read-only or instruction-level no-write exploration may run concurrently when it does not depend on unstable state.
-- Write-capable tasks may run concurrently only with non-overlapping ownership and stable interfaces.
-- Tasks with overlapping files, unstable shared interfaces, or unresolved dependencies are serialized.
-- Bounded generic delegation, ownership, dependencies, capacity-aware parallelism, stable-snapshot review, and fresh-context review are preserved in both modes.
-- `LIGHT` defaults to direct main-agent work. `STANDARD` uses at most one implementation subagent by default. `HIGH` uses at most one implementation subagent while preserving two reviewer slots when two independent capabilities are justified.
-- On a four-slot host without reliable thread retirement, the total distinct-thread budget is root plus at most one implementation worker plus the required review reserve; completed threads are not assumed to release capacity.
-- Subagents default to minimal explicit task packets with `fork_turns: none` when exposed and receive at most two substantive follow-ups.
-- `wait_agent` is metered: no 1-, 10-, 20-, or 30-second polling loops; three consecutive no-information timeouts trigger replanning; warn at eight waits; stop standard delegation at twelve waits and high-risk execution at twenty waits.
+- Write-capable, exploratory, validation, documentation, evidence, and repair tasks are not delegated.
+- Bounded generic delegation is preserved only for stable-snapshot fresh-context final review.
+- `LIGHT` and `STANDARD` use one final reviewer. `HIGH` may use at most two reviewers when their scopes are decoupled, non-duplicative, and independent of each other's output.
+- On a four-slot host without reliable thread retirement, the total distinct-thread budget is root plus the required final-review reserve; completed threads are not assumed to release capacity.
+- Review subagents default to minimal explicit task packets with `fork_turns: none` when exposed and receive no substantive follow-up.
+- `wait_agent` is metered: launch the complete decoupled reviewer wave concurrently, allow at most one useful return per reviewer, use no 1-, 10-, 20-, or 30-second polling loops, and terminate the remaining wave after the first no-information timeout.
 - Dispatch evidence reports wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and wait/coordination token ratios when reliable telemetry is available.
 
 ### Compact Planning Reference Patch And Goal Protocol
@@ -207,7 +203,7 @@ Execution Blueprint, Dispatch Plan, Goal, PR/MR evidence, verifier input, verifi
 - Validation lifecycle: V0 focused, V1 integration, concentrated adversarial review/repair, frozen candidate, V2 final deterministic, final reviewer wave, and V3 external evidence.
 - Candidate snapshot count, adversarial repair count, final certification waves, and evidence that V3 ran after V2 on the frozen tree and was inspected by final reviewers without default replay.
 
-Strict evidence may additionally record exposed initial/final models, reasoning efforts, profiles, verified isolation, bounded replacement, reviewer tiers, and Initial Assignment Accuracy.
+Strict evidence may additionally record exposed final-reviewer models, reasoning efforts, profiles, verified isolation, and reviewer tiers.
 
 Inherited evidence must omit those strict-only metrics and guarantees. When the host happens to expose the inherited parent model, the evidence may record it as inherited runtime provenance, not as selected subagent routing. Missing model, reasoning, profile, or sandbox evidence must remain visibly unavailable rather than being inferred.
 
@@ -286,7 +282,7 @@ Then they do not specify unsupported per-subagent models, reasoning efforts, cus
 
 Given inherited mode
 When work is decomposed
-Then generic subagents may receive explicit roles, objectives, ownership boundaries, dependencies, deliverables, validation responsibilities, and parallelization constraints.
+Then generic subagents may receive only explicit final-review roles, non-duplicative scopes, evidence packets, batched deliverables, and parallelization constraints.
 
 ### AC-9: Review Evidence Distinguishes Fresh Context From Isolation
 
@@ -315,14 +311,14 @@ Then dual-track tests and all relevant existing tests pass, and documentation, s
 ## Open Questions Resolved
 
 - Should strict routing be removed because the current host cannot select profiles? -> No. Preserve it for hosts with demonstrated selector support.
-- Should all multi-agent execution pause when model selection is unavailable? -> No. Use the complete inherited-model track for generic role-based delegation.
+- Should all multi-agent execution pause when model selection is unavailable? -> No. Use inherited-model delegation only for bounded final review; keep implementation on the main agent.
 - How is capability detected? -> Inspect the visible supported spawn contract first; avoid a probe spawn when schema evidence is conclusive.
 - Does an installed TOML prove strict routing is available? -> No. Selectability requires current host evidence.
 - When is an execution mode selected? -> Only after the preflight report and explicit user confirmation.
 - Can inherited mode record the parent model? -> Only as observable inherited provenance, never as an independently selected subagent configuration.
 - Does a no-write instruction prove read-only isolation? -> No. Host-enforced isolation requires separate observable evidence.
 - What happens to exact model, provider, profile, reasoning, sandbox, or isolation requirements in inherited mode? -> Planning pauses for a human decision.
-- Is reducing agent count a goal? -> Agent count is not minimized blindly, but every delegation must justify its coordination cost and preserve required review capacity. Use the delivery-lane budgets and wait circuit breakers.
+- Is reducing agent count a goal? -> Yes for implementation: its subagent ceiling is zero. Final reviewers are minimized to one, or two concurrently for decoupled high-risk capabilities, with strict wait circuit breakers.
 - When is the final Goal Prompt generated? -> Only after mode confirmation and successful persistence of the separately confirmed planning artifacts and compact reference patch.
 
 ## Premises

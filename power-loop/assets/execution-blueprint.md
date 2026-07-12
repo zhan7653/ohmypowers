@@ -98,7 +98,7 @@ High-risk failure matrix: `<applicable fabrication, scope, authorization, tamper
 
 Review gates:
 
-- Concentrated adversarial development review: `<one complete packet and one batched finding set, or not applicable>`
+- Concentrated adversarial development review: `<main-agent self-review with one complete packet and one batched finding set, or not applicable>`
 - Concentrated repair rounds: `<0 or 1; same-risk systemic recurrence stops for replanning>`
 - Final certification waves: `<planned 1; maximum 2 only for one unexpected blocker repair/recertification cycle>`
 - Candidate snapshot ceiling: `3`
@@ -111,17 +111,17 @@ Review gates:
 
 - Host concurrent-agent slots: `<observed count or unavailable>`
 - Reliable agent retire/close capability: `<supported with evidence | unavailable>`
-- Total distinct subagent-thread ceiling: `<budget that preserves required review capacity>`
-- Implementation subagent ceiling: `<0 for LIGHT by default | 0-1 for STANDARD | at most 1 for HIGH>`
-- Reserved review slots: `<at least 1; 2 for HIGH when justified>`
-- Per-agent substantive follow-up limit: `2`
-- wait_agent warning threshold: `8`
-- wait_agent hard stop: `<12 for STANDARD | 20 for HIGH | lower LIGHT budget>`
-- Consecutive no-information timeout stop: `3`
+- Total distinct subagent-thread ceiling: `<1 for LIGHT or STANDARD | maximum 2 for HIGH>`
+- Implementation subagent ceiling: `0`
+- Reserved review slots: `<1 for LIGHT or STANDARD | 1-2 for HIGH when scopes are decoupled>`
+- Per-agent substantive follow-up limit: `0`
+- wait_agent warning threshold: `<1 for LIGHT or STANDARD | 2 for HIGH>`
+- wait_agent hard stop per review wave: `<number of launched reviewers; maximum 2>`
+- No-information timeout stop: `the first no-information timeout terminates the remaining reviewer wave`
 - Wait polling rule: `no 1-, 10-, 20-, or 30-second polling; use at least 60 seconds or the longest permitted interaction timeout`
 - Coordination telemetry: `<wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and token ratios when available>`
 - Candidate snapshot ceiling: `3`
-- Concentrated adversarial review waves: `<0 or 1>`
+- Concentrated adversarial review waves: `<0 or 1 main-agent self-review>`
 - Concentrated repair rounds: `<0 or 1>`
 - Final certification wave budget: `<planned 1; hard stop after a second blocking wave>`
 - V3 external-check budget: `1 successful final-tree run after V2 and before final review; verifier does not replay it by default`

@@ -39,7 +39,7 @@ Strict-field rule: populate each task and evidence field only when its capabilit
 
 ## Assignment policy
 
-Initial assignment rationale: `<why each task uses the lower implementation, higher implementation, simple review, ordinary review, or complex review route; use Luna Max, Sol Medium, Terra High, or Sol High labels only when the capability matrix evidences the corresponding profile and reasoning effect>`
+Initial assignment rationale: `<implementation stays on the main agent; explain only the selected final reviewer route or routes, using Terra High, Sol Medium, or Sol High labels only when the capability matrix evidences the corresponding profile and reasoning effect>`
 
 Required custom-agent availability: `<verified when profile selection is supported | unavailable — not independently selectable | missing required profiles>`
 
@@ -51,12 +51,12 @@ Strict reviewer routing; resolve each label through the capability matrix:
 
 ## Task graph
 
-Repeat this section for every implementation, integration, validation, and selected review-capability task.
+Repeat this section only for selected final review-capability tasks. Implementation, tests, integration, validation, documentation, evidence packaging, and repair remain main-agent work.
 
 ### `<TASK-ID>`: `<short task name>`
 
 - Objective: `<one independently useful objective>`
-- Role: `<implementation | tests | integration | validation | selected review capability>`
+- Role: `selected final review capability`
 - Custom agent: `<exact installed agent name when profile selection is supported | unavailable — not independently selectable>`
 - Initial model: `<exact selected model when separately supported | unavailable — not independently selectable>`
 - Reasoning effort: `<Medium | High | Max when separately supported | unavailable — not independently selectable>`
@@ -68,8 +68,8 @@ Repeat this section for every implementation, integration, validation, and selec
 - Expected deliverable: `<diff, tests, evidence, or report>`
 - Validation responsibility: `<validation IDs, checks, or review responsibility>`
 - Parallelization conditions: `<when this may run concurrently and what must remain stable>`
-- Allowed direct escalation targets: `<power_sol_worker when profile selection is supported | directly selected Sol model when only model selection is supported | None>`
-- Escalation ceiling: `<supported target fields only; mark unsupported profile/reasoning fields unavailable | No escalation for read-only review tasks>`
+- Allowed direct escalation targets: `None`
+- Escalation ceiling: `No escalation or replacement for read-only review tasks`
 
 ## Dependency waves and parallelism
 
@@ -77,57 +77,49 @@ Repeat this section for every implementation, integration, validation, and selec
 |---|---|---|---|---|
 | `WAVE-1` | `<TASK-IDs>` | `<parallel | sequential>` | `<condition>` | `<stable deliverable/interface>` |
 
-Use the fewest subagents that preserve a clear wall-clock benefit and required implementation independence. `LIGHT` defaults to direct main-agent work. `STANDARD` uses at most one implementation subagent by default. `HIGH` preserves capacity for its justified independent review capabilities. Do not split work that lacks an independent deliverable or creates overlapping write ownership.
+Use no implementation subagents. Launch final reviewers in one parallel wave only when their scopes are decoupled: no reviewer depends on another, their capabilities do not duplicate each other, and all inspect the same frozen tree and evidence package. Use one reviewer for `LIGHT` or `STANDARD`; use at most two for `HIGH`.
 
 ## Agent capacity and coordination budget
 
 - Host concurrent slots: `<observed count or unavailable>`
 - Reliable thread retire/close operation: `<supported with evidence | unavailable>`
 - Root slot: `1`
-- Implementation subagent budget: `<0 for LIGHT by default | 0-1 for STANDARD | at most 1 for HIGH>`
-- Reserved review slots: `<at least 1; 2 for HIGH when two review capabilities are justified>`
+- Implementation subagent budget: `0`
+- Reserved review slots: `<1 for LIGHT or STANDARD | 1-2 for HIGH when two decoupled review capabilities are justified>`
 - Total distinct subagent-thread ceiling: `<value that preserves the review reserve; never assume completed threads release capacity>`
-- Per-agent substantive follow-up limit: `2`
-- `wait_agent` warning threshold: `8`
-- `wait_agent` hard stop: `<12 for STANDARD | 20 for HIGH | lower explicit LIGHT budget>`
-- Consecutive no-information timeout stop: `3`
+- Per-agent substantive follow-up limit: `0`
+- `wait_agent` warning threshold: `<1 for LIGHT or STANDARD | 2 for HIGH>`
+- `wait_agent` hard stop per review wave: `<1 for LIGHT or STANDARD | number of launched reviewers, maximum 2 for HIGH>`
+- No-information timeout stop: `the first no-information timeout terminates the remaining reviewer wave`
 - Polling rule: `no 1-, 10-, 20-, or 30-second loops; use at least 60 seconds or the longest permitted interaction timeout`
 - Context rule: `minimal explicit packet; fork_turns: none when exposed; no full-session history by default`
 
 ## Ownership conflict rules
 
 - Use one task-level branch or worktree for the loop.
-- Start write-capable workers only after assigning non-overlapping paths and interface responsibilities.
-- Serialize overlapping paths, unstable interfaces, and unresolved dependencies.
-- Let read-only exploration, code review, and evidence verification run in parallel when they inspect stable inputs.
-- Stop and replan when ownership becomes ambiguous; do not let workers race on the same files.
+- Do not start write-capable subagents.
+- Final reviewers are instruction-level no-write tasks over one frozen tree.
+- Parallelize reviewers only when their capability scopes are non-duplicative and neither reviewer consumes another's result.
+- If reviewer scopes cannot be decoupled, combine them into one review packet or serialize the work in the main agent instead of creating a reviewer chain.
 
-## Escalation protocol
+## Review routing protocol
 
-- Permit at most one direct route replacement per implementation task. Record it as model escalation only when model selection or the applied model effect is separately evidenced.
-- Replace only for evidence-backed capability or reasoning under-classification; describe a reasoning change only when reasoning selection or its applied effect is separately evidenced.
-- Do not escalate for permission, environment, dependency, validation-infrastructure, or interface-conflict failures.
-- Reclassify only from the Luna route directly to the Sol route; there is no implementation model ladder.
-- Use `power_luna_worker` to `power_sol_worker` only when profile selection is supported. With model-only selection, use the corresponding direct model transition and mark the custom-agent field unavailable.
-- Claim Max or Medium reasoning only when the reasoning dimension is separately supported.
-- Assign the Sol route initially when repository inspection already shows work above the Luna boundary.
-- Cap implementation at the supported Sol route fields; do not claim unsupported profile, reasoning, or sandbox configuration.
-- Stop and report the blocker if the capability-matrix-resolved Sol implementation route cannot complete the task.
-- Give the replacement worker prior findings, failure evidence, relevant artifacts, and current state.
+- Select reviewer routes once from the final diff and risk packet before launching the wave.
+- Do not replace, escalate, or retry a reviewer after launch merely because it timed out or returned `BLOCKED`.
+- If a required reviewer capability is unavailable, return `NEEDS_HUMAN`.
 
 ## Main orchestrator responsibilities
 
-- Own interfaces, dependency coordination, conflict resolution, dispatch, metered waiting, steering, escalation decisions, and result consolidation.
-- Implement or integrate directly when delegation would consume review capacity or cost more coordination than it saves.
-- Pause when delegation or a required custom agent is unavailable unless this confirmed plan explicitly documents a narrow exception.
+- Own all exploration, implementation, tests, integration, validation, documentation, evidence packaging, repair, snapshot capture, reviewer selection, metered waiting, and result consolidation.
+- Pause when a required final reviewer capability is unavailable.
 
-Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact integration paths; explain any HIGH-risk delegation boundary>`
+Main-agent implementation scope: `all implementation and repair paths for every delivery lane`
 
 ## Verification and review plan
 
 - Development failure matrix: `<complete HIGH-risk matrix before implementation, or not applicable>`
 - Validation layers: `<V0 focused; V1 integration; V2 final deterministic; V3 external after V2 and before final review>`
-- Concentrated adversarial review: `<one development-feedback wave returning one batched finding set, or not applicable>`
+- Concentrated adversarial review: `<main-agent self-review returning one batched finding set, or not applicable>`
 - Concentrated repair budget: `<0 or 1; same-risk systemic recurrence stops for replanning>`
 - Candidate snapshot ceiling: `3`
 - Final certification wave budget: `<planned 1; maximum 2 only for one unexpected blocker repair/recertification cycle>`
@@ -137,7 +129,7 @@ Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact
 - Stable snapshot: `<repository/ref, commit, Git tree digest, dirty/generated boundary, capture time, and validation evidence; tree digest controls freshness>`
 - Contract-prescribed reviews: `<exact reviewers, agents, models, providers, and procedures, or None>`
 - Selection basis when no review topology is prescribed: `<contract obligations; final diff; affected interfaces/data; validation; and security, compatibility, migration, data, permission, concurrency, and domain risks>`
-- Minimum sufficient capabilities: `<one or more independent read-only capabilities, including contract-conformance review>`
+- Minimum sufficient capabilities: `<one for LIGHT/STANDARD; one or two decoupled capabilities for HIGH, including contract-conformance review>`
 - Reviewer tier selection: `<simple structured route only for explicitly simple checks; ordinary Sol route by default; higher-complexity Sol route for high-risk or semantically complex review, with rationale; use Terra High, Sol Medium, or Sol High labels only when their profile and reasoning effects are evidenced>`
 - Independent contract-conformance reviewer: `<identity/source and implementation-independence evidence; required for PASS or PASS_WITH_NOTES>`
 - Additional review capabilities: `<code, test, security, compatibility, migration, data, or domain review only when justified, or None>`
@@ -146,30 +138,20 @@ Main-agent implementation scope: `<direct LIGHT/STANDARD implementation or exact
 - Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
 - Contract-conformance packet: `<pinned Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and thin Goal, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
 - Other review packets: `<tailored to each selected capability and scope>`
-- Execution: `<after V0/V1 and any concentrated adversarial repair, freeze one candidate; run V2, then V3 once, then independent selected final reviews in one wave over that same snapshot and evidence package; contract-prescribed reviews do not substitute for one another>`
+- Execution: `<after main-agent V0/V1, adversarial self-review, and any repair, freeze one candidate; run V2, then V3 once, then launch all decoupled selected final reviewers concurrently over that same snapshot and evidence package; contract-prescribed reviews do not substitute for one another>`
 
 ## Dispatch Summary requirements
 
 At completion or stop, report:
 
 - confirmed execution mode and capability evidence;
-- planned and actual task counts;
-- every task's initial and final supported routing fields, with unsupported fields recorded as `unavailable — not independently selectable`;
-- route-replacement status and evidence-backed reason; call it model escalation only when model evidence supports that claim;
-- parallel or sequential execution and wave;
+- planned and actual final-review task counts;
+- every reviewer task's supported routing fields, with unsupported fields recorded as `unavailable — not independently selectable`;
+- concurrent review-wave membership and decoupling rationale;
 - ownership conflicts and their resolution;
 - incomplete tasks and pause reasons;
-- Initial Assignment Accuracy.
 - pinned canonical Issue identity and final Git tree digest.
 - wait_agent calls, timeout count, useful waits, maximum consecutive timeouts, cumulative wait duration, and circuit-breaker events;
 - each agent's substantive follow-up count;
 - useful_wait_ratio, wait-related tokens, wait_token_ratio, and total coordination-token ratio when reliable telemetry is available; otherwise explicitly unavailable.
-
-Calculate Initial Assignment Accuracy as:
-
-```text
-implementation tasks completed without direct route replacement
--------------------------------------------------------------
-completed or attempted implementation tasks that received an initial assignment
-```
 <!-- power-loop:agent-dispatch-plan:end -->
