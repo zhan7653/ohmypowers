@@ -30,7 +30,8 @@ Classification is an evidence conclusion. Execution mode is a user-confirmed pla
 - `power-grill` owns the requirement-level contract: problem, goal, user-observable behavior, scope, non-goals, dependencies, external contracts, constraints, risks, validation expectations, acceptance criteria, stop condition, and pause conditions.
 - `power-loop` may derive private interfaces, exact affected files, control flow, error handling, test seams, validation commands, ownership, dependencies, and integration order after repository inspection.
 - Unresolved user behavior, public API, schema, compatibility, security, permission, migration, provider, or business decisions return `NEEDS_GRILL` or `NEEDS_HUMAN` rather than being decided silently.
-- The Task Contract remains canonical and takes precedence over the Execution Blueprint, Agent Dispatch Plan, Issue Patch, and Goal Prompt.
+- The complete persisted Issue body is the sole normative contract. The Task Contract owns requirements; the confirmed Execution Blueprint and Agent Dispatch Plan own execution obligations. The Goal, comments, session, PR/MR text, and runner summaries are supplementary evidence and cannot add obligations.
+- Canonical Issue identity uses SHA-256 of the exact full persisted UTF-8 body without normalization as unconditionally authoritative content identity; host revision metadata is provenance. Task Contract identity covers exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`.
 
 ### Capability Preflight
 
@@ -151,7 +152,17 @@ No mode-specific Dispatch Plan or Goal Prompt may be generated before execution-
 
 The Issue Patch may update only the marked Execution Blueprint, Agent Dispatch Plan, and execution metadata. A revised patch requires fresh confirmation. Pasted-only contracts must be persisted as a hosted issue or local brief before the execution sections can be confirmed.
 
-The Goal references the confirmed persisted contract and planning sections instead of embedding a second canonical copy. It performs capability and repository-baseline checks before implementation and stops when material drift makes the confirmed plan stale. The user starts it manually; `power-loop` does not execute it.
+The Goal is a thin launcher that pins the canonical Issue identity, names the confirmed sections to read, performs identity/planning/baseline/capability preflight, stops on drift, and instructs manual start. It must not introduce budget, scope, validation, review, PR, lifecycle, permission, retry, reporting, or other obligations absent from the Issue. The user starts it manually; `power-loop` does not execute it.
+
+### Snapshot Freshness, Waiver, And Lifecycle Handoff
+
+Verifier and curator evidence records repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time. Git tree digest controls freshness: different commits with the same tree are `tree-equivalent` and may reuse evidence; a different tree invalidates the old PASS and review evidence for the final tree.
+
+Curator assigns exactly one freshness classification: `tree-equivalent`, `reverified`, `human-waived`, `contract-changing`, or `unresolved`. A changed tree reaches closure only after verifier evidence bound to that final tree or an explicit complete human waiver. The waiver persists verified snapshot, final snapshot, changed paths, diff summary, behavior impact, validations run, uncovered content, reason, scope, confirmer, confirmation time, residual risks, and a coverage statement that the old PASS covers only the verified snapshot and the final tree is human-waived, not verifier PASS.
+
+Task Contract, acceptance-criteria, public-behavior, security, permission, or migration changes are `contract-changing`: requirements return to `power-grill` and the confirmed plan returns to `power-loop`. Curator owns lifecycle, linkage, waiver, and closure evidence, but cannot edit the Task Contract, Execution Blueprint, or Agent Dispatch Plan.
+
+Persisted Issue lifecycle state is exactly one of `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, or `follow-up-needed`. Runtime/verifier outcomes such as `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, and `NEEDS_HUMAN`, and curator classifications, are not persisted states. Labels are optional, non-normative presentation aids and never gates.
 
 ### Mode-Accurate Evidence And Verification
 
@@ -183,6 +194,7 @@ At least one implementation-independent contract-conformance review is required 
 - No mode claims exact monetary, token, credit, or subscription savings without authoritative usage evidence.
 - Unresolved high-risk work remains `HUMAN_ONLY` and receives no implementation Goal Prompt.
 - Historical generated plans require no compatibility, migration, or reopening.
+- Historical or external issues missing exact contract or snapshot identity remain readable, but receive no fabricated freshness guarantee; require evidence, replanning, or an explicit human decision.
 
 ## Out Of Scope
 
@@ -291,5 +303,6 @@ Then dual-track tests and all relevant existing tests pass, and documentation, s
 - Strict routing and inherited routing are separately maintained product behaviors, not preferred and degraded forms of one template.
 - Useful delegation is defined by roles, ownership, dependencies, deliverables, validation, and review independence, not solely by model selection.
 - Fresh-context review strengthens independence but does not create host-enforced filesystem isolation.
-- The final Goal Prompt is an operational launcher, not a second canonical plan.
+- The final Goal Prompt is a thin operational launcher, not a second normative contract, and adds no obligations.
 - Stable mode and capability evidence belongs in persisted planning and execution artifacts so users and verifiers can audit what was actually supported.
+- A verifier result covers only its bound Git tree; a human waiver never relabels the final tree as verifier PASS.

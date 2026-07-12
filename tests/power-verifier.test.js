@@ -51,7 +51,24 @@ function normalizeReviewerResult(result) {
 function aggregate(input) {
   if (input.conflicts.length || input.humanDecisionRequired) return 'NEEDS_HUMAN'
 
-  const isFresh = evidence => evidence.snapshot === input.snapshot.id && !evidence.stale
+  const hasCanonicalIssueIdentity = issue =>
+    Boolean(issue?.source && issue?.revision && issue?.fullBodyDigest)
+  const sameIssueIdentity =
+    hasCanonicalIssueIdentity(input.pinnedIssue) &&
+    hasCanonicalIssueIdentity(input.observedIssue) &&
+    input.pinnedIssue.source === input.observedIssue.source &&
+    input.pinnedIssue.fullBodyDigest === input.observedIssue.fullBodyDigest
+  const hasSnapshotIdentity = Boolean(
+    input.snapshot?.repositoryRef &&
+      input.snapshot?.commit &&
+      input.snapshot?.gitTreeDigest &&
+      input.snapshot?.dirtyGeneratedBoundary &&
+      input.snapshot?.capturedAt,
+  )
+  const isFresh = evidence =>
+    Boolean(input.snapshot.gitTreeDigest) &&
+    evidence.gitTreeDigest === input.snapshot.gitTreeDigest &&
+    !evidence.stale
   const selectedReviews = input.reviews.filter(review => review.selected !== false)
   const selectedReviewResults = selectedReviews.map(review => normalizeReviewerResult(review.result))
   const isPassingReview = review => ['PASS', 'PASS_WITH_NOTES'].includes(normalizeReviewerResult(review.result))
@@ -63,6 +80,8 @@ function aggregate(input) {
         clause.humanDecisionRequired),
   )
   if (hasHumanRequiredClause) return 'NEEDS_HUMAN'
+
+  if (!sameIssueIdentity || !hasSnapshotIdentity) return 'BLOCKED'
 
   const hasBlockingClause = input.clauses.some(
     clause =>
@@ -113,37 +132,32 @@ function aggregate(input) {
 test('aggregation fixtures implement the documented deterministic precedence', async () => {
   const fixture = await readFixture('aggregation-cases.json')
 
-  assert.equal(fixture.schema, 'power-verifier-aggregation-cases/v1')
+  assert.equal(fixture.schema, 'power-verifier-aggregation-cases/v2')
   for (const scenario of fixture.cases) {
     assert.equal(aggregate(scenario.input), scenario.expected.result, scenario.id)
     assert.ok(scenario.expected.smallestNextAction, `${scenario.id} has a next action`)
   }
 })
 
-test('aggregation fixtures cover every required result and evidence condition', async () => {
+test('aggregation fixtures cover canonical Issue and Git tree freshness conditions', async () => {
   const fixture = await readFixture('aggregation-cases.json')
   const ids = new Set(fixture.cases.map(scenario => scenario.id))
 
   for (const id of [
     'full-compliance',
-    'fixable-implementation-nonconformance',
-    'missing-required-evidence',
+    'same-tree-different-commit',
+    'host-revision-difference-same-body',
+    'canonical-issue-body-mismatch',
+    'changed-tree-blocked',
+    'historical-missing-issue-identity',
+    'historical-missing-tree-identity',
     'missing-independent-review',
-    'issue-goal-conflict',
+    'issue-internal-conflict',
     'nonblocking-reviewer-notes',
-    'stale-evidence-after-snapshot-change',
-    'exact-named-review-requirement',
-    'failed-exact-required-review',
-    'stale-clause-evidence',
     'human-required-clause',
-    'selected-review-wrong-snapshot',
-    'selected-needs-human-review-stale',
-    'selected-needs-human-review-wrong-snapshot',
     'selected-public-blocked-review',
     'selected-public-needs-human-review',
     'selected-public-pass-with-notes-review',
-    'selected-public-pending-review',
-    'exact-review-pass-with-notes',
   ]) {
     assert.ok(ids.has(id), `missing ${id}`)
   }
@@ -156,23 +170,43 @@ test('selected public reviewer results have deterministic precedence', async () 
   for (const [id, expected] of [
     ['selected-public-blocked-review', 'BLOCKED'],
     ['selected-public-needs-human-review', 'NEEDS_HUMAN'],
-    ['selected-needs-human-review-stale', 'BLOCKED'],
-    ['selected-needs-human-review-wrong-snapshot', 'BLOCKED'],
     ['selected-public-pass-with-notes-review', 'PASS_WITH_NOTES'],
-    ['selected-public-pending-review', 'BLOCKED'],
-    ['exact-review-pass-with-notes', 'PASS_WITH_NOTES'],
   ]) {
     assert.equal(aggregate(cases.get(id).input), expected, id)
   }
 })
 
-test('failed exact reviews, stale clauses, and human-required clauses cannot pass', async () => {
+test('Issue identity gaps, changed trees, and human-required clauses cannot pass', async () => {
   const fixture = await readFixture('aggregation-cases.json')
   const cases = new Map(fixture.cases.map(scenario => [scenario.id, scenario]))
 
-  for (const id of ['failed-exact-required-review', 'stale-clause-evidence', 'human-required-clause']) {
+  for (const id of [
+    'canonical-issue-body-mismatch',
+    'changed-tree-blocked',
+    'historical-missing-issue-identity',
+    'historical-missing-tree-identity',
+    'human-required-clause',
+  ]) {
     assert.notEqual(aggregate(cases.get(id).input), 'PASS', id)
   }
+})
+
+test('different commits with the same Git tree reuse verifier evidence', async () => {
+  const fixture = await readFixture('aggregation-cases.json')
+  const scenario = fixture.cases.find(item => item.id === 'same-tree-different-commit')
+
+  assert.notEqual(scenario.input.snapshot.commit, scenario.input.requiredEvidence[0].commit)
+  assert.equal(scenario.input.snapshot.gitTreeDigest, scenario.input.requiredEvidence[0].gitTreeDigest)
+  assert.equal(aggregate(scenario.input), 'PASS')
+})
+
+test('authoritative body identity survives differing host revision metadata', async () => {
+  const fixture = await readFixture('aggregation-cases.json')
+  const scenario = fixture.cases.find(item => item.id === 'host-revision-difference-same-body')
+
+  assert.notEqual(scenario.input.pinnedIssue.revision, scenario.input.observedIssue.revision)
+  assert.equal(scenario.input.pinnedIssue.fullBodyDigest, scenario.input.observedIssue.fullBodyDigest)
+  assert.equal(aggregate(scenario.input), 'PASS_WITH_NOTES')
 })
 
 test('repository guidance does not reintroduce fixed Sol High review topology', async () => {
@@ -193,15 +227,24 @@ test('repository guidance does not reintroduce fixed Sol High review topology', 
 test('semantic packages are replay-ready evidence, not deterministic LLM assertions', async () => {
   const fixture = await readFixture('semantic-cases.json')
 
-  assert.equal(fixture.schema, 'power-verifier-semantic-cases/v2')
+  assert.equal(fixture.schema, 'power-verifier-semantic-cases/v3')
   assert.equal(fixture.evaluation, 'manual-read-only-replay')
   assert.ok(fixture.packages.some(item => item.project.portable), 'includes an arbitrary project')
   for (const item of fixture.packages) {
     assert.match(item.expected.result, /^(PASS|PASS_WITH_NOTES|BLOCKED|NEEDS_HUMAN)$/)
     assert.ok(item.contract.issue.clauses.length)
-    assert.ok(item.contract.goal.clauses.length)
-    assert.ok(item.snapshot.id)
+    assert.ok(item.contract.issue.source)
+    assert.ok(item.contract.issue.revision)
+    assert.ok(item.contract.issue.fullBodyDigest)
+    assert.equal(item.contract.goal.evidenceRole, 'supplementary')
+    assert.equal('clauses' in item.contract.goal, false, `${item.id} Goal is not a normative clause source`)
+    assert.ok(item.snapshot.repositoryRef)
+    assert.ok(item.snapshot.commit)
+    assert.ok(item.snapshot.gitTreeDigest)
+    assert.ok(item.snapshot.dirtyGeneratedBoundary)
+    assert.ok(item.snapshot.capturedAt)
     assert.ok(item.clauseEvidence.length)
+    assert.ok(item.clauseEvidence.every(clause => clause.clauseId.startsWith('issue:')))
     assert.match(item.executionModeEvidence.confirmedMode, /^(strict-model-routing|inherited-model-routing)$/)
     assert.match(item.executionModeEvidence.classification, /^(strict-selection-supported|inherited-model-only|indeterminate)$/)
     assert.ok(item.executionModeEvidence.evidenceInspected)
@@ -312,4 +355,25 @@ test('verifier guidance requires mode evidence and rejects unsupported inherited
   ]) assert.match(skill, new RegExp(unsupported))
   assert.match(skill, /return `NEEDS_HUMAN`/)
   assert.match(skill, /Record model or reasoning only when the host directly exposes it; never infer either value\./)
+})
+
+test('verifier artifacts define the Issue as sole normative source and bind results to Git trees', async () => {
+  const files = [
+    'power-verifier/SKILL.md',
+    'power-verifier/assets/implementation-verifier-checklist.md',
+    'power-verifier/assets/verifier-result-template.md',
+  ]
+
+  for (const relativePath of files) {
+    const content = await readFile(path.join(root, relativePath), 'utf8')
+    assert.match(content, /full-body SHA-256|full persisted UTF-8 body/i)
+    assert.match(content, /Git tree digest/)
+    assert.match(content, /supplementary/i)
+  }
+
+  const skill = await readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8')
+  assert.match(skill, /sole normative verification contract/)
+  assert.match(skill, /Different commits with the same Git tree digest are tree-equivalent/)
+  assert.match(skill, /do not fabricate/i)
+  assert.doesNotMatch(skill, /verification contract is exactly:[\s\S]*Final Goal Prompt/)
 })

@@ -2,13 +2,18 @@
 
 Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
-## Contract Sources And Conflict Status
+## Canonical Issue Identity And Conflict Status
 
-- Canonical Issue or local contract: `<source and identity>`
-- Final Goal Prompt: `<source and identity>`
-- Supplementary evidence considered: `<comments, discussions, summaries, or none>`
-- Conflict status: `<none | conflict requiring NEEDS_HUMAN>`
-- Conflicting clause IDs and rationale: `<none or cited clause records>`
+- Canonical Issue or local contract source: `<URL or persisted path>`
+- Pinned host revision: `<revision metadata or unavailable>`
+- Pinned exact full-body SHA-256: `<sha256:... or unavailable>`
+- Observed host revision: `<revision metadata or unavailable>`
+- Observed exact full-body SHA-256: `<sha256:... or unavailable>`
+- Identity status: `<matched | matched body with differing host revision metadata | mismatched source/body | insufficient historical identity>`
+- Supplementary evidence considered: `<Goal Prompt, session, PR/MR, runner summary, comments, or none>`
+- Supplementary Issue references: `<matching references, drift, missing references, or none>`
+- Issue-internal conflict status: `<none | conflict requiring NEEDS_HUMAN>`
+- Conflicting Issue clause IDs and rationale: `<none or cited clause records>`
 
 ## Execution Mode And Capability Evidence
 
@@ -27,10 +32,10 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 - Repository/ref: `<identity>`
 - Commit: `<commit or unavailable>`
-- Diff or tree digest: `<identity>`
+- Git tree digest: `<identity or unavailable>`
 - Dirty/generated-artifact boundary: `<none or disclosed boundary>`
 - Captured at: `<time>`
-- Freshness assessment: `<fresh | stale evidence identified>`
+- Freshness assessment: `<tree-fresh | tree-equivalent despite different commit | stale tree evidence | cannot determine>`
 
 ## Clause Evidence
 
@@ -44,13 +49,13 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Capability and risk assessment: `<obligations, diff, interfaces/data, validation, and material risks>`
 - Minimum sufficient planned capabilities: `<capabilities and justification>`
 
-| Reviewer identity/source | Confirmed mode | Inherited configuration provenance | Model / reasoning if exposed | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Snapshot identity |
+| Reviewer identity/source | Confirmed mode | Inherited configuration provenance | Model / reasoning if exposed | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Verified Git tree digest |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 |  |  | Inherited from parent/Not applicable/Unavailable | Not exposed | Yes/No |  |  |  | None observed |  |  |  |
 
 ## Validation Replay
 
-| Required validation | Exact command | Safety class | Execution boundary | Observable host-isolation evidence | Snapshot | Result | Relevant evidence |
+| Required validation | Exact command | Safety class | Execution boundary | Observable host-isolation evidence | Git tree digest | Result | Relevant evidence |
 |---|---|---|---|---|---|---|---|
 |  |  | Safe read-only/Isolated writable/Unsafe-not-run |  | None observed |  | Passed/Failed/Not run |  |
 

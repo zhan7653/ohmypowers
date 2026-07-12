@@ -5,6 +5,10 @@ Planning status: `<proposed | confirmed | stale>`
 
 Contract source: `<hosted issue URL/number or local brief path>`
 
+Task Contract digest: `sha256:<exact UTF-8 bytes from document start to the byte before the Blueprint start marker>`
+
+Pre-patch Issue identity at planning: `<source plus host revision when available plus exact full-body SHA-256; body digest is authoritative; provenance only because patch application changes the body>`
+
 Source branch: `<branch>`
 
 Source commit: `<full commit SHA>`
@@ -81,11 +85,23 @@ Stable interface gates:
 |---|---|---|---|
 | `VAL-1` | `<exact command>` | `<acceptance criteria or integration property>` | `<TASK-ID>` |
 
+## Runtime budget and delivery policy
+
+- Max implementation iterations: `<confirmed limit>`
+- Same-failure retry limit: `<confirmed limit>`
+- No-progress stop: `<confirmed threshold>`
+- Draft PR/MR policy: `<when creation/update is allowed and evidence required>`
+- Hosted mutation policy: `<exact confirmation requirement>`
+- Protected branch and merge policy: `<no direct protected-branch push/merge unless explicitly authorized>`
+- Evidence invalidation: `<implementation tree change invalidates affected validation and review evidence>`
+- Pause conditions: `<scope, identity, capability, ownership, validation, or contract-level drift conditions>`
+
 ## Staleness and replan conditions
 
 Treat this Blueprint as stale and stop for a new `power-loop` pass or confirmed revision when:
 
 - the Task Contract changes;
+- the authoritative complete Issue body digest no longer matches the digest pinned by the launcher;
 - the exposed spawn capability materially changes or conflicts with the confirmed execution mode;
 - the user changes the confirmed execution mode;
 - the source branch or commit changes in a way that materially affects an owned path, interface, dependency, validation command, or assumption;

@@ -32,10 +32,12 @@ Do not detect Ultra mode. Generate the same planning artifacts whenever the cont
 
 Use this precedence:
 
-1. Task Contract: canonical what and why.
-2. Execution Blueprint: confirmed repository-aware how.
-3. Agent Dispatch Plan: confirmed mode-specific tasks, roles, ownership, dependencies, and supported configuration.
-4. Goal runtime decisions: operational choices that do not change the three confirmed layers.
+1. Complete persisted Issue/local body: sole normative contract source.
+2. Task Contract: canonical what and why within that body.
+3. Execution Blueprint: confirmed repository-aware how and Issue-owned runtime, delivery, validation, review, pause, and stop policy.
+4. Agent Dispatch Plan: confirmed mode-specific tasks, roles, ownership, dependencies, supported configuration, and review handoff.
+
+The final Goal is only a pinned launcher. It may identify and require reading these confirmed sections, perform preflight and drift checks, stop on mismatch, and tell the user to start it manually. It must not add or restate budget, scope, validation, review, PR, lifecycle, permission, or other normative obligations.
 
 Stop when a derived artifact conflicts with the Task Contract. Return `NEEDS_GRILL` for an unresolved requirement boundary and `NEEDS_HUMAN` for a material public, product, business, security, permission, compatibility, schema, or migration decision.
 
@@ -57,7 +59,14 @@ After explicit patch confirmation, update only the marked Execution Blueprint an
 
 Prefer a hosted issue, then a persisted local brief, then a pasted Task Contract. A pasted-only contract may receive readiness, Blueprint, and Dispatch drafts, but it must be persisted before a target-specific Issue Patch or final Goal Prompt can be produced.
 
-Treat the `Task Contract` section as canonical. For legacy issues, treat requirement sections before Execution Blueprint, Agent Dispatch Plan, or `Curation status` as the Task Contract. Do not reuse an execution section unless it is explicitly `Planning status: confirmed` and still matches the contract and repository baseline.
+Treat the complete persisted Issue/local body as the sole normative contract. Within it, the `Task Contract` section owns requirements and confirmed execution sections own planning and operational obligations. Comments, the final Goal, session summaries, PR/MR bodies, and runner output are supplementary evidence only and cannot override or expand the persisted body. For legacy issues, treat requirement sections before Execution Blueprint, Agent Dispatch Plan, or `Curation status` as the Task Contract. Do not invent strong revision guarantees for a source whose exact persisted bytes cannot be obtained; require persistence, replanning, additional evidence, or a human decision. Do not reuse an execution section unless it is explicitly `Planning status: confirmed` and still matches the contract and repository baseline.
+
+Use these exact identities without normalization:
+
+- Task Contract digest: SHA-256 of the exact UTF-8 bytes from document start to the byte immediately before `<!-- power-loop:execution-blueprint:start -->`.
+- Canonical Issue identity: source URL/path, host revision metadata when exposed, and SHA-256 of the exact complete persisted body. The complete-body digest is authoritative when host metadata and body content disagree.
+
+Capture the Task Contract digest before generating a patch, recheck it immediately before application, and prove it is unchanged afterward. Compute the authoritative complete-body digest only after the confirmed patch has been applied and verified; do not write that digest into the body it hashes.
 
 ## Workflow
 
@@ -105,7 +114,7 @@ For any blocked result, return only the decision, blockers, and smallest next ac
 
 ### 3. Inspect The Repository
 
-Inspect only enough context to derive the implementation. Record the contract source, source branch and full commit, timestamp, relevant facts and assumptions, worktree state, exact affected paths, internal interfaces, flow, error handling, dependencies, validation commands, and material-drift conditions.
+Inspect only enough context to derive the implementation. Record the contract source and canonical identity evidence available at inspection time, Task Contract digest, source branch and full commit, timestamp, relevant facts and assumptions, worktree state, exact affected paths, internal interfaces, flow, error handling, dependencies, validation commands, runtime budget, delivery/PR policy, review policy, pause/stop conditions, and material-drift conditions.
 
 If inspection exposes a requirement decision, stop instead of hiding it in the plan.
 
@@ -170,7 +179,7 @@ For a persisted target:
 
 Treat confirmation as patch-specific. Any revision requires a complete regenerated patch and new confirmation.
 
-After confirmation, re-read the target, verify the Task Contract is unchanged, apply only the two blocks, re-read again, and compare them exactly. On any failure, return `PATCH_NOT_APPLIED` or `PATCH_VERIFICATION_FAILED` and withhold the Goal Prompt.
+After confirmation, re-read the target and require the same source, host revision when exposed, complete-body digest, and Task Contract digest observed when the patch was displayed. If the authoritative body digest changed, stop and regenerate the patch even when host metadata did not change. Apply only the two blocks, re-read again, compare them exactly, and prove the Task Contract digest is unchanged. Then compute the new canonical Issue identity from the exact complete persisted body. On any failure, return `PATCH_NOT_APPLIED` or `PATCH_VERIFICATION_FAILED` and withhold the Goal Prompt.
 
 ### 7. Generate The Final Goal Prompt
 
@@ -180,7 +189,7 @@ Reinspect the exposed spawn contract at Goal preflight without a probe when its 
 
 In strict mode, check required selector and custom-agent availability when the host exposes it. If a required profile is known missing, stop for installation or explicit approval of a named alternative. In inherited mode, confirm generic delegation remains available and do not add unsupported selector arguments.
 
-Fill the Goal Prompt by reference to the persisted contract and confirmed sections. Preserve baseline drift checks, delegated implementation, exact task ownership, mode-specific failure handling, dynamic verifier handoff, review-plan selection after the final diff, snapshot freshness, safe validation replay, PR/MR evidence, a mode-accurate Dispatch Summary, loop decisions, and manual execution. Include only guarantees supported by the confirmed mode. Do not copy the full contract or plans into the Goal Prompt.
+Fill the Goal Prompt with only the pinned canonical Issue identity, Task Contract digest, required confirmed-section references, repository and capability preflight, drift-stop behavior, and manual-start instruction. Require an exact complete-body digest match before implementation; host revision metadata is additional evidence, while the body digest is authoritative. On Task Contract, planning status, baseline, capability, or identity drift, stop for re-read, renewed confirmation, or a new `power-loop` pass as directed by the persisted Issue. Do not copy obligations from the contract or plans into the Goal and do not add budget, scope, validation, review, PR, lifecycle, permission, retry, or reporting rules.
 
 Use [assets/pr-evidence-template.md](assets/pr-evidence-template.md) for the implementation evidence package. Never merge.
 
@@ -188,6 +197,6 @@ Use [assets/pr-evidence-template.md](assets/pr-evidence-template.md) for the imp
 
 Before execution-mode confirmation, output only the capability result, evidence, recommendation, uncertainty, and confirmation request. After mode confirmation but before patch confirmation, output the contract source, confirmed mode, capability evidence, readiness/risk decision, proposed Blueprint, proposed mode-specific Dispatch Plan, complete confirmed-state Issue Patch, confirmation request, and `Goal Prompt: withheld until this exact patch is applied and verified.`
 
-After application, output the verification result, persisted reference, ready-to-run Goal Prompt, and an explicit instruction for the user to start it manually.
+After application, output the verification result, persisted source plus host revision when available plus authoritative complete-body SHA-256, Task Contract SHA-256, ready-to-run thin Goal Prompt, and an explicit instruction for the user to start it manually.
 
 For a blocked contract, output only the decision, blockers, and smallest useful next action.

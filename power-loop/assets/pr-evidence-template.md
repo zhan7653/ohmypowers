@@ -46,8 +46,9 @@ Curator mutation status:
 
 Contract sources:
 
-- Canonical Issue/local body: `<immutable URL/path and version>`
-- Final Goal Prompt: `<immutable text/reference>`
+- Canonical Issue/local body: `<source, host revision when available, and exact full-body SHA-256; sole normative contract and body digest authoritative>`
+- Task Contract digest: `<SHA-256 over exact UTF-8 bytes from document start to byte before Blueprint start marker>`
+- Thin Goal Prompt: `<supplementary immutable text/reference; adds no obligations>`
 
 Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decision>`
 
@@ -59,7 +60,7 @@ Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decisi
 
 - Repository/ref: `<repository and ref>`
 - Commit: `<full SHA, or not applicable>`
-- Diff or tree digest: `<digest>`
+- Git tree digest: `<digest; authoritative freshness identity>`
 - Dirty/generated boundary: `<status and excluded/generated artifacts>`
 - Captured at: `<ISO-8601 timestamp with timezone>`
 - Evidence freshness: `<all evidence references this snapshot, or stale evidence and required reruns>`

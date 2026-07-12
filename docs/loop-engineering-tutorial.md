@@ -14,6 +14,8 @@ power-grill
 -> user manually runs /goal
 -> snapshot-bound validation replay and independent contract-conformance review
 -> PR evidence and human review
+-> power-curator compares verified and final Git trees
+-> confirmed lifecycle update or route-back
 ```
 
 The example is intentionally small. The important part is the contract, planning, dispatch, confirmation, validation, and review sequence.
@@ -157,7 +159,7 @@ Planning status: `not-generated`
 State: open
 ```
 
-The issue or local brief must exist before final Goal generation because it is the canonical home for the confirmed execution sections.
+The issue or local brief must exist before final Goal generation because its complete persisted body is the sole normative contract. Record host revision metadata as provenance and use SHA-256 of the exact full persisted UTF-8 body, without normalization, as the authoritative identity. The Task Contract identity is the SHA-256 of exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`.
 
 ## Step 3: Run power-loop
 
@@ -209,20 +211,20 @@ Check that:
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
 
-After confirmation, `power-loop` applies only the two marked blocks, re-reads the issue/local brief, verifies the exact content, and only then generates the final Goal Prompt.
+After confirmation, `power-loop` applies only the two marked blocks, re-reads the issue/local brief, verifies the exact content and Task Contract byte boundary, and only then computes the authoritative full-body SHA-256 and generates the final Goal Prompt.
 
 ## Step 5: Manually Run The Goal Prompt
 
 The user starts the returned prompt manually. The orchestrator should:
 
-1. Re-read the confirmed issue/local brief.
+1. Re-read the confirmed issue/local brief and require its authoritative full-body SHA-256 to match the Goal pin. Host revision drift with identical bytes is provenance; a digest mismatch stops execution.
 2. Reinspect the spawn contract without a probe when its schema is conclusive, and verify that it still supports the confirmed execution mode.
 3. Check for material drift from the recorded branch and commit.
 4. In strict mode, verify each required selector and configuration independently. In inherited mode, verify generic delegation remains available and do not add per-agent configuration claims.
 5. Create or enter the one task-level branch/worktree.
 6. Dispatch tasks according to dependency waves and ownership.
 7. Run targeted and full validation.
-8. Capture the stable implementation snapshot, replay safe contract-required validation, and run selected independent reviews over that snapshot. Give the contract-conformance reviewer the complete Issue/local contract, final Goal Prompt, clause evidence, validation replay, provenance, scope, risks, and non-goals. Record only model, reasoning, profile, or isolation evidence that the host actually exposes.
+8. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe contract-required validation and run selected independent reviews over that snapshot. Give the contract-conformance reviewer the complete Issue/local contract and identity, with the thin Goal, session, PR text, and runner summaries only as supplementary evidence. Record only model, reasoning, profile, or isolation evidence that the host actually exposes.
 9. Repair fixable blockers within budget.
 10. Prepare draft PR/MR evidence.
 11. Produce the mode-accurate Dispatch Summary and loop decision.
@@ -253,6 +255,17 @@ The Dispatch Summary should record:
 
 In `strict-model-routing`, also record supported initial/final model assignments, bounded escalation, reviewer configuration, and Initial Assignment Accuracy. In `inherited-model-routing`, omit those strict-only metrics and do not describe the inherited parent configuration as a selected subagent assignment.
 
+## Step 7: Reconcile The Final Tree
+
+Before lifecycle closure, run `power-curator` against the verifier snapshot and the final PR or merge snapshot.
+
+- The comparison uses Git tree digest, not commit identity. Different commits with the same tree are `tree-equivalent` and may reuse the verifier evidence.
+- A changed tree invalidates the old PASS for the final tree. Inventory changed paths, behavior impact, validations, and uncovered content, then classify exactly one of `reverified`, `human-waived`, `contract-changing`, or `unresolved`.
+- A human waiver records the verified snapshot, final snapshot, diff summary, validations run, uncovered content, reason, scope, confirmer, confirmation time, and residual risk. State explicitly that the old PASS covers only the verified snapshot and the final tree is human-waived, not verifier PASS.
+- Changes to the Task Contract, acceptance criteria, public behavior, security, permissions, or migration decisions are `contract-changing` and return to `power-grill` and `power-loop`; curator does not waive them into completion.
+
+Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, or `follow-up-needed`. `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, `NEEDS_HUMAN`, and curator classifications are outcomes or assessments, not lifecycle states. Labels remain optional and non-normative. Any Curation status or hosted mutation still requires the user to confirm the exact proposed change.
+
 ## Expected Failure Handling
 
 - Missing requirement-level behavior or acceptance criteria -> `NEEDS_GRILL`.
@@ -268,6 +281,8 @@ In `strict-model-routing`, also record supported initial/final model assignments
 - Strict-mode evidence-backed Luna capability mismatch -> at most one direct replacement by Sol Medium.
 - Missing the implementation-independent contract-conformance review -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; additional review capabilities are required only when contract or risk justifies them.
 - Material repository drift -> stop for a new `power-loop` pass or confirmed plan revision.
+- Final Git tree differs from the verifier tree without fresh verification or a complete confirmed waiver -> closure remains `unresolved`; never apply the stale PASS to the final tree.
+- Post-verifier change affects requirements, acceptance criteria, public behavior, security, permissions, or migration -> route back to `power-grill` and `power-loop`.
 
 ## Minimal User Script
 
@@ -280,6 +295,7 @@ In `strict-model-routing`, also record supported initial/final model assignments
 6. Confirm the exact patch.
 7. Receive the ready-to-run Goal Prompt.
 8. Manually start the Goal Prompt.
-9. Review the independent contract-conformance result and any additional capability-specific review results.
-10. Review the draft PR/MR and mode-accurate Dispatch Summary. Do not merge until a human is satisfied.
+9. Review the snapshot-bound contract-conformance result and any additional capability-specific review results.
+10. Review the draft PR/MR and mode-accurate Dispatch Summary.
+11. Use $power-curator to compare the verified and final Git trees, then confirm the exact lifecycle or waiver record. Do not merge or close until a human is satisfied.
 ```

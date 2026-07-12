@@ -76,9 +76,9 @@ Narrow main-agent implementation exception: `<None, or exact paths and reason ex
 
 ## Verification and review plan
 
-- Verification contract: `<complete canonical Issue/local body and final Goal Prompt; comments, discussions, and runner summaries are supplementary unless incorporated into the contract>`
+- Verification contract: `<the pinned complete canonical Issue/local body is the sole normative contract; the thin Goal, comments, discussions, PR body, and runner summaries are supplementary execution evidence and add no obligations>`
 - Confirmed mode evidence: `<inherited-model-routing plus capability evidence and confirmation>`
-- Stable snapshot: `<repository/ref, commit, diff or tree digest, dirty/generated boundary, capture time, and validation evidence>`
+- Stable snapshot: `<repository/ref, commit, Git tree digest, dirty/generated boundary, capture time, and validation evidence; tree digest controls freshness>`
 - Contract-prescribed reviews: `<exact required identities or procedures, or None; unavailable exact requirements require NEEDS_HUMAN>`
 - Selection basis: `<contract obligations; final diff; affected interfaces/data; validation; and material risks>`
 - Minimum sufficient capabilities: `<one or more independent capabilities, including contract-conformance review>`
@@ -89,7 +89,7 @@ Narrow main-agent implementation exception: `<None, or exact paths and reason ex
 - Reviewer records: `<for each: identity/source, confirmed mode, configuration provenance, implementation independence, capability, scope, instruction boundary, observable host-isolation evidence if any, evidence inspected, result, and snapshot identity>`
 - Validation replay: `<exact command, safety class, isolated temporary-artifact boundary when applicable, result, evidence, and snapshot identity>`
 - Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
-- Contract-conformance packet: `<complete canonical Issue/local body, final Goal Prompt, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
+- Contract-conformance packet: `<pinned complete canonical Issue/local body and identity, supplementary thin Goal, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
 - Other review packets: `<tailored to each selected capability and scope>`
 - Execution: `<run independent fresh-context reviews in parallel over the same snapshot when possible; use fork_turns: none when exposed>`
 
@@ -105,4 +105,5 @@ At completion or stop, report:
 - ownership conflicts and their resolution;
 - incomplete tasks and pause reasons;
 - validation and reviewer snapshot identities.
+- pinned canonical Issue identity and final Git tree digest.
 <!-- power-loop:agent-dispatch-plan:end -->
