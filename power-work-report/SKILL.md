@@ -112,10 +112,10 @@ The draft report also includes a reviewed personal reflection and evidence-backe
       node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" instruction-apply --date YYYY-MM-DD [--codex-home DIR] [--out-dir DIR]
       ```
 
-      A successful apply records the instruction audit in memory and requires a new Codex session for normal discovery.
+      `instruction-apply` is successful only after the instruction audit is atomically persisted in memory. If audit persistence fails, the target is restored to its exact prior bytes (or prior absence), and no success is claimed. A successful apply requires a new Codex session for normal discovery.
     - If the target drifts, discard the old confirmation, regenerate the plan/diff, and ask for both relevant confirmation again. Never apply a stale proposal.
     - Revision and removal of report-managed entries use the same plan, exact-diff review, and separate apply confirmation. Never rewrite content outside the managed region.
-12. Pause and explain the specific refusal when planning or applying reports `ambiguous_target`, `nested_scope`, `override_present`, `conflict`, `size_limit`, `permission_denied`, `codex_failed`, `forbidden_content`, `target_drift`, proposal/candidate integrity failure, or atomic-write failure. Do not guess a target, override human rules, or claim a partial write succeeded.
+12. Pause and explain the specific refusal when planning or applying reports `ambiguous_target`, `nested_scope`, `override_present`, `conflict`, `size_limit`, `permission_denied`, `codex_failed`, `forbidden_content`, `target_drift`, proposal/candidate integrity failure, or atomic-write failure. Report `audit_persistence_failed` as rolled back: the target was restored and the apply did not succeed. `rollback_failed` is a hard pause requiring inspection of the target and recorded error evidence; never retry automatically or claim success. Do not guess a target, override human rules, or claim a partial write succeeded.
 13. Finalization is an independent authorization. The user may finalize without approving any instruction candidate, or plan/apply an instruction without authorizing finalization. Only after explicit report confirmation, run:
 
    ```bash
@@ -127,6 +127,8 @@ The draft report also includes a reviewed personal reflection and evidence-backe
 ## Failure Handling
 
 If Codex draft generation fails, the CLI writes a fallback draft with status `codex_failed`. It may show warnings but must contain no actionable reusable or instruction candidates. Do not finalize fallback drafts unless the user explicitly asks to allow fallback finalization, then pass `--allow-fallback`.
+
+If instruction audit persistence fails after a target write, success depends on rollback. `audit_persistence_failed` means rollback restored the exact prior target bytes or absence. `rollback_failed` means the final target state requires human inspection using the error evidence; pause without automatic retry.
 
 ## Privacy
 

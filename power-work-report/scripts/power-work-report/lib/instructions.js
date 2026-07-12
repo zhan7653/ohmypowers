@@ -35,6 +35,8 @@ export const INSTRUCTION_ERROR_CODES = Object.freeze([
   'candidate_integrity',
   'target_drift',
   'atomic_write_failed',
+  'audit_persistence_failed',
+  'rollback_failed',
 ])
 
 export class InstructionChangeError extends Error {
@@ -131,7 +133,7 @@ export async function applyInstructionChange(options = {}) {
   if (written !== proposal.afterContent || sha256(written ?? '') !== proposal.afterSha256) {
     fail('atomic_write_failed', 'AGENTS.md did not contain the confirmed bytes after the atomic write.')
   }
-  return {
+  const audit = {
     proposalId: proposal.proposalId,
     candidateId: proposal.candidateId,
     action: proposal.action,
@@ -140,6 +142,86 @@ export async function applyInstructionChange(options = {}) {
     afterSha256: proposal.afterSha256,
     sourceReport: proposal.sourceReport,
     appliedAt: timestamp(options.now),
+  }
+  if (options.persistAudit) {
+    try {
+      await options.persistAudit(audit)
+    } catch (auditError) {
+      try {
+        await rollbackInstructionChange({ fs, proposal, options })
+      } catch (rollbackError) {
+        fail('rollback_failed', 'Instruction audit persistence failed and the target could not be safely restored.', {
+          auditError: errorEvidence(auditError),
+          rollbackError: errorEvidence(rollbackError),
+          targetPath: proposal.target.path,
+          expectedAfterSha256: proposal.afterSha256,
+          currentSha256: await currentDigest(fs, proposal.target.path),
+        })
+      }
+      fail('audit_persistence_failed', 'Instruction audit persistence failed; the target was restored to its exact prior state.', {
+        auditError: errorEvidence(auditError),
+        targetPath: proposal.target.path,
+        restoredExists: proposal.target.exists,
+        restoredSha256: proposal.beforeSha256,
+      })
+    }
+  }
+  return audit
+}
+
+async function rollbackInstructionChange({ fs, proposal, options }) {
+  const current = await readOptional(fs, proposal.target.path)
+  if (current !== proposal.afterContent) {
+    fail('target_drift', 'AGENTS.md changed after instruction application; audit rollback will not overwrite it.')
+  }
+  const nonce = `${options.atomicNonce || crypto.randomBytes(6).toString('hex')}-rollback`
+  const quarantinePath = `${proposal.target.path}.power-work-report-${nonce}.applied`
+  const restorePath = `${proposal.target.path}.power-work-report-${nonce}.restore`
+  if (options.beforeRollbackRename) await options.beforeRollbackRename({ targetPath: proposal.target.path, quarantinePath })
+  try {
+    await fs.rename(proposal.target.path, quarantinePath)
+  } catch (error) {
+    fail('atomic_write_failed', `Could not quarantine the applied AGENTS.md during rollback: ${error.message}`, { causeCode: error?.code })
+  }
+  const quarantined = await readOptional(fs, quarantinePath)
+  if (quarantined !== proposal.afterContent) {
+    await restoreQuarantinedTarget(fs, quarantinePath, proposal.target.path)
+    fail('target_drift', 'AGENTS.md changed while rollback began; the concurrent bytes were preserved.')
+  }
+  try {
+    if (proposal.target.exists) {
+      await fs.writeFile(restorePath, proposal.beforeContent, { encoding: 'utf8', flag: 'wx' })
+      await fs.link(restorePath, proposal.target.path)
+      await fs.unlink(restorePath)
+      if (await readOptional(fs, proposal.target.path) !== proposal.beforeContent) {
+        fail('atomic_write_failed', 'Rollback did not restore the exact prior AGENTS.md bytes.')
+      }
+    } else {
+      if (options.beforeRollbackRemove) await options.beforeRollbackRemove({ targetPath: proposal.target.path, quarantinePath })
+      if (await readOptional(fs, proposal.target.path) !== null) {
+        fail('target_drift', 'A new AGENTS.md appeared while restoring the target to its absent state.')
+      }
+    }
+    await fs.unlink(quarantinePath)
+  } catch (error) {
+    try { await fs.unlink(restorePath) } catch {}
+    if (error instanceof InstructionChangeError) throw error
+    fail('atomic_write_failed', `Could not restore the prior AGENTS.md state: ${error.message}`, {
+      causeCode: error?.code,
+      quarantinePath,
+    })
+  }
+}
+
+async function restoreQuarantinedTarget(fs, quarantinePath, targetPath) {
+  try {
+    await fs.link(quarantinePath, targetPath)
+    await fs.unlink(quarantinePath)
+  } catch (error) {
+    fail('atomic_write_failed', 'Concurrent target bytes were quarantined but could not be restored without overwriting another file.', {
+      causeCode: error?.code,
+      quarantinePath,
+    })
   }
 }
 
@@ -389,6 +471,23 @@ async function statOptional(fs, filePath) {
   } catch (error) {
     if (error?.code === 'ENOENT') return null
     throw error
+  }
+}
+
+async function currentDigest(fs, filePath) {
+  try {
+    const content = await readOptional(fs, filePath)
+    return content === null ? null : sha256(content)
+  } catch (error) {
+    return `unreadable:${error?.code || error?.name || 'error'}`
+  }
+}
+
+function errorEvidence(error) {
+  return {
+    name: error?.name || 'Error',
+    code: error?.code || null,
+    message: error?.message || String(error),
   }
 }
 

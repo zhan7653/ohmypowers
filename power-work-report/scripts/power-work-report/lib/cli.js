@@ -4,7 +4,7 @@ import { writeRawSummary } from './collector.js'
 import { generateDraftWithCodex } from './codex-draft.js'
 import { finalizeReport } from './finalize.js'
 import { applyInstructionChange, planInstructionChange } from './instructions.js'
-import { appendInstructionChange, readMemory } from './memory.js'
+import { appendInstructionChange, readMemory, writeMemoryAtomically } from './memory.js'
 import {
   buildFallbackDraft,
   buildMemoryProposal,
@@ -15,7 +15,7 @@ import {
 } from './render.js'
 import { pathsForDate, resolveCodexHome, resolveOutDir, resolveTimezone } from './paths.js'
 
-export async function runCli(argv) {
+export async function runCli(argv, hooks = {}) {
   const [command, ...rest] = argv
   if (!command || command === '--help' || command === '-h') {
     printHelp()
@@ -72,7 +72,7 @@ export async function runCli(argv) {
   }
 
   if (command === 'instruction-apply') {
-    const result = await instructionApplyCommand({ paths })
+    const result = await instructionApplyCommand({ paths, hooks })
     console.log(JSON.stringify(result, null, 2))
     return
   }
@@ -188,7 +188,7 @@ async function instructionPlanCommand({ date, codexHome, paths, options }) {
   }
 }
 
-async function instructionApplyCommand({ paths }) {
+async function instructionApplyCommand({ paths, hooks }) {
   const proposal = await readRequiredJson(paths.instructionProposalPath)
   let candidate
   try {
@@ -198,10 +198,18 @@ async function instructionApplyCommand({ paths }) {
     throw new Error(`Cannot verify the instruction candidate against its source report: ${error.message}`)
   }
   const memory = await readMemory(paths.memoryFile)
-  const audit = await applyInstructionChange({ proposal, candidate })
-  const nextMemory = appendInstructionChange(memory, audit)
-  await fs.mkdir(path.dirname(paths.memoryFile), { recursive: true })
-  await fs.writeFile(paths.memoryFile, `${JSON.stringify(nextMemory, null, 2)}\n`, 'utf8')
+  const audit = await applyInstructionChange({
+    proposal,
+    candidate,
+    persistAudit: async value => {
+      const nextMemory = appendInstructionChange(memory, value)
+      await writeMemoryAtomically(paths.memoryFile, nextMemory, {
+        beforeCommit: hooks.beforeAuditCommit
+          ? details => hooks.beforeAuditCommit({ ...details, audit: value, memory: nextMemory })
+          : undefined,
+      })
+    },
+  })
   return {
     ...audit,
     changeId: audit.proposalId,

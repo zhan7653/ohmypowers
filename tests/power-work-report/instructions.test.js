@@ -134,6 +134,101 @@ test('permission refusal and atomic failure are typed and non-mutating', async t
   assert.equal(await fs.readFile(target, 'utf8'), 'raced\n')
 })
 
+test('audit failure rolls existing add and update targets back to exact prior bytes', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const human = '# Human rules\n\nPreserve trailing spaces.  '
+  await fs.writeFile(target, human)
+  const add = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run focused tests.' }))
+  await assert.rejects(applyInstructionChange({
+    proposal: add,
+    atomicNonce: 'audit-add',
+    persistAudit: async () => { throw new Error('memory write failed') },
+  }), value => value?.code === 'audit_persistence_failed' && value.details.restoredExists === true)
+  assert.equal(await fs.readFile(target, 'utf8'), human)
+
+  await applyInstructionChange({ proposal: add, atomicNonce: 'seed' })
+  const managedBeforeUpdate = await fs.readFile(target, 'utf8')
+  const update = await planInstructionChange(base({ action: 'update', scope: 'project', projectRoot: repo, instruction: 'Run the focused validation command.' }))
+  await assert.rejects(applyInstructionChange({
+    proposal: update,
+    atomicNonce: 'audit-update',
+    persistAudit: async () => { throw new Error('memory write failed') },
+  }), error('audit_persistence_failed'))
+  assert.equal(await fs.readFile(target, 'utf8'), managedBeforeUpdate)
+  assert.ok((await fs.readFile(target, 'utf8')).startsWith(human))
+})
+
+test('audit failure removes a target created from an absent proposal', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run focused tests.' }))
+  await assert.rejects(applyInstructionChange({
+    proposal,
+    atomicNonce: 'audit-create',
+    persistAudit: async () => { throw new Error('audit unavailable') },
+  }), value => value?.code === 'audit_persistence_failed' && value.details.restoredExists === false)
+  await assert.rejects(fs.stat(target), value => value?.code === 'ENOENT')
+})
+
+test('audit persistence is awaited before success and receives the final audit', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run focused tests.' }))
+  let persisted = false
+  const audit = await applyInstructionChange({
+    proposal,
+    atomicNonce: 'audit-success',
+    persistAudit: async value => {
+      await Promise.resolve()
+      assert.equal(value.proposalId, proposal.proposalId)
+      assert.equal(await fs.readFile(proposal.target.path, 'utf8'), proposal.afterContent)
+      persisted = true
+    },
+  })
+  assert.equal(persisted, true)
+  assert.equal(audit.afterSha256, proposal.afterSha256)
+})
+
+test('post-apply drift makes audit rollback fail safely with both errors recorded', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  await fs.writeFile(target, 'human\n')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run focused tests.' }))
+  await assert.rejects(applyInstructionChange({
+    proposal,
+    atomicNonce: 'audit-drift',
+    persistAudit: async () => {
+      await fs.writeFile(target, 'concurrent owner bytes\n')
+      throw new Error('memory write failed')
+    },
+  }), value => {
+    assert.equal(value?.code, 'rollback_failed')
+    assert.equal(value.details.auditError.message, 'memory write failed')
+    assert.equal(value.details.rollbackError.code, 'target_drift')
+    return true
+  })
+  assert.equal(await fs.readFile(target, 'utf8'), 'concurrent owner bytes\n')
+})
+
+test('rollback detects a race immediately before restoring an existing target', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  await fs.writeFile(target, 'human\n')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run focused tests.' }))
+  await assert.rejects(applyInstructionChange({
+    proposal,
+    atomicNonce: 'rollback-race',
+    persistAudit: async () => { throw new Error('memory write failed') },
+    beforeRollbackRename: () => fs.writeFile(target, 'rollback race bytes\n'),
+  }), value => value?.code === 'rollback_failed' && value.details.rollbackError.code === 'target_drift')
+  assert.equal(await fs.readFile(target, 'utf8'), 'rollback race bytes\n')
+})
+
 function base(overrides = {}) {
   const candidate = {
     id: 'validation-rule',

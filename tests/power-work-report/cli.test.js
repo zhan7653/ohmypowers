@@ -805,6 +805,59 @@ test('ordinary finalize never mutates AGENTS.md and target drift leaves instruct
   assert.deepEqual((await readJson(path.join(tmp, 'memory.json'))).instructionChanges, auditBefore)
 })
 
+test('instruction apply rolls target back when atomic audit persistence fails before memory commit', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-audit-rollback-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  const memoryPath = path.join(tmp, 'memory.json')
+  const targetBefore = '# Human rules\n\nPreserve exact bytes.  '
+  const memoryBefore = `${JSON.stringify({
+    schemaVersion: 1,
+    todos: [{ id: 'existing', text: 'Keep todo', project: '/workspace/alpha', status: 'open' }],
+    ideas: [{ id: 'idea', text: 'Keep idea', project: '/workspace/alpha' }],
+    reports: [],
+    instructionChanges: [],
+    legacyField: 'preserve me',
+  }, null, 2)}\n`
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, targetBefore)
+  await fs.writeFile(memoryPath, memoryBefore)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+  const proposal = await readJson(path.join(tmp, '2026-07-01', 'draft', 'instruction-change.proposed.json'))
+  let hookCalled = false
+
+  await assert.rejects(
+    () => runCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp], {
+      beforeAuditCommit: async ({ tempPath, filePath, audit }) => {
+        hookCalled = true
+        assert.equal(filePath, memoryPath)
+        assert.equal(audit.proposalId, proposal.proposalId)
+        assert.equal(await fs.readFile(target, 'utf8'), proposal.afterContent)
+        assert.ok(await exists(tempPath))
+        throw new Error('forced audit persistence failure')
+      },
+    }),
+    error => error?.code === 'audit_persistence_failed'
+      && error.details.auditError.message === 'forced audit persistence failure',
+  )
+
+  assert.equal(hookCalled, true)
+  assert.equal(await fs.readFile(target, 'utf8'), targetBefore)
+  assert.equal(await fs.readFile(memoryPath, 'utf8'), memoryBefore)
+  assert.deepEqual(
+    (await fs.readdir(tmp)).filter(name => name.includes('.memory.json.power-work-report-')),
+    [],
+  )
+})
+
 test('project instruction planning requires the explicit temporary repository and remains proposal-only', async t => {
   const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-project-plan-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))

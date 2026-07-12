@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import path from 'node:path'
 import { promises as fs } from 'node:fs'
 
 export function emptyMemory() {
@@ -14,6 +15,28 @@ export async function readMemory(filePath) {
     throw new Error(`Memory JSON is missing or invalid: ${filePath}: ${error.message}`)
   }
   return normalizeMemory(value)
+}
+
+export async function writeMemoryAtomically(filePath, memory, options = {}) {
+  await fs.mkdir(path.dirname(filePath), { recursive: true })
+  const tempPath = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.power-work-report-${options.nonce || crypto.randomBytes(6).toString('hex')}.tmp`,
+  )
+  try {
+    await fs.writeFile(tempPath, `${JSON.stringify(normalizeMemory(memory), null, 2)}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+    })
+    if (options.beforeCommit) await options.beforeCommit({ tempPath, filePath })
+    await fs.rename(tempPath, filePath)
+  } finally {
+    try {
+      await fs.unlink(tempPath)
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error
+    }
+  }
 }
 
 export function normalizeMemory(value) {
