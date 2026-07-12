@@ -74,7 +74,7 @@ The draft report also includes a reviewed personal reflection and evidence-backe
    - 项目 Codex 指令候选
    - 洞察警告
    - finalize 前必须确认
-7. Ask the user to confirm or provide oral edits for reflection wording, todos, completion candidates, ideas, and insight candidates.
+7. Ask the user to confirm or provide oral edits for reflection wording, todos, completion candidates, ideas, and insight candidates. Review each candidate's explicit `conflict`, `nestedScope`, `scopePath`, and `safetyReasons` signals. If conflict or nested-scope signals are present, pause for human scope/rule resolution instead of offering `instruction-plan`. These fields carry explicit or detected safety signals; they do not prove automatic semantic understanding of every possible conflict.
 8. If the user gives edits, update the draft JSON/proposal files, especially `memory-update.proposed.json`.
    - Keep unconfirmed historical completion candidates in `review`, not `todoUpdates`.
    - Add confirmed completions to `todoUpdates` with `status: "done"` and enough identity to match the memory todo (`id`, or `text` plus `project`).
@@ -98,13 +98,13 @@ The draft report also includes a reviewed personal reflection and evidence-backe
    - 附录：证据索引
 10. Treat Skill and automation candidates as recommendations only. Explain the evidence, scope, rationale, and expected benefit, but do not create, install, or run anything from them.
 11. For a global or project Codex instruction candidate, use a separate two-confirmation workflow:
-    - First confirmation: the user selects exactly one candidate and action (`add`, managed `update`, or managed `remove`). Run:
+    - First confirmation: after resolving any explicit conflict or nested-scope signal, the user selects exactly one candidate and action (`add`, managed `update`, or managed `remove`). Run:
 
       ```bash
       node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" instruction-plan --date YYYY-MM-DD --candidate-id ID --action add|update|remove [--project-root DIR] [--codex-home DIR] [--out-dir DIR]
       ```
 
-      This reads the actual target `AGENTS.md`, writes `draft/instruction-change.proposed.json` and `draft/instruction-change.diff`, and does not write the target file.
+      This reads the actual target `AGENTS.md`, writes `draft/instruction-change.proposed.json` and `draft/instruction-change.diff`, and does not write the target file. The proposal's `candidateSnapshot` binds the candidate's recommendation, full evidence, rationale, benefit, provenance, status, and safety/scope signals through the second gate. Explicit conflict or nested-scope signals produce typed `conflict` or `nested_scope` refusal instead of a writable proposal.
     - Show the exact target, managed entry identity, source report, and the complete `draft/instruction-change.diff`.
     - Second confirmation: ask whether to apply that exact displayed diff. Only after explicit confirmation, run:
 
@@ -112,10 +112,10 @@ The draft report also includes a reviewed personal reflection and evidence-backe
       node "${CODEX_HOME:-$HOME/.codex}/skills/power-work-report/scripts/power-work-report/bin/power-work-report.js" instruction-apply --date YYYY-MM-DD [--codex-home DIR] [--out-dir DIR]
       ```
 
-      `instruction-apply` is successful only after the instruction audit is atomically persisted in memory. If audit persistence fails, the target is restored to its exact prior bytes (or prior absence), and no success is claimed. A successful apply requires a new Codex session for normal discovery.
-    - If the target drifts, discard the old confirmation, regenerate the plan/diff, and ask for both relevant confirmation again. Never apply a stale proposal.
+      `instruction-apply` is successful only after the instruction audit is atomically persisted in memory. The target write uses compare-and-commit and never overwrites concurrent target bytes. Memory audit persistence also uses compare-and-commit: if memory changed concurrently, the concurrent memory is preserved, audit persistence fails, the instruction target is rolled back to its exact prior bytes or absence, and no success is claimed. Review current target/memory state, create a fresh plan, and repeat both confirmations. A successful apply requires a new Codex session for normal discovery.
+    - If the target, source candidate snapshot, or memory drifts, discard the old confirmation, review current state, regenerate the plan/diff, and ask for both relevant confirmations again. Never apply a stale proposal.
     - Revision and removal of report-managed entries use the same plan, exact-diff review, and separate apply confirmation. Never rewrite content outside the managed region.
-12. Pause and explain the specific refusal when planning or applying reports `ambiguous_target`, `nested_scope`, `override_present`, `conflict`, `size_limit`, `permission_denied`, `codex_failed`, `forbidden_content`, `target_drift`, proposal/candidate integrity failure, or atomic-write failure. Report `audit_persistence_failed` as rolled back: the target was restored and the apply did not succeed. `rollback_failed` is a hard pause requiring inspection of the target and recorded error evidence; never retry automatically or claim success. Do not guess a target, override human rules, or claim a partial write succeeded.
+12. Pause and explain the specific refusal when planning or applying reports `ambiguous_target`, `nested_scope`, `override_present`, `conflict`, `size_limit`, `permission_denied`, `codex_failed`, `forbidden_content`, `target_drift`, proposal/candidate integrity failure, or atomic-write failure. Report concurrent memory compare-and-commit failure through `audit_persistence_failed` as rolled back: concurrent memory was preserved, the target was restored, and the apply did not succeed. `rollback_failed` is a hard pause requiring inspection of the target and recorded error evidence; never retry automatically or claim success. Do not guess a target, override human rules, or claim a partial write succeeded.
 13. Finalization is an independent authorization. The user may finalize without approving any instruction candidate, or plan/apply an instruction without authorizing finalization. Only after explicit report confirmation, run:
 
    ```bash
@@ -128,7 +128,7 @@ The draft report also includes a reviewed personal reflection and evidence-backe
 
 If Codex draft generation fails, the CLI writes a fallback draft with status `codex_failed`. It may show warnings but must contain no actionable reusable or instruction candidates. Do not finalize fallback drafts unless the user explicitly asks to allow fallback finalization, then pass `--allow-fallback`.
 
-If instruction audit persistence fails after a target write, success depends on rollback. `audit_persistence_failed` means rollback restored the exact prior target bytes or absence. `rollback_failed` means the final target state requires human inspection using the error evidence; pause without automatic retry.
+If instruction audit persistence fails after a target write, success depends on rollback. This includes concurrent memory changes detected by memory compare-and-commit: preserve the concurrent memory, roll the instruction target back, and require fresh review/planning/confirmation. `audit_persistence_failed` means rollback restored the exact prior target bytes or absence. `rollback_failed` means the final target state requires human inspection using the error evidence; pause without automatic retry.
 
 ## Privacy
 

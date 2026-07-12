@@ -7,6 +7,10 @@ const SCHEMA_VERSION = 1
 const DEFAULT_MAX_BYTES = 32 * 1024
 const REGION_START = '<!-- power-work-report:instructions:start -->'
 const REGION_END = '<!-- power-work-report:instructions:end -->'
+const CANDIDATE_SNAPSHOT_FIELDS = [
+  'id', 'type', 'scope', 'recommendation', 'instruction', 'evidenceCount', 'dates', 'projects', 'evidence',
+  'rationale', 'expectedBenefit', 'provenance', 'confirmationStatus', 'conflict', 'nestedScope', 'scopePath', 'safetyReasons',
+]
 const FORBIDDEN = [
   /\bcodex_failed\b/i,
   /\b(?:todo|to-do)\b/i,
@@ -65,9 +69,12 @@ export async function planInstructionChange(options = {}) {
   }
 
   const createdAt = timestamp(options.now)
+  const candidateSnapshot = snapshotCandidate(candidate)
+  assertCandidateSnapshot(candidateSnapshot, 'invalid_candidate')
   const base = {
     schemaVersion: SCHEMA_VERSION,
     candidateId: candidate.id,
+    candidateSnapshot,
     action,
     sourceReport,
     target: { scope: candidate.scope, path: target.path, exists: beforeContent !== null },
@@ -76,7 +83,7 @@ export async function planInstructionChange(options = {}) {
     exactDiff: exactDiff(target.path, beforeContent ?? '', afterContent),
     beforeSha256: sha256(beforeContent ?? ''),
     afterSha256: sha256(afterContent),
-    candidateSha256: candidateDigest({ candidateId: candidate.id, action, sourceReport, target: target.path, beforeContent: beforeContent ?? '', afterContent }),
+    candidateSha256: candidateDigest({ candidateSnapshot, action, sourceReport, target: target.path, beforeContent: beforeContent ?? '', afterContent }),
     createdAt,
   }
   const proposalId = sha256(canonical(base)).slice(0, 24)
@@ -96,11 +103,13 @@ export async function applyInstructionChange(options = {}) {
   if (proposal.proposalId !== sha256(canonical(proposalBase)).slice(0, 24)
     || proposal.beforeSha256 !== sha256(proposal.beforeContent)
     || proposal.afterSha256 !== sha256(proposal.afterContent)
-    || proposal.exactDiff !== exactDiff(proposal.target.path, proposal.beforeContent, proposal.afterContent)) {
+    || proposal.exactDiff !== exactDiff(proposal.target.path, proposal.beforeContent, proposal.afterContent)
+    || proposal.candidateId !== proposal.candidateSnapshot?.id
+    || proposal.target.scope !== proposal.candidateSnapshot?.scope) {
     fail('proposal_integrity', 'Instruction proposal fields are not internally consistent.')
   }
   const expectedCandidate = candidateDigest({
-    candidateId: proposal.candidateId,
+    candidateSnapshot: proposal.candidateSnapshot,
     action: proposal.action,
     sourceReport: proposal.sourceReport,
     target: proposal.target.path,
@@ -112,23 +121,21 @@ export async function applyInstructionChange(options = {}) {
   }
   if (options.candidate) {
     const candidate = normalizeCandidate(options.candidate)
-    const proposedEntry = entryText(proposal.action === 'remove' ? proposal.beforeContent : proposal.afterContent, proposal.candidateId)
-    const candidateEntry = proposal.action === 'remove' ? proposedEntry : renderEntry(candidate)
-    if (candidate.id !== proposal.candidateId || candidate.scope !== proposal.target.scope || candidateEntry !== proposedEntry) {
+    if (canonical(snapshotCandidate(candidate)) !== canonical(proposal.candidateSnapshot)) {
       fail('candidate_integrity', 'The confirmed candidate does not match the proposal.')
     }
   }
 
   const current = await readOptional(fs, proposal.target.path)
   const currentContent = current ?? ''
-  if (sha256(currentContent) !== proposal.beforeSha256 || currentContent !== proposal.beforeContent) {
+  if ((current !== null) !== proposal.target.exists || sha256(currentContent) !== proposal.beforeSha256 || currentContent !== proposal.beforeContent) {
     fail('target_drift', 'AGENTS.md changed after the proposal was created; generate and confirm a new diff.')
   }
   if (await statOptional(fs, path.join(path.dirname(proposal.target.path), 'AGENTS.override.md'))) {
     fail('override_present', 'AGENTS.override.md appeared after confirmation; generate a new plan after human review.')
   }
   await assertWritable(fs, proposal.target.path, current !== null)
-  await atomicWrite(fs, proposal.target.path, proposal.beforeContent, proposal.afterContent, options)
+  await atomicWrite(fs, proposal.target.path, proposal.target.exists, proposal.beforeContent, proposal.afterContent, options)
   const written = await readOptional(fs, proposal.target.path)
   if (written !== proposal.afterContent || sha256(written ?? '') !== proposal.afterSha256) {
     fail('atomic_write_failed', 'AGENTS.md did not contain the confirmed bytes after the atomic write.')
@@ -233,7 +240,48 @@ function normalizeCandidate(value) {
   const scope = requiredString(scopeValue, 'candidate.scope').toLowerCase()
   if (scope !== 'global' && scope !== 'project') fail('ambiguous_target', 'Candidate scope must be exactly global or project.')
   const instruction = String(value.instruction ?? value.content ?? value.recommendation ?? '').trim()
-  return { ...value, id, scope, instruction }
+  return {
+    ...value,
+    id,
+    type: String(value.type || `${scope}-instruction`).trim(),
+    scope,
+    recommendation: String(value.recommendation ?? instruction).trim(),
+    instruction,
+    evidenceCount: Number.isFinite(Number(value.evidenceCount)) ? Number(value.evidenceCount) : 0,
+    dates: stringArray(value.dates),
+    projects: stringArray(value.projects),
+    evidence: Array.isArray(value.evidence) ? jsonValue(value.evidence, []) : [],
+    rationale: String(value.rationale || '').trim(),
+    expectedBenefit: String(value.expectedBenefit || '').trim(),
+    provenance: jsonValue(value.provenance, null),
+    confirmationStatus: String(value.confirmationStatus || (value.confirmed === true ? 'confirmed' : '')).trim(),
+    conflict: value.conflict === true,
+    nestedScope: value.nestedScope === true,
+    scopePath: value.scopePath == null ? null : String(value.scopePath),
+    safetyReasons: stringArray(value.safetyReasons),
+  }
+}
+
+function snapshotCandidate(candidate) {
+  return {
+    id: candidate.id,
+    type: candidate.type,
+    scope: candidate.scope,
+    recommendation: candidate.recommendation,
+    instruction: candidate.instruction,
+    evidenceCount: candidate.evidenceCount,
+    dates: candidate.dates,
+    projects: candidate.projects,
+    evidence: candidate.evidence,
+    rationale: candidate.rationale,
+    expectedBenefit: candidate.expectedBenefit,
+    provenance: candidate.provenance,
+    confirmationStatus: candidate.confirmationStatus,
+    conflict: candidate.conflict,
+    nestedScope: candidate.nestedScope,
+    scopePath: candidate.scopePath,
+    safetyReasons: candidate.safetyReasons,
+  }
 }
 
 function normalizeAction(value) {
@@ -242,13 +290,16 @@ function normalizeAction(value) {
 }
 
 function assertCandidateAllowed(candidate, options) {
-  if (candidate.confirmed !== true && options.confirmed !== true) fail('candidate_unconfirmed', 'The instruction candidate has not been confirmed.')
+  if (candidate.confirmationStatus !== 'confirmed' && options.confirmed !== true) fail('candidate_unconfirmed', 'The instruction candidate has not been confirmed.')
   if (!candidate.instruction && options.action !== 'remove') fail('invalid_candidate', 'Add and update candidates require instruction text.')
   if (/codex_failed/i.test(JSON.stringify(candidate))) {
     fail('codex_failed', 'A codex_failed report or candidate cannot authorize a persistent instruction.')
   }
   if (FORBIDDEN.some(pattern => pattern.test(candidate.instruction))) {
     fail('forbidden_content', 'Temporary, progress, todo, speculative, or codex_failed content cannot become a persistent instruction.')
+  }
+  if (candidate.instruction.includes('<!-- power-work-report:')) {
+    fail('forbidden_content', 'Instruction text cannot contain report-owned management markers.')
   }
   if (candidate.nestedScope || candidate.scopePath || options.nestedScope) fail('nested_scope', 'A nested AGENTS.md scope requires an explicit human decision.')
   if (candidate.conflict || options.conflict) fail('conflict', 'The candidate conflicts with an existing instruction and cannot be applied automatically.')
@@ -331,6 +382,7 @@ function assertManagedStructure(content) {
   const region = starts.length ? regionBounds(content) : null
   const marker = /<!-- power-work-report:entry:([A-Za-z0-9][A-Za-z0-9._-]{0,127}):(start|end) -->/g
   const counts = new Map()
+  const stack = []
   for (const match of content.matchAll(marker)) {
     if (!region || match.index < region.contentStart || match.index >= region.endMarker) {
       fail('managed_region_invalid', 'A report-owned instruction marker appears outside the managed region.')
@@ -338,7 +390,14 @@ function assertManagedStructure(content) {
     const value = counts.get(match[1]) || { start: [], end: [] }
     value[match[2]].push(match.index)
     counts.set(match[1], value)
+    if (match[2] === 'start') {
+      if (stack.length) fail('managed_region_invalid', 'Report-owned instruction entries may not overlap or nest.')
+      stack.push(match[1])
+    } else {
+      if (stack.pop() !== match[1]) fail('managed_region_invalid', 'Report-owned instruction entry intervals are crossed or unmatched.')
+    }
   }
+  if (stack.length) fail('managed_region_invalid', 'A report-owned instruction entry is not closed.')
   for (const value of counts.values()) {
     if (value.start.length !== 1 || value.end.length !== 1 || value.start[0] >= value.end[0]) {
       fail('managed_region_invalid', 'A report-owned instruction entry is malformed or duplicated.')
@@ -378,14 +437,43 @@ async function assertWritable(fs, targetPath, exists) {
   }
 }
 
-async function atomicWrite(fs, targetPath, beforeContent, content, options) {
-  const tempPath = `${targetPath}.power-work-report-${options.atomicNonce || crypto.randomBytes(6).toString('hex')}.tmp`
+async function atomicWrite(fs, targetPath, expectedExists, beforeContent, content, options) {
+  const nonce = options.atomicNonce || crypto.randomBytes(6).toString('hex')
+  const tempPath = `${targetPath}.power-work-report-${nonce}.tmp`
+  const quarantinePath = `${targetPath}.power-work-report-${nonce}.before`
+  const existingStat = expectedExists ? await statOptional(fs, targetPath) : null
   try {
     await fs.writeFile(tempPath, content, { encoding: 'utf8', flag: 'wx' })
+    if (existingStat?.mode != null && fs.chmod) await fs.chmod(tempPath, existingStat.mode & 0o7777)
     if (options.beforeRename) await options.beforeRename({ tempPath, targetPath })
     const latest = await readOptional(fs, targetPath)
-    if ((latest ?? '') !== beforeContent) fail('target_drift', 'AGENTS.md changed while applying the proposal; generate and confirm a new diff.')
-    await fs.rename(tempPath, targetPath)
+    if ((latest !== null) !== expectedExists || (latest ?? '') !== beforeContent) fail('target_drift', 'AGENTS.md changed while applying the proposal; generate and confirm a new diff.')
+    if (!expectedExists) {
+      if (options.beforeInstallLink) await options.beforeInstallLink({ tempPath, targetPath, quarantinePath: null })
+      await linkNoReplace(fs, tempPath, targetPath, null)
+      if (await readOptional(fs, targetPath) !== content) fail('atomic_write_failed', 'Installed AGENTS.md bytes changed before commit verification.')
+      await fs.unlink(tempPath)
+      return
+    }
+
+    await fs.rename(targetPath, quarantinePath)
+    const quarantined = await readOptional(fs, quarantinePath)
+    if (quarantined !== beforeContent) {
+      await restoreQuarantinedTarget(fs, quarantinePath, targetPath)
+      fail('target_drift', 'AGENTS.md changed during compare-and-commit; concurrent bytes were preserved.')
+    }
+    if (options.beforeInstallLink) await options.beforeInstallLink({ tempPath, targetPath, quarantinePath })
+    try {
+      await linkNoReplace(fs, tempPath, targetPath, quarantinePath)
+    } catch (error) {
+      if (error instanceof InstructionChangeError) throw error
+      throw error
+    }
+    if (await readOptional(fs, targetPath) !== content) {
+      fail('atomic_write_failed', 'Installed AGENTS.md bytes changed before commit verification.', { quarantinePath })
+    }
+    await fs.unlink(tempPath)
+    await fs.unlink(quarantinePath)
   } catch (error) {
     try { await fs.unlink(tempPath) } catch {}
     if (error instanceof InstructionChangeError) throw error
@@ -393,16 +481,65 @@ async function atomicWrite(fs, targetPath, beforeContent, content, options) {
   }
 }
 
+async function linkNoReplace(fs, sourcePath, targetPath, quarantinePath) {
+  try {
+    await fs.link(sourcePath, targetPath)
+  } catch (error) {
+    if (error?.code === 'EEXIST') {
+      fail('target_drift', 'A concurrent AGENTS.md appeared before commit; it was preserved.', { quarantinePath })
+    }
+    if (quarantinePath && await readOptional(fs, targetPath) === null) {
+      try { await restoreQuarantinedTarget(fs, quarantinePath, targetPath) } catch {}
+    }
+    throw error
+  }
+}
+
 function assertProposal(value) {
-  const fields = ['schemaVersion', 'proposalId', 'candidateId', 'action', 'sourceReport', 'target', 'beforeContent', 'afterContent', 'exactDiff', 'beforeSha256', 'afterSha256', 'candidateSha256', 'createdAt', 'proposalSha256']
+  const fields = ['schemaVersion', 'proposalId', 'candidateId', 'candidateSnapshot', 'action', 'sourceReport', 'target', 'beforeContent', 'afterContent', 'exactDiff', 'beforeSha256', 'afterSha256', 'candidateSha256', 'createdAt', 'proposalSha256']
   if (!value || typeof value !== 'object' || fields.some(field => !(field in value))) fail('invalid_proposal', 'Instruction proposal is incomplete.')
   if (value.schemaVersion !== SCHEMA_VERSION) fail('invalid_proposal', 'Instruction proposal schema version is unsupported.')
+  assertCandidateSnapshot(value.candidateSnapshot)
+}
+
+function assertCandidateSnapshot(value, code = 'invalid_proposal') {
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+    || canonical(Object.keys(value).sort()) !== canonical([...CANDIDATE_SNAPSHOT_FIELDS].sort())) {
+    fail(code, 'Instruction proposal candidate snapshot is incomplete or contains unknown fields.')
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(value.id)
+    || !['global', 'project'].includes(value.scope)
+    || value.confirmationStatus !== 'confirmed'
+    || !Number.isFinite(value.evidenceCount)
+    || value.evidenceCount < 0
+    || !Array.isArray(value.dates)
+    || !Array.isArray(value.projects)
+    || !Array.isArray(value.evidence)
+    || !Array.isArray(value.safetyReasons)
+    || typeof value.conflict !== 'boolean'
+    || typeof value.nestedScope !== 'boolean'
+    || (value.scopePath !== null && typeof value.scopePath !== 'string')) {
+    fail(code, 'Instruction proposal candidate snapshot has invalid field values.')
+  }
+  for (const field of ['type', 'recommendation', 'instruction', 'rationale', 'expectedBenefit']) {
+    if (typeof value[field] !== 'string') fail(code, `Instruction proposal candidate snapshot field ${field} must be a string.`)
+  }
 }
 
 function candidateDigest(value) {
-  const beforeEntry = entryText(value.beforeContent, value.candidateId)
-  const afterEntry = entryText(value.afterContent, value.candidateId)
-  return sha256(canonical({ candidateId: value.candidateId, action: value.action, sourceReport: value.sourceReport, target: value.target, beforeEntry, afterEntry }))
+  const candidateId = value.candidateSnapshot.id
+  const beforeEntry = entryText(value.beforeContent, candidateId)
+  const afterEntry = entryText(value.afterContent, candidateId)
+  return sha256(canonical({
+    candidateSnapshot: value.candidateSnapshot,
+    action: value.action,
+    sourceReport: value.sourceReport,
+    target: value.target,
+    beforeSha256: sha256(value.beforeContent),
+    afterSha256: sha256(value.afterContent),
+    beforeEntry,
+    afterEntry,
+  }))
 }
 
 function entryText(content, id) {
@@ -443,6 +580,20 @@ function requiredString(value, field) {
 
 function normalizeText(value) {
   return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+function stringArray(value) {
+  if (!Array.isArray(value)) return []
+  return value.map(item => String(item).trim()).filter(Boolean)
+}
+
+function jsonValue(value, fallback) {
+  if (value === undefined) return fallback
+  try {
+    return JSON.parse(JSON.stringify(value))
+  } catch {
+    fail('invalid_candidate', 'Candidate evidence and provenance must be serializable.')
+  }
 }
 
 function occurrences(content, value) {

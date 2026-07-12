@@ -7,29 +7,91 @@ export function emptyMemory() {
 }
 
 export async function readMemory(filePath) {
-  let value
+  return (await readMemorySnapshot(filePath)).memory
+}
+
+export async function readMemorySnapshot(filePath) {
+  let rawBytes
   try {
-    value = JSON.parse(await fs.readFile(filePath, 'utf8'))
+    rawBytes = await fs.readFile(filePath)
   } catch (error) {
-    if (error?.code === 'ENOENT') return emptyMemory()
+    if (error?.code === 'ENOENT') {
+      return { memory: emptyMemory(), exists: false, rawBytes: null, mode: null }
+    }
     throw new Error(`Memory JSON is missing or invalid: ${filePath}: ${error.message}`)
   }
-  return normalizeMemory(value)
+  let value
+  try {
+    value = JSON.parse(rawBytes.toString('utf8'))
+  } catch (error) {
+    throw new Error(`Memory JSON is missing or invalid: ${filePath}: ${error.message}`)
+  }
+  const stat = await fs.stat(filePath)
+  return { memory: normalizeMemory(value), exists: true, rawBytes, mode: stat.mode }
 }
 
 export async function writeMemoryAtomically(filePath, memory, options = {}) {
   await fs.mkdir(path.dirname(filePath), { recursive: true })
+  const serializedBytes = Buffer.from(`${JSON.stringify(normalizeMemory(memory), null, 2)}\n`, 'utf8')
+  const nonce = options.nonce || crypto.randomBytes(6).toString('hex')
   const tempPath = path.join(
     path.dirname(filePath),
-    `.${path.basename(filePath)}.power-work-report-${options.nonce || crypto.randomBytes(6).toString('hex')}.tmp`,
+    `.${path.basename(filePath)}.power-work-report-${nonce}.tmp`,
   )
+  const quarantinePath = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.power-work-report-${nonce}.previous`,
+  )
+  let quarantined = false
   try {
-    await fs.writeFile(tempPath, `${JSON.stringify(normalizeMemory(memory), null, 2)}\n`, {
-      encoding: 'utf8',
-      flag: 'wx',
-    })
+    await fs.writeFile(tempPath, serializedBytes, { flag: 'wx' })
+    if (options.expectedMode !== null && options.expectedMode !== undefined) {
+      await fs.chmod(tempPath, options.expectedMode)
+    }
     if (options.beforeCommit) await options.beforeCommit({ tempPath, filePath })
-    await fs.rename(tempPath, filePath)
+
+    if (options.expectedExists) {
+      try {
+        await fs.rename(filePath, quarantinePath)
+        quarantined = true
+      } catch (error) {
+        if (error?.code === 'ENOENT') throw memoryWriteError('memory_drift', 'Memory disappeared before the audit could be committed.')
+        throw memoryWriteError('memory_atomic_write_failed', `Could not quarantine memory before commit: ${error.message}`)
+      }
+      const currentBytes = await fs.readFile(quarantinePath)
+      if (!Buffer.isBuffer(options.expectedBytes) || !currentBytes.equals(options.expectedBytes)) {
+        await restoreQuarantinedMemory(quarantinePath, filePath)
+        quarantined = false
+        throw memoryWriteError('memory_drift', 'Memory changed before the audit could be committed.')
+      }
+    } else if (await pathExists(filePath)) {
+      throw memoryWriteError('memory_drift', 'Memory was created before the audit could be committed.')
+    }
+
+    try {
+      await fs.link(tempPath, filePath)
+    } catch (error) {
+      if (error?.code === 'EEXIST') {
+        throw memoryWriteError('memory_drift', 'Memory changed while the audit was being committed.', {
+          quarantinePath: quarantined ? quarantinePath : undefined,
+        })
+      }
+      throw memoryWriteError('memory_atomic_write_failed', `Could not install committed memory: ${error.message}`, {
+        quarantinePath: quarantined ? quarantinePath : undefined,
+      })
+    }
+    if (options.afterInstall) await options.afterInstall({ tempPath, filePath })
+    const installedBytes = await fs.readFile(filePath)
+    if (!installedBytes.equals(serializedBytes)) {
+      throw memoryWriteError('memory_drift', 'Memory changed immediately after the audit was installed.', {
+        quarantinePath: quarantined ? quarantinePath : undefined,
+      })
+    }
+    await fs.unlink(tempPath)
+    if (quarantined) {
+      await fs.unlink(quarantinePath)
+      quarantined = false
+    }
   } finally {
     try {
       await fs.unlink(tempPath)
@@ -37,6 +99,36 @@ export async function writeMemoryAtomically(filePath, memory, options = {}) {
       if (error?.code !== 'ENOENT') throw error
     }
   }
+}
+
+async function restoreQuarantinedMemory(quarantinePath, filePath) {
+  try {
+    await fs.link(quarantinePath, filePath)
+    await fs.unlink(quarantinePath)
+  } catch (error) {
+    throw memoryWriteError(
+      'memory_atomic_write_failed',
+      'Concurrent memory bytes were quarantined but could not be restored without overwriting another file.',
+      { causeCode: error?.code, quarantinePath },
+    )
+  }
+}
+
+async function pathExists(filePath) {
+  try {
+    await fs.stat(filePath)
+    return true
+  } catch (error) {
+    if (error?.code === 'ENOENT') return false
+    throw error
+  }
+}
+
+function memoryWriteError(code, message, details = {}) {
+  const error = new Error(message)
+  error.code = code
+  error.details = details
+  return error
 }
 
 export function normalizeMemory(value) {

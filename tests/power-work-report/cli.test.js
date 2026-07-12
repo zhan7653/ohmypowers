@@ -741,6 +741,11 @@ test('instruction plan and apply use separate gates, audit success, and support 
   const proposalPath = path.join(tmp, '2026-07-01', 'draft', 'instruction-change.proposed.json')
   const diffPath = path.join(tmp, '2026-07-01', 'draft', 'instruction-change.diff')
   const proposal = await readJson(proposalPath)
+  assert.equal(proposal.candidateSnapshot.confirmationStatus, 'confirmed')
+  assert.equal(proposal.candidateSnapshot.conflict, false)
+  assert.equal(proposal.candidateSnapshot.nestedScope, false)
+  assert.equal(proposal.candidateSnapshot.scopePath, '')
+  assert.deepEqual(proposal.candidateSnapshot.safetyReasons, [])
   assert.equal(await fs.readFile(target, 'utf8'), before)
   assert.equal(await fs.readFile(diffPath, 'utf8'), proposal.exactDiff)
   assert.equal(planOutput.targetPath, target)
@@ -776,6 +781,79 @@ test('instruction plan and apply use separate gates, audit success, and support 
   assert.equal(memory.todos.length > 0, true)
   assert.equal(memory.ideas.length > 0, true)
   assert.equal(memory.reports.length, 1)
+})
+
+test('instruction planning preserves public safety signals and refuses conflict or nested scope without mutation', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-instruction-safety-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  const reportPath = path.join(tmp, '2026-07-01', 'draft', 'report.json')
+  const targetBefore = 'human rules\n'
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, targetBefore)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  const original = await readJson(reportPath)
+  const cases = [
+    { field: 'conflict', value: true, code: 'conflict' },
+    { field: 'nestedScope', value: true, code: 'nested_scope' },
+    { field: 'scopePath', value: '/workspace/alpha/packages/api', code: 'nested_scope' },
+  ]
+
+  for (const item of cases) {
+    const report = structuredClone(original)
+    const candidate = report.reusableInsights.globalInstructionCandidates[0]
+    candidate[item.field] = item.value
+    candidate.safetyReasons = [`pause because ${item.field}`]
+    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`)
+    await assert.rejects(
+      () => runCli([
+        'instruction-plan', '--date', '2026-07-01', '--candidate-id', candidate.id,
+        '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+      ]),
+      error => error?.code === item.code,
+    )
+    assert.equal(await fs.readFile(target, 'utf8'), targetBefore)
+  }
+})
+
+test('instruction apply rejects source-report evidence, rationale, or safety changes after planning', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-candidate-integrity-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  const reportPath = path.join(tmp, '2026-07-01', 'draft', 'report.json')
+  const targetBefore = 'human rules\n'
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, targetBefore)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+  const original = await readJson(reportPath)
+  const mutations = [
+    candidate => { candidate.evidence[0].summary = 'Changed evidence after confirmation.' },
+    candidate => { candidate.rationale = 'Changed rationale after confirmation.' },
+    candidate => { candidate.safetyReasons = ['New safety concern after confirmation.'] },
+  ]
+
+  for (const mutate of mutations) {
+    const report = structuredClone(original)
+    mutate(report.reusableInsights.globalInstructionCandidates[0])
+    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`)
+    await assert.rejects(
+      () => runCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp]),
+      error => error?.code === 'candidate_integrity',
+    )
+    assert.equal(await fs.readFile(target, 'utf8'), targetBefore)
+  }
 })
 
 test('ordinary finalize never mutates AGENTS.md and target drift leaves instruction audit unchanged', async t => {
@@ -856,6 +934,108 @@ test('instruction apply rolls target back when atomic audit persistence fails be
     (await fs.readdir(tmp)).filter(name => name.includes('.memory.json.power-work-report-')),
     [],
   )
+})
+
+test('concurrent existing memory update is preserved and rolls the instruction target back', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-drift-existing-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  const memoryPath = path.join(tmp, 'memory.json')
+  const targetBefore = 'human target\n'
+  const initialMemory = '{"schemaVersion":1,"todos":[],"ideas":[],"reports":[],"instructionChanges":[]}\n'
+  const concurrentMemory = '{"schemaVersion":1,"todos":[{"text":"concurrent"}],"ideas":[],"reports":[],"instructionChanges":[]}\n'
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, targetBefore)
+  await fs.writeFile(memoryPath, initialMemory)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+
+  await assert.rejects(
+    () => runCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp], {
+      beforeAuditCommit: () => fs.writeFile(memoryPath, concurrentMemory),
+    }),
+    error => error?.code === 'audit_persistence_failed'
+      && error.details.auditError.code === 'memory_drift',
+  )
+  assert.equal(await fs.readFile(target, 'utf8'), targetBefore)
+  assert.equal(await fs.readFile(memoryPath, 'utf8'), concurrentMemory)
+  assert.deepEqual((await fs.readdir(tmp)).filter(name => name.includes('.memory.json.power-work-report-')), [])
+})
+
+test('post-install in-place memory write is detected before success and retains recovery evidence', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-post-install-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  const memoryPath = path.join(tmp, 'memory.json')
+  const targetBefore = 'human target\n'
+  const initialMemory = '{"schemaVersion":1,"todos":[],"ideas":[],"reports":[],"instructionChanges":[]}\n'
+  const concurrentMemory = '{"schemaVersion":1,"todos":[{"text":"post-install writer"}],"ideas":[],"reports":[],"instructionChanges":[]}\n'
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, targetBefore)
+  await fs.writeFile(memoryPath, initialMemory)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+
+  await assert.rejects(
+    () => runCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp], {
+      afterAuditInstall: () => fs.writeFile(memoryPath, concurrentMemory),
+    }),
+    error => error?.code === 'audit_persistence_failed'
+      && error.details.auditError.code === 'memory_drift',
+  )
+  assert.equal(await fs.readFile(target, 'utf8'), targetBefore)
+  assert.equal(await fs.readFile(memoryPath, 'utf8'), concurrentMemory)
+  const artifacts = (await fs.readdir(tmp)).filter(name => name.includes('.memory.json.power-work-report-'))
+  assert.equal(artifacts.filter(name => name.endsWith('.tmp')).length, 0)
+  assert.equal(artifacts.filter(name => name.endsWith('.previous')).length, 1)
+  assert.equal(await fs.readFile(path.join(tmp, artifacts[0]), 'utf8'), initialMemory)
+  assert.deepEqual((await readJson(memoryPath)).instructionChanges, [])
+})
+
+test('concurrent absent-memory creator is preserved and rolls the instruction target back', async t => {
+  const tmp = await fs.mkdtemp(path.join('/tmp', 'pwr-memory-drift-absent-'))
+  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
+  const codexHome = path.join(tmp, 'codex-home')
+  const target = path.join(codexHome, 'AGENTS.md')
+  const memoryPath = path.join(tmp, 'memory.json')
+  const targetBefore = 'human target\n'
+  const concurrentMemory = '{"schemaVersion":1,"todos":[{"text":"creator"}],"ideas":[],"reports":[]}\n'
+  await fs.mkdir(codexHome, { recursive: true })
+  await fs.writeFile(target, targetBefore)
+  await run([
+    'run', '--date', '2026-07-01', '--codex-home', fixtureCodexHome, '--out-dir', tmp,
+    '--timezone', 'Asia/Shanghai', '--codex-bin', successCodex,
+  ])
+  assert.equal(await exists(memoryPath), false)
+  await run([
+    'instruction-plan', '--date', '2026-07-01', '--candidate-id', 'focused-tests-before-handoff',
+    '--action', 'add', '--codex-home', codexHome, '--out-dir', tmp,
+  ])
+
+  await assert.rejects(
+    () => runCli(['instruction-apply', '--date', '2026-07-01', '--out-dir', tmp], {
+      beforeAuditCommit: () => fs.writeFile(memoryPath, concurrentMemory),
+    }),
+    error => error?.code === 'audit_persistence_failed'
+      && error.details.auditError.code === 'memory_drift',
+  )
+  assert.equal(await fs.readFile(target, 'utf8'), targetBefore)
+  assert.equal(await fs.readFile(memoryPath, 'utf8'), concurrentMemory)
+  assert.deepEqual((await fs.readdir(tmp)).filter(name => name.includes('.memory.json.power-work-report-')), [])
 })
 
 test('project instruction planning requires the explicit temporary repository and remains proposal-only', async t => {

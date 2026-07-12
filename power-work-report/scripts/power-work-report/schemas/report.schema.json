@@ -209,7 +209,11 @@
         "rationale": { "type": "string" },
         "expectedBenefit": { "type": "string" },
         "provenance": { "enum": ["automatic", "user_nominated"] },
-        "confirmationStatus": { "enum": ["unconfirmed", "selected", "rejected"] }
+        "confirmationStatus": { "enum": ["unconfirmed", "selected", "rejected"] },
+        "conflict": { "type": "boolean" },
+        "nestedScope": { "type": "boolean" },
+        "scopePath": { "type": "string" },
+        "safetyReasons": { "$ref": "#/$defs/stringItems" }
       }
     },
     "insightEvidence": {

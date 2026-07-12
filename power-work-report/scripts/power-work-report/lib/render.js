@@ -1088,6 +1088,10 @@ function appendCandidateGroupMarkdown(lines, title, candidates) {
     lines.push(`- 项目: ${formatInlineList(candidate.projects)}`)
     lines.push(`- 推荐理由: ${candidate.rationale || '未提供。'}`)
     lines.push(`- 预期收益: ${candidate.expectedBenefit || '未提供。'}`)
+    lines.push(`- 冲突信号: ${candidate.conflict === true ? '是' : '否'}`)
+    lines.push(`- 嵌套作用域信号: ${candidate.nestedScope === true ? '是' : '否'}`)
+    lines.push(`- 建议作用域路径: ${candidate.scopePath || '无。'}`)
+    lines.push(`- 安全原因: ${formatInlineList(candidate.safetyReasons)}`)
     lines.push(`- 建议下一步: ${candidateNextStep(candidate)}`)
     lines.push('- 证据:')
     const evidence = candidate.evidence || []
@@ -1232,6 +1236,8 @@ function candidateHtml(candidate) {
       <span class="badge">作用域: ${escapeHtml(candidate.scope || '')}</span>
       <span class="badge">状态: ${escapeHtml(candidate.confirmationStatus || 'unconfirmed')}</span>
       <span class="badge">证据: ${escapeHtml(candidate.evidenceCount ?? evidence.length)}</span>
+      <span class="badge">冲突: ${candidate.conflict === true ? '是' : '否'}</span>
+      <span class="badge">嵌套作用域: ${candidate.nestedScope === true ? '是' : '否'}</span>
     </div>
     <p><strong>ID：</strong>${escapeHtml(candidate.id || '')}</p>
     <p><strong>来源：</strong>${escapeHtml(candidate.provenance || '')}</p>
@@ -1239,6 +1245,8 @@ function candidateHtml(candidate) {
     <p><strong>项目：</strong>${escapeHtml(formatInlineList(candidate.projects))}</p>
     <p><strong>推荐理由：</strong>${escapeHtml(candidate.rationale || '未提供。')}</p>
     <p><strong>预期收益：</strong>${escapeHtml(candidate.expectedBenefit || '未提供。')}</p>
+    <p><strong>建议作用域路径：</strong>${escapeHtml(candidate.scopePath || '无。')}</p>
+    <p><strong>安全原因：</strong>${escapeHtml(formatInlineList(candidate.safetyReasons))}</p>
     <p><strong>建议下一步：</strong>${escapeHtml(candidateNextStep(candidate))}</p>
     <h4>证据</h4>
     ${evidence.length ? `<ul class="file-list">${evidence.map(item => `<li>${escapeHtml(formatEvidenceText(item))}</li>`).join('')}</ul>` : '<p class="empty">无。</p>'}
@@ -1267,6 +1275,9 @@ function formatEvidenceText(item) {
 }
 
 function candidateNextStep(candidate) {
+  if (candidate.conflict === true || candidate.nestedScope === true || candidate.scopePath) {
+    return '暂停；先由人工解决作用域或规则冲突，并重新审阅候选。当前信号不允许进入 instruction-plan。'
+  }
   if (candidate.type === 'global_instruction' || candidate.type === 'project_instruction') {
     return '先单独确认候选，再生成准确 instruction-plan diff；只有第二次确认该 diff 后才能 apply。'
   }

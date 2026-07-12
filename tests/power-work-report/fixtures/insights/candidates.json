@@ -111,7 +111,11 @@
       "rationale": "Prevents incomplete handoffs.",
       "expectedBenefit": "More reliable verification.",
       "provenance": "automatic",
-      "confirmationStatus": "selected"
+      "confirmationStatus": "selected",
+      "conflict": "yes",
+      "nestedScope": 1,
+      "scopePath": { "path": "/workspace/alpha/packages/api" },
+      "safetyReasons": ["  inspect existing rules  ", 42, "inspect existing rules", null]
     },
     {
       "id": "cross-project-global",
@@ -140,7 +144,15 @@
       "rationale": "The rule repeats across repositories.",
       "expectedBenefit": "More reliable handoffs globally.",
       "provenance": "automatic",
-      "confirmationStatus": "selected"
+      "confirmationStatus": "selected",
+      "conflict": true,
+      "nestedScope": true,
+      "scopePath": "/workspace/beta/packages/api",
+      "safetyReasons": [
+        "Possible conflict with an existing validation rule.",
+        "Nested package scope may be more accurate.",
+        "Possible conflict with an existing validation rule."
+      ]
     }
   ],
   "projectInstructionCandidates": [

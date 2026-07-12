@@ -3,6 +3,9 @@ import crypto from 'node:crypto'
 const MEMO_LIMIT = 4000
 const TEXT_LIMIT = 1200
 const EVIDENCE_SUMMARY_LIMIT = 800
+const SCOPE_PATH_LIMIT = 1000
+const SAFETY_REASON_LIMIT = 400
+const SAFETY_REASON_COUNT = 20
 const CANDIDATE_GROUPS = {
   skillCandidates: 'skill',
   automationCandidates: 'automation',
@@ -126,6 +129,10 @@ function normalizeCandidate(value, type, evidenceRecords) {
   const expectedBenefit = boundedText(value.expectedBenefit, TEXT_LIMIT)
   const confirmationStatus = 'unconfirmed'
   const id = boundedText(value.id, 160) || stableCandidateId(normalizedType, recommendation, normalizedScope)
+  const conflict = value.conflict === true
+  const nestedScope = value.nestedScope === true
+  const scopePath = typeof value.scopePath === 'string' ? boundedText(value.scopePath, SCOPE_PATH_LIMIT) : ''
+  const safetyReasons = boundedStringList(value.safetyReasons, SAFETY_REASON_LIMIT, SAFETY_REASON_COUNT)
 
   return {
     id,
@@ -140,6 +147,10 @@ function normalizeCandidate(value, type, evidenceRecords) {
     expectedBenefit,
     provenance,
     confirmationStatus,
+    conflict,
+    nestedScope,
+    scopePath,
+    safetyReasons,
   }
 }
 
@@ -291,6 +302,15 @@ function boundedText(value, limit) {
 
 function textList(value) {
   return unique((Array.isArray(value) ? value : []).map(item => boundedText(item, TEXT_LIMIT)))
+}
+
+function boundedStringList(value, itemLimit, countLimit) {
+  if (!Array.isArray(value)) return []
+  return unique(
+    value
+      .filter(item => typeof item === 'string')
+      .map(item => boundedText(item, itemLimit)),
+  ).slice(0, countLimit)
 }
 
 function unique(values) {

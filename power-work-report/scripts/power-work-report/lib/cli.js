@@ -4,7 +4,7 @@ import { writeRawSummary } from './collector.js'
 import { generateDraftWithCodex } from './codex-draft.js'
 import { finalizeReport } from './finalize.js'
 import { applyInstructionChange, planInstructionChange } from './instructions.js'
-import { appendInstructionChange, readMemory, writeMemoryAtomically } from './memory.js'
+import { appendInstructionChange, readMemory, readMemorySnapshot, writeMemoryAtomically } from './memory.js'
 import {
   buildFallbackDraft,
   buildMemoryProposal,
@@ -197,15 +197,21 @@ async function instructionApplyCommand({ paths, hooks }) {
   } catch (error) {
     throw new Error(`Cannot verify the instruction candidate against its source report: ${error.message}`)
   }
-  const memory = await readMemory(paths.memoryFile)
+  const memorySnapshot = await readMemorySnapshot(paths.memoryFile)
   const audit = await applyInstructionChange({
     proposal,
     candidate,
     persistAudit: async value => {
-      const nextMemory = appendInstructionChange(memory, value)
+      const nextMemory = appendInstructionChange(memorySnapshot.memory, value)
       await writeMemoryAtomically(paths.memoryFile, nextMemory, {
+        expectedExists: memorySnapshot.exists,
+        expectedBytes: memorySnapshot.rawBytes,
+        expectedMode: memorySnapshot.mode,
         beforeCommit: hooks.beforeAuditCommit
           ? details => hooks.beforeAuditCommit({ ...details, audit: value, memory: nextMemory })
+          : undefined,
+        afterInstall: hooks.afterAuditInstall
+          ? details => hooks.afterAuditInstall({ ...details, audit: value, memory: nextMemory })
           : undefined,
       })
     },
@@ -239,6 +245,7 @@ function instructionCandidate(candidate, options = {}) {
     ...candidate,
     scope,
     instruction: candidate.recommendation,
+    confirmationStatus: options.confirmed === true ? 'confirmed' : candidate.confirmationStatus,
     confirmed: options.confirmed === true,
     projectRoot: scope === 'project' ? options.projectRoot : undefined,
   }

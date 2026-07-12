@@ -144,7 +144,17 @@ test('candidate guards derive evidence fields and enforce repetition, scope, and
   assert.deepEqual(insights.skillCandidates[0].projects, ['/workspace/alpha'])
   assert.deepEqual(insights.automationCandidates.map(item => item.id), ['repeated-automation'])
   assert.deepEqual(insights.globalInstructionCandidates.map(item => item.id), ['cross-project-global'])
-  assert.equal(insights.globalInstructionCandidates[0].confirmationStatus, 'unconfirmed')
+  const globalCandidate = insights.globalInstructionCandidates[0]
+  assert.equal(globalCandidate.confirmationStatus, 'unconfirmed')
+  assert.equal(globalCandidate.type, 'global_instruction')
+  assert.equal(globalCandidate.scope, 'global')
+  assert.equal(globalCandidate.conflict, true)
+  assert.equal(globalCandidate.nestedScope, true)
+  assert.equal(globalCandidate.scopePath, '/workspace/beta/packages/api')
+  assert.deepEqual(globalCandidate.safetyReasons, [
+    'Nested package scope may be more accurate.',
+    'Possible conflict with an existing validation rule.',
+  ])
   assert.deepEqual(insights.projectInstructionCandidates.map(item => item.id), [
     'memo-nomination',
     'single-project-global',
@@ -152,9 +162,43 @@ test('candidate guards derive evidence fields and enforce repetition, scope, and
   const reclassified = insights.projectInstructionCandidates.find(item => item.id === 'single-project-global')
   assert.equal(reclassified.type, 'project_instruction')
   assert.equal(reclassified.scope, '/workspace/alpha')
+  assert.equal(reclassified.conflict, false)
+  assert.equal(reclassified.nestedScope, false)
+  assert.equal(reclassified.scopePath, '')
+  assert.deepEqual(reclassified.safetyReasons, ['inspect existing rules'])
   const nominated = insights.projectInstructionCandidates.find(item => item.id === 'memo-nomination')
   assert.equal(nominated.provenance, 'user_nominated')
   assert.equal(nominated.confirmationStatus, 'unconfirmed')
+  assert.equal(insights.skillCandidates[0].conflict, false)
+  assert.deepEqual(insights.skillCandidates[0].safetyReasons, [])
+})
+
+test('candidate safety annotations are bounded without changing instruction classification', () => {
+  const rawSummary = summary()
+  const candidate = automaticCandidate('bounded-safety', 'project_instruction', [
+    evidence('report', '/reports/2026-07-11/final/report.json', '2026-07-11', '/workspace/alpha'),
+    evidence('session', 'today-session', '2026-07-12', '/workspace/alpha'),
+  ])
+  candidate.conflict = true
+  candidate.nestedScope = true
+  candidate.scopePath = '/workspace/alpha/'.padEnd(1500, 'x')
+  candidate.safetyReasons = Array.from({ length: 25 }, (_, index) => `reason ${index} ${'x'.repeat(500)}`)
+  const insights = normalizeReusableInsights({
+    skillCandidates: [],
+    automationCandidates: [],
+    globalInstructionCandidates: [],
+    projectInstructionCandidates: [candidate],
+    warnings: [],
+  }, { rawSummary })
+  const normalized = insights.projectInstructionCandidates[0]
+
+  assert.equal(normalized.type, 'project_instruction')
+  assert.equal(normalized.scope, '/workspace/alpha')
+  assert.equal(normalized.conflict, true)
+  assert.equal(normalized.nestedScope, true)
+  assert.equal(normalized.scopePath.length, 1000)
+  assert.equal(normalized.safetyReasons.length, 20)
+  assert.ok(normalized.safetyReasons.every(reason => reason.length <= 400))
 })
 
 test('forbidden English and Chinese instruction content is removed before display', async () => {
@@ -315,6 +359,10 @@ test('report schema requires the additive reflection and insight contract', asyn
     'provenance',
     'confirmationStatus',
   ])
+  assert.equal(schema.$defs.candidate.properties.conflict.type, 'boolean')
+  assert.equal(schema.$defs.candidate.properties.nestedScope.type, 'boolean')
+  assert.equal(schema.$defs.candidate.properties.scopePath.type, 'string')
+  assert.equal(schema.$defs.candidate.properties.safetyReasons.$ref, '#/$defs/stringItems')
 })
 
 function summary() {

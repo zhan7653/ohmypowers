@@ -83,13 +83,21 @@ test('proposal and candidate digests reject tampering', async t => {
   const tmp = await sandbox(t)
   const repo = await gitRepo(tmp)
   const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  assert.deepEqual(Object.keys(proposal.candidateSnapshot), [
+    'id', 'type', 'scope', 'recommendation', 'instruction', 'evidenceCount', 'dates', 'projects', 'evidence',
+    'rationale', 'expectedBenefit', 'provenance', 'confirmationStatus', 'conflict', 'nestedScope', 'scopePath', 'safetyReasons',
+  ])
   await assert.rejects(applyInstructionChange({ proposal: { ...proposal, afterContent: `${proposal.afterContent}tamper` } }), error('proposal_integrity'))
   const candidateTamper = { ...proposal, candidateSha256: '0'.repeat(64) }
   candidateTamper.proposalSha256 = proposal.proposalSha256
   await assert.rejects(applyInstructionChange({ proposal: candidateTamper }), error('proposal_integrity'))
   await assert.rejects(applyInstructionChange({
     proposal,
-    candidate: { id: 'validation-rule', scope: 'project', instruction: 'A different confirmed rule.' },
+    candidate: { ...base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }).candidate, rationale: 'Changed after confirmation.' },
+  }), error('candidate_integrity'))
+  await assert.rejects(applyInstructionChange({
+    proposal,
+    candidate: { ...base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }).candidate, evidence: [{ date: '2026-07-11', changed: true }] },
   }), error('candidate_integrity'))
 })
 
@@ -132,6 +140,96 @@ test('permission refusal and atomic failure are typed and non-mutating', async t
     beforeRename: () => fs.writeFile(target, 'raced\n'),
   }), error('target_drift'))
   assert.equal(await fs.readFile(target, 'utf8'), 'raced\n')
+})
+
+test('compare-and-commit preserves bytes introduced during target rename', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  await fs.writeFile(target, 'planned bytes\n')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  let raced = false
+  const racingFs = {
+    ...fs,
+    rename: async (from, to) => {
+      if (!raced && from === target) {
+        raced = true
+        await fs.writeFile(target, 'concurrent rename bytes\n')
+      }
+      return fs.rename(from, to)
+    },
+  }
+  await assert.rejects(applyInstructionChange({ proposal, fs: racingFs, atomicNonce: 'rename-adversary' }), error('target_drift'))
+  assert.equal(await fs.readFile(target, 'utf8'), 'concurrent rename bytes\n')
+})
+
+test('compare-and-commit never overwrites a target created before install link', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  await fs.writeFile(target, 'planned bytes\n')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  let raced = false
+  const racingFs = {
+    ...fs,
+    link: async (from, to) => {
+      if (!raced && from.endsWith('.tmp') && to === target) {
+        raced = true
+        await fs.writeFile(target, 'concurrent link bytes\n')
+      }
+      return fs.link(from, to)
+    },
+  }
+  await assert.rejects(applyInstructionChange({ proposal, fs: racingFs, atomicNonce: 'link-adversary' }), error('target_drift'))
+  assert.equal(await fs.readFile(target, 'utf8'), 'concurrent link bytes\n')
+})
+
+test('absent-target commit uses no-replace link and preserves a concurrent creator', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  let raced = false
+  const racingFs = {
+    ...fs,
+    link: async (from, to) => {
+      if (!raced && to === target) {
+        raced = true
+        await fs.writeFile(target, 'concurrent creator bytes\n')
+      }
+      return fs.link(from, to)
+    },
+  }
+  await assert.rejects(applyInstructionChange({ proposal, fs: racingFs, atomicNonce: 'absent-link-adversary' }), error('target_drift'))
+  assert.equal(await fs.readFile(target, 'utf8'), 'concurrent creator bytes\n')
+})
+
+test('absent proposal rejects even a concurrently created empty target', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const proposal = await planInstructionChange(base({ scope: 'project', projectRoot: repo, instruction: 'Run tests.' }))
+  await assert.rejects(applyInstructionChange({
+    proposal,
+    atomicNonce: 'empty-creator',
+    beforeRename: () => fs.writeFile(target, ''),
+  }), error('target_drift'))
+  assert.equal(await fs.readFile(target, 'utf8'), '')
+})
+
+test('managed entry intervals cannot nest or cross', async t => {
+  const tmp = await sandbox(t)
+  const repo = await gitRepo(tmp)
+  const target = path.join(repo, 'AGENTS.md')
+  const cases = [
+    `${managedStart()}\n${entry('a', 'start')}\n${entry('b', 'start')}\n${entry('a', 'end')}\n${entry('b', 'end')}\n${managedEnd()}\n`,
+    `${managedStart()}\n${entry('a', 'start')}\n${entry('b', 'start')}\n${entry('b', 'end')}\n${entry('a', 'end')}\n${managedEnd()}\n`,
+  ]
+  for (const content of cases) {
+    await fs.writeFile(target, content)
+    await assert.rejects(planInstructionChange(base({ action: 'update', scope: 'project', projectRoot: repo, instruction: 'Run focused tests.' })), error('managed_region_invalid'))
+    assert.equal(await fs.readFile(target, 'utf8'), content)
+  }
 })
 
 test('audit failure rolls existing add and update targets back to exact prior bytes', async t => {
@@ -234,6 +332,17 @@ function base(overrides = {}) {
     id: 'validation-rule',
     scope: overrides.scope,
     instruction: overrides.instruction,
+    type: 'project-instruction',
+    recommendation: overrides.instruction,
+    evidenceCount: 2,
+    dates: ['2026-07-10', '2026-07-12'],
+    projects: overrides.scope === 'global' ? ['/repo/a', '/repo/b'] : ['/repo/a'],
+    evidence: [{ date: '2026-07-10', summary: 'Repeated validation miss.' }],
+    rationale: 'Prevents a repeated validation omission.',
+    expectedBenefit: 'More reliable completion claims.',
+    provenance: { source: 'finalized-reports' },
+    confirmationStatus: 'confirmed',
+    safetyReasons: [],
     projectRoot: overrides.projectRoot,
     nestedScope: overrides.nestedScope,
     conflict: overrides.conflict,
@@ -249,6 +358,18 @@ function base(overrides = {}) {
     fs: overrides.fs,
     now: NOW,
   }
+}
+
+function managedStart() {
+  return '<!-- power-work-report:instructions:start -->'
+}
+
+function managedEnd() {
+  return '<!-- power-work-report:instructions:end -->'
+}
+
+function entry(id, side) {
+  return `<!-- power-work-report:entry:${id}:${side} -->`
 }
 
 async function sandbox(t) {
