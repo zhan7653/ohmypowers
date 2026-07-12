@@ -6,20 +6,19 @@ This tutorial exercises the full `ohmypowers` flow on a small linear-regression 
 power-grill
 -> confirmed requirements issue/local brief
 -> confirmed delivery lane and split decision
--> capability preflight and confirmed execution mode
 -> power-loop repository inspection
 -> separate Execution Blueprint artifact
--> separate Agent Dispatch Plan artifact
--> confirmed compact reference patch
+-> confirmed compact Blueprint-reference patch
 -> ready-to-run Goal Prompt
 -> user manually runs /goal
+-> runtime Final Review Plan after V2/V3
 -> snapshot-bound validation replay plus independent contract-conformance and code review
 -> PR evidence and human review
 -> power-curator compares verified and final Git trees
 -> confirmed lifecycle update or route-back
 ```
 
-The example is intentionally small. The important part is the contract, planning, dispatch, confirmation, validation, and review sequence.
+The example is intentionally small. The important part is the contract, Blueprint confirmation, main-agent implementation, validation, and frozen-tree review sequence.
 
 ## Test Problem
 
@@ -54,7 +53,7 @@ Confirm requirement-level boundaries:
 - Validation expectations: prove convergence, reproducibility, unsafe-learning-rate handling, and documented usage.
 - Stop condition: required behavior exists and every acceptance criterion has evidence.
 
-Do not require the user to select exact files, function signatures, internal control flow, test seams, validation commands, task ownership, or models. `power-loop` derives repository details after capability preflight and execution-mode confirmation. An exact model, profile, provider, reasoning, sandbox, or isolation requirement is still a binding contract constraint.
+Do not require the user to select exact files, function signatures, internal control flow, test seams, validation commands, task ownership, or reviewer models. `power-loop` derives repository details during Blueprint generation and inspects reviewer capability only after the final tree is frozen. An exact reviewer model, profile, provider, reasoning, sandbox, or isolation requirement remains a binding contract constraint.
 
 ## Step 2: Persist The Task Contract
 
@@ -163,16 +162,6 @@ Artifact digest: `None`
 Delivery lane: `LIGHT`
 <!-- power-loop:execution-blueprint:end -->
 
-<!-- power-loop:agent-dispatch-plan:start -->
-# Agent Dispatch Plan
-
-Planning status: `not-generated`
-
-Artifact: `None`
-
-Artifact digest: `None`
-<!-- power-loop:agent-dispatch-plan:end -->
-
 # Curation status
 
 State: open
@@ -188,29 +177,13 @@ Use $power-loop on <issue-url-or-local-brief>.
 
 `power-loop` should:
 
-1. Inspect the visible subagent-spawn schema or equivalent host contract. Do not launch a probe agent when that evidence is conclusive.
-2. Report the classification, evidence inspected, relevant uncertainty, and recommended mode:
-   - `strict-selection-supported` recommends `strict-model-routing` when a supported model or custom-profile selector is demonstrably available;
-   - `inherited-model-only` recommends `inherited-model-routing` when no supported model, reasoning, or custom-profile selector is exposed;
-   - `indeterminate` asks the user for more evidence instead of guessing.
-3. Ask the user to confirm the execution mode. Do not run readiness/risk gating or generate a mode-specific Agent Dispatch Plan or final Goal Prompt before confirmation.
-4. Run readiness, delivery-lane, split, and residual-risk gating; for this example, confirm `LIGHT`, no split needed, `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
-5. Inspect the repository and record its source branch and commit.
-6. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, instruction boundaries, and integration order in a separately persisted, non-normative Execution Blueprint artifact.
-7. Keep implementation work on the main agent and describe only the bounded final reviewer wave in the separately persisted, non-normative Agent Dispatch Plan artifact.
-8. Display a short decision summary and exact compact reference patch whose blocks contain artifact paths, digests, and `Planning status: confirmed`.
-9. Withhold the Goal Prompt and ask for confirmation of the decision summary and exact compact patch.
+1. Run readiness, delivery-lane, split, and residual-risk gating; for this example, confirm `LIGHT`, no split needed, `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
+2. Inspect the repository and record its source branch and commit.
+3. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, and implementation order in a separately persisted, non-normative Execution Blueprint.
+4. Display a short decision summary and exact compact Blueprint-reference patch.
+5. Withhold the Goal Prompt and ask for confirmation of the decision summary and exact patch.
 
-The supported model-or-profile selector establishes the strict recommendation; it does not prove reasoning, profile, model, or sandbox selection that the evidence did not show. Record those capabilities independently. Use strict selection only for final reviewers on this branch, and pause if a required reviewer configuration is unavailable.
-
-Under `strict-model-routing`, a plausible final-review routing is:
-
-- Terra High only for an explicitly simple review, Sol Medium for ordinary review, and Sol High for the most complex or high-risk review.
-- An implementation-independent contract-conformance capability, plus any code, security, compatibility, migration, test, or domain capability justified by the final diff and risks. Reviewer capabilities are dynamic, and contract-prescribed reviewers are honored exactly.
-
-Under `inherited-model-routing`, review subagents inherit the parent configuration. The plan specifies review roles, scopes, evidence packets, batched deliverables, parallelization constraints, and fresh-context boundaries, but it does not select or guarantee a subagent model, reasoning effort, custom profile, reviewer tier, sandbox, escalation, or model-cost outcome. An instruction such as “do not write files” is a behavioral boundary, not host-enforced read-only isolation.
-
-Keep exploration, implementation, tests, integration, validation, and repair on the main agent. Delegate only final review: always cover contract conformance and code review, then add decoupled risk-specific reviewers up to observed concurrent capacity.
+Reviewer routing is deliberately absent from pre-implementation planning. Keep exploration, implementation, tests, integration, validation, and repair on the main agent. After V2/V3 and the final diff exist, inspect runtime reviewer capability and create one Final Review Plan.
 
 ## Step 4: Review And Confirm The Planning References
 
@@ -218,43 +191,35 @@ Check that:
 
 - the Task Contract is unchanged;
 - the delivery lane, split decision, required safety guarantees, and stronger guarantees out of scope are visible in the short decision summary;
-- both separate planning artifacts have exact digests and explicitly say they are non-normative;
-- the capability classification, inspected evidence, recommended mode, and confirmed mode are recorded consistently;
+- the separate Blueprint has an exact digest and explicitly says it is non-normative;
 - the Blueprint reflects the actual repository;
 - every write task has exact non-overlapping ownership;
 - dependencies and integration order are credible;
-- in `strict-model-routing`, each reviewer model, profile, reasoning, and sandbox field is backed by its corresponding selector evidence;
-- in `inherited-model-routing`, the plan contains none of the unsupported reviewer model, reasoning, profile, sandbox, cost, or tier claims;
-- independent review capabilities are selected from the contract and implementation risks; fresh context is required where independence matters, while read-only isolation is claimed only if the host separately exposes and verifies it;
-- the main agent performs all implementation and repair, while the Dispatch Plan contains only final-review tasks;
-- every final reviewer receives a minimal explicit packet, preferably `fork_turns: none`, and at most one consolidated clarification/completion follow-up;
-- the plan records at least contract-conformance and code reviewers, adds non-duplicative risk capabilities, and caps the wave only by observed concurrent capacity;
-- decoupled reviewers launch concurrently, receive a three-minute grace period, use three-minute waits when interaction policy permits, and stop only after three consecutive no-information timeouts without observable progress.
+- reviewer capability and routing are not precomputed in the Blueprint or Issue;
 - validation is layered into V0 focused, V1 integration, V2 final deterministic, and V3 external checks;
 - high-risk work has a complete failure matrix before implementation, one batched adversarial review, at most one concentrated repair, and at most three candidate snapshots;
 - V2, V3, and final reviewers use one frozen tree; V3 runs once after V2 and the final reviewers inspect that unchanged evidence package without replaying V3 by default.
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
 
-After confirmation, `power-loop` verifies both separate planning artifacts, applies only the two compact marked reference blocks, re-reads the issue/local brief, verifies the exact content and Task Contract byte boundary, and only then computes the authoritative full-body SHA-256 and generates the final Goal Prompt.
+After confirmation, `power-loop` verifies the Blueprint, applies only its compact marked reference block, re-reads the issue/local brief, verifies the Task Contract byte boundary, and only then computes the authoritative full-body SHA-256 and generates the final Goal Prompt.
 
 ## Step 5: Manually Run The Goal Prompt
 
 The user starts the returned prompt manually. The orchestrator should:
 
 1. Re-read the confirmed issue/local brief and require its authoritative full-body SHA-256 to match the Goal pin. Host revision drift with identical bytes is provenance; a digest mismatch stops execution.
-2. Reinspect the spawn contract without a probe when its schema is conclusive, and verify that it still supports the confirmed execution mode.
-3. Check for material drift from the recorded branch and commit.
-4. In strict mode, verify each required selector and configuration independently. In inherited mode, verify generic delegation remains available and do not add per-agent configuration claims.
-5. Create or enter the one task-level branch/worktree.
-6. Execute implementation, tests, integration, and validation in the main agent; the Dispatch Plan begins at final review.
-7. Run V0 focused checks during implementation and V1 integration checks on the integrated candidate.
-8. For high-risk work, the main agent runs one concentrated adversarial self-review over the complete failure matrix and records one batched finding set; perform at most one concentrated repair.
-9. Freeze a certification candidate, capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time, then run V2 full deterministic checks on that tree.
-10. After V2 passes, run V3 external/network/authentication/discovery checks once, then launch all decoupled independent final reviewers concurrently over the same unchanged tree and complete evidence package. Give the contract-conformance reviewer the exact Task Contract bytes/digest and complete Issue identity/lifecycle context, with planning artifacts, the thin Goal, session, PR text, and runner summaries only as supplementary evidence. The verifier inspects valid V3 primary evidence rather than replaying it by default.
-11. Prepare draft PR/MR evidence and produce the mode-accurate Dispatch Summary and loop decision.
+2. Check for material drift from the recorded branch and commit.
+3. Create or enter the one task-level branch/worktree.
+4. Execute implementation, tests, integration, and validation in the main agent.
+5. Run V0 focused checks and V1 integration checks.
+6. For high-risk work, run one main-agent failure-matrix self-review and at most one concentrated repair.
+7. Freeze a certification candidate and run V2, then V3 once when applicable.
+8. Inspect the runtime spawn contract and create a Final Review Plan. Use selected reviewer fields only when independently exposed; otherwise record inherited configuration provenance.
+9. Launch contract-conformance, code, and independently justified risk reviewers concurrently over the same tree and evidence package.
+10. Run the verifier and prepare compact PR/MR evidence.
 
-If runtime capability evidence has materially changed, pause for renewed mode confirmation and replanning. Also pause when the confirmed mode cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement; do not silently weaken the contract.
+Pause only when an exact Task Contract reviewer/model/profile/provider/reasoning/sandbox/isolation requirement cannot be satisfied.
 
 ## Step 6: Review Evidence
 
@@ -270,18 +235,7 @@ The PR/MR evidence should map every acceptance criterion:
 | AC-5 | Usage and evidence are documented. | Contract-prescribed or risk-justified independent review | `<README path>` | Pass |
 ```
 
-The Dispatch Summary should record:
-
-- the confirmed execution mode and capability evidence;
-- planned and actual tasks;
-- parallel/sequential execution waves;
-- `wait_agent` calls, timeouts, useful waits, cumulative wait duration, maximum consecutive timeouts, circuit-breaker events, and per-agent follow-up counts;
-- `useful_wait_ratio`, `wait_token_ratio`, and total coordination-token ratio when reliable telemetry is available, or an explicit unavailable value;
-- ownership conflicts;
-- incomplete tasks and pause reasons.
-- V0/V1 development checks, the batched adversarial finding set, concentrated repair count, frozen certification tree, V2 result, final reviewer wave, V3 ordering/result, and candidate snapshot count.
-
-In `strict-model-routing`, record only the supported final-reviewer configuration and selection rationale. In `inherited-model-routing`, do not describe the inherited parent configuration as a selected subagent assignment.
+Final review evidence records only reviewer count, `wait_agent` calls, maximum consecutive no-information timeouts, cumulative wait duration, routing provenance, reviewer results, and the frozen tree.
 
 ## Step 7: Reconcile The Final Tree
 
@@ -299,13 +253,8 @@ Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, 
 - Missing requirement-level behavior or acceptance criteria -> `NEEDS_GRILL`.
 - Missing exact files or commands that repository inspection can safely discover -> derive them; do not grill again solely for that reason.
 - Unresolved public API, schema, security, permission, migration, compatibility, or business decision -> `NEEDS_GRILL` or `NEEDS_HUMAN`.
-- Conclusive schema lacks model/profile selectors -> recommend `inherited-model-routing`; do not spawn a model-specific probe.
-- Incomplete or contradictory capability evidence -> classify `indeterminate` and ask; do not choose a mode silently.
-- Execution mode not explicitly confirmed -> no mode-specific Dispatch Plan or Goal Prompt.
 - Patch not confirmed, rejected, changed, or not applied -> no Goal Prompt.
-- Strict selector/configuration missing at planning or runtime -> pause for a human decision; no silent inherited fallback.
-- Exact model, profile, provider, reasoning, sandbox, or isolation constraint unavailable in inherited mode -> pause for a human decision.
-- Strict-mode permission, environment, dependency, validation-infrastructure, or interface-conflict failure -> no reviewer substitution.
+- Exact reviewer model, profile, provider, reasoning, sandbox, or isolation constraint unavailable at final review -> pause for a human decision; do not substitute a weaker reviewer.
 - Missing either the independent contract-conformance or code-review result -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; add other review capabilities when contract or risk justifies them.
 - Material repository drift -> stop for a new `power-loop` pass or confirmed plan revision.
 - Final Git tree differs from the verifier tree without fresh verification or a complete confirmed waiver -> closure remains `unresolved`; never apply the stale PASS to the final tree.
@@ -317,12 +266,10 @@ Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, 
 1. Use $power-grill to draft a requirements-focused Task Contract.
 2. Confirm and persist the issue or local brief.
 3. Use $power-loop on that persisted source.
-4. Review the capability evidence and confirm `strict-model-routing` or `inherited-model-routing`.
-5. Review the separate Blueprint and mode-specific Dispatch artifacts, decision summary, and exact compact reference patch.
-6. Confirm the decision summary and exact compact patch.
-7. Receive the ready-to-run Goal Prompt.
-8. Manually start the Goal Prompt.
-9. Review the snapshot-bound contract-conformance result and any additional capability-specific review results.
-10. Review the draft PR/MR and mode-accurate Dispatch Summary.
-11. Use $power-curator to compare the verified and final Git trees, then confirm the exact lifecycle or waiver record. Do not merge or close until a human is satisfied.
+4. Review the Blueprint, decision summary, and exact compact reference patch.
+5. Confirm the decision summary and exact compact patch.
+6. Receive and manually start the ready-to-run Goal Prompt.
+7. After V2/V3, review the runtime Final Review Plan and snapshot-bound reviewer results.
+8. Review the compact PR/MR evidence and verifier result.
+9. Use $power-curator to compare the verified and final Git trees, then confirm the exact lifecycle or waiver record. Do not merge or close until a human is satisfied.
 ```

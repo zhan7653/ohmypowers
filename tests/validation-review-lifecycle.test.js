@@ -59,8 +59,7 @@ test('loop and verifier artifacts separate V0-V3, batch adversarial findings, an
   const files = [
     'power-loop/SKILL.md',
     'power-loop/assets/execution-blueprint.md',
-    'power-loop/assets/agent-dispatch-plan-inherited.md',
-    'power-loop/assets/agent-dispatch-plan-strict.md',
+    'power-loop/assets/final-review-plan.md',
     'power-loop/assets/pr-evidence-template.md',
     'power-verifier/SKILL.md',
     'power-verifier/assets/implementation-verifier-checklist.md',
@@ -75,7 +74,7 @@ test('loop and verifier artifacts separate V0-V3, batch adversarial findings, an
   assert.match(combined, /one batched finding set|one batched finding/i)
   assert.match(combined, /at most one concentrated repair|Concentrated repair rounds: `<0 or 1/)
   assert.match(combined, /Candidate snapshot ceiling: `3`/)
-  assert.match(combined, /run once after V2|after `V2` passes/i)
+  assert.match(combined, /V3 External.*after V2|after V2.*V3/i)
   assert.match(combined, /does not replay|do not replay/i)
   assert.match(combined, /same frozen Git tree digest|same unchanged tree|unchanged frozen tree/i)
 })

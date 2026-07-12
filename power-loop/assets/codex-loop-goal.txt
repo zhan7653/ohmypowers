@@ -2,23 +2,24 @@
 
 Pinned Issue identity:
 - Source: <contract-source>
-- Host revision: <host revision metadata when available, or unavailable>
+- Host revision: <metadata or unavailable>
 - Exact complete-body SHA-256: <sha256>
-- Exact Task Contract SHA-256: <sha256 of UTF-8 bytes from document start to the byte before the Blueprint start marker>
+- Exact Task Contract SHA-256: <sha256>
 
-Required confirmed references:
-- Task Contract: <heading or anchor>
-- Execution Blueprint reference: <heading or anchor; must say Planning status: confirmed>
+Required confirmed reference:
+- Execution Blueprint reference: <heading or anchor; Planning status: confirmed>
 - Execution Blueprint artifact: <source and exact SHA-256>
-- Agent Dispatch Plan reference: <heading or anchor; must say Planning status: confirmed>
-- Agent Dispatch Plan artifact: <source and exact SHA-256>
 
 Preflight:
-1. Re-read the exact complete persisted body from Source. Treat only its Task Contract byte range as normative. The remaining Issue body, both planning artifacts, and this Goal are supplementary execution evidence and add no requirements.
-2. Hash the exact body bytes without normalization and require the complete-body SHA-256 above to match. The body digest is authoritative; stop on a mismatch even if Host revision is unchanged.
-3. Hash the exact Task Contract byte range and require its SHA-256 above to match. Require both compact planning references to be present and confirmed.
-4. Read both planning artifacts, hash their exact bytes, and require their referenced SHA-256 values to match.
-5. Verify the repository baseline and current subagent capability against the referenced planning artifacts. Do not launch a probe when its visible schema is conclusive. `strict-model-routing` and `inherited-model-routing` claims remain limited to the capability evidence persisted there. Instruction-level no-write behavior is not host-enforced isolation.
-6. Stop before implementation on any Issue identity, Task Contract, planning-reference, planning-artifact, repository-baseline, execution-mode, capability, section, or source-access drift. Replan operational details without changing the Task Contract unless a new requirement-level decision is exposed.
+1. Re-read the complete persisted body and treat only its Task Contract byte range as normative.
+2. Require the complete-body and Task Contract digests above to match exact bytes.
+3. Require the compact Blueprint reference and Blueprint artifact digest to match.
+4. Verify the repository baseline and stop on material Task Contract, identity, Blueprint, source-access, or repository drift.
 
-If preflight passes, satisfy the Task Contract and use the confirmed planning artifacts as the current operational approach. The user must start this Goal manually; do not invoke it automatically.
+If preflight passes, follow the confirmed Blueprint. Keep exploration, implementation, tests, integration, validation, documentation, evidence packaging, and repair in the main agent.
+
+After the final tree is frozen and V2/V3 evidence exists, inspect the runtime reviewer-spawn capability, create a Final Review Plan from `power-loop/assets/final-review-plan.md`, launch the decoupled final reviewer wave, run `power-verifier`, and prepare compact PR/MR evidence.
+
+Do not require or confirm reviewer routing before implementation. Ask for a human decision only when an exact Task Contract reviewer/model/profile/provider/reasoning/sandbox/isolation requirement cannot be satisfied.
+
+The user must start this Goal manually; do not invoke it automatically.

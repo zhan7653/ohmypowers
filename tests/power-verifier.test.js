@@ -11,9 +11,7 @@ const fixedTopologyPaths = [
   'docs/loop-engineering-tutorial.md',
   'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
   'power-loop/SKILL.md',
-  'power-loop/assets/agent-dispatch-plan.md',
-  'power-loop/assets/agent-dispatch-plan-strict.md',
-  'power-loop/assets/agent-dispatch-plan-inherited.md',
+  'power-loop/assets/final-review-plan.md',
   'power-loop/assets/codex-loop-goal.txt',
   'power-loop/assets/execution-blueprint.md',
   'power-loop/assets/issue-patch.md',
@@ -333,7 +331,7 @@ test('inherited verifier evidence records provenance honestly and pauses for una
   assert.equal(exact.reviewerProvenance.length, 0, 'execution pauses before substituting a reviewer')
 })
 
-test('verifier guidance requires mode evidence and rejects unsupported inherited guarantees', async () => {
+test('verifier guidance requires runtime routing evidence and rejects unsupported configuration claims', async () => {
   const files = [
     'power-verifier/SKILL.md',
     'power-verifier/assets/implementation-verifier-checklist.md',
@@ -342,9 +340,9 @@ test('verifier guidance requires mode evidence and rejects unsupported inherited
 
   for (const relativePath of files) {
     const content = await readFile(path.join(root, relativePath), 'utf8')
-    assert.match(content, /Confirmed execution mode|confirmed execution mode/)
-    assert.match(content, /Capability classification|capability classification/)
-    assert.match(content, /Configuration provenance|configuration provenance/)
+    assert.match(content, /Runtime Reviewer Routing|runtime reviewer-routing|runtime reviewer routing/i)
+    assert.match(content, /Evidence inspected|evidence inspected/)
+    assert.match(content, /Configuration provenance|configuration provenance|routing\/configuration provenance/i)
     assert.match(content, /host-isolation|host isolation/i)
   }
 
@@ -357,7 +355,7 @@ test('verifier guidance requires mode evidence and rejects unsupported inherited
     'model-cost savings',
   ]) assert.match(skill, new RegExp(unsupported))
   assert.match(skill, /return `NEEDS_HUMAN`/)
-  assert.match(skill, /Record model or reasoning only when the host directly exposes it; never infer either value\./)
+  assert.match(skill, /Record model or reasoning only when directly exposed\./)
 })
 
 test('verifier artifacts define the Task Contract as normative, preserve Issue identity, and bind results to Git trees', async () => {

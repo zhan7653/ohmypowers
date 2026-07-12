@@ -63,17 +63,16 @@ test('grill and loop require explicit split and safety decisions instead of sile
   assert.match(grill, /independently useful `LIGHT` or `STANDARD` feature is bundled with a `HIGH`-risk mutation boundary/)
   assert.match(grill, /Do not silently select the strongest transaction, concurrency, audit, recovery, or rollback guarantee/)
   assert.match(loop, /Return `NEEDS_GRILL` when an independently valuable `LIGHT` or `STANDARD` outcome is bundled with a separable `HIGH`-risk boundary/)
-  assert.match(checklist, /Broad terms such as “safe”, “atomic”, or “recoverable”/)
+  assert.match(checklist, /broad terms such as “safe”, “atomic”, or “recoverable”/i)
   assert.match(issueTemplate, /Required safety guarantees:/)
   assert.match(issueTemplate, /Stronger guarantees out of scope:/)
 })
 
-test('Task Contract is normative while planning artifacts are separate compact references', async () => {
-  const [issueTemplate, blueprint, inherited, strict, patch, goal, verifier] = await Promise.all([
+test('Task Contract is normative while Blueprint and runtime review evidence stay supplementary', async () => {
+  const [issueTemplate, blueprint, finalReview, patch, goal, verifier] = await Promise.all([
     readFile(path.join(root, 'power-grill', 'assets', 'issue-body.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'execution-blueprint.md'), 'utf8'),
-    readFile(path.join(root, 'power-loop', 'assets', 'agent-dispatch-plan-inherited.md'), 'utf8'),
-    readFile(path.join(root, 'power-loop', 'assets', 'agent-dispatch-plan-strict.md'), 'utf8'),
+    readFile(path.join(root, 'power-loop', 'assets', 'final-review-plan.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'issue-patch.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'assets', 'codex-loop-goal.txt'), 'utf8'),
     readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8'),
@@ -81,14 +80,14 @@ test('Task Contract is normative while planning artifacts are separate compact r
 
   assert.match(issueTemplate, /The Task Contract is the sole normative contract/)
   assert.match(issueTemplate, /Artifact digest: `None`/)
-  for (const plan of [blueprint, inherited, strict]) {
-    assert.match(plan, /confirmed operational guidance/)
-    assert.match(plan, /cannot add/)
-  }
+  assert.match(blueprint, /confirmed operational guidance/)
+  assert.match(blueprint, /cannot add/)
+  assert.match(finalReview, /supplementary evidence/)
+  assert.match(finalReview, /cannot add/)
   assert.match(patch, /Compact Planning Reference Patch/)
   assert.match(patch, /Decision summary/)
   assert.match(patch, /Artifact digest: `sha256:/)
   assert.doesNotMatch(patch, /<all remaining filled Execution Blueprint fields and sections>/)
-  assert.match(goal, /Treat only its Task Contract byte range as normative/)
+  assert.match(goal, /treat only its Task Contract byte range as normative/i)
   assert.match(verifier, /extract normative clauses only from the Task Contract/)
 })

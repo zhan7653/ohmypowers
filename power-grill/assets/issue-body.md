@@ -82,18 +82,6 @@ Delivery lane: `<copied from the confirmed Task Contract>`
 This compact block may later reference a separately persisted, non-normative repository-aware plan after explicit user confirmation. The plan may evolve without changing the Task Contract unless it exposes a new requirement-level decision.
 <!-- power-loop:execution-blueprint:end -->
 
-<!-- power-loop:agent-dispatch-plan:start -->
-# Agent Dispatch Plan
-
-Planning status: `not-generated`
-
-Artifact: `None`
-
-Artifact digest: `None`
-
-This compact block may later reference a separately persisted, non-normative task and capability plan after explicit user confirmation. Dispatch choices do not add requirements to the Task Contract.
-<!-- power-loop:agent-dispatch-plan:end -->
-
 # Curation status
 
 State: open

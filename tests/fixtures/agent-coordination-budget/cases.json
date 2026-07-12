@@ -1,85 +1,31 @@
 {
-  "schema": "review-coordination-budget-cases/v2",
+  "schema": "review-coordination-budget-cases/v3",
   "cases": [
     {
       "id": "four-slots-contract-code-review",
-      "input": {
-        "hostSlots": 4,
-        "reliableRetire": false,
-        "requiredReviewers": 2
-      },
-      "expected": {
-        "reviewers": 2,
-        "totalDistinctSubagents": 2,
-        "waitHardStop": 5,
-        "needsHuman": false
-      }
+      "input": { "hostSlots": 4, "requiredReviewers": 2 },
+      "expected": { "reviewers": 2, "totalDistinctSubagents": 2, "needsHuman": false }
     },
     {
       "id": "four-slots-three-decoupled-reviews",
-      "input": {
-        "hostSlots": 4,
-        "reliableRetire": false,
-        "requiredReviewers": 3
-      },
-      "expected": {
-        "reviewers": 3,
-        "totalDistinctSubagents": 3,
-        "waitHardStop": 6,
-        "needsHuman": false
-      }
+      "input": { "hostSlots": 4, "requiredReviewers": 3 },
+      "expected": { "reviewers": 3, "totalDistinctSubagents": 3, "needsHuman": false }
     },
     {
       "id": "three-slots-contract-code-review",
-      "input": {
-        "hostSlots": 3,
-        "reliableRetire": false,
-        "requiredReviewers": 2
-      },
-      "expected": {
-        "reviewers": 2,
-        "totalDistinctSubagents": 2,
-        "waitHardStop": 5,
-        "needsHuman": false
-      }
+      "input": { "hostSlots": 3, "requiredReviewers": 2 },
+      "expected": { "reviewers": 2, "totalDistinctSubagents": 2, "needsHuman": false }
     },
     {
-      "id": "insufficient-slots-for-decoupled-reviews",
-      "input": {
-        "hostSlots": 2,
-        "reliableRetire": false,
-        "requiredReviewers": 2
-      },
-      "expected": {
-        "reviewers": 0,
-        "totalDistinctSubagents": 0,
-        "waitHardStop": 0,
-        "needsHuman": true
-      }
-    },
-    {
-      "id": "required-reviewers-exceed-wave-capacity",
-      "input": {
-        "hostSlots": 4,
-        "reliableRetire": false,
-        "requiredReviewers": 4
-      },
-      "expected": {
-        "reviewers": 0,
-        "totalDistinctSubagents": 0,
-        "waitHardStop": 0,
-        "needsHuman": true
-      }
+      "id": "insufficient-slots",
+      "input": { "hostSlots": 2, "requiredReviewers": 2 },
+      "expected": { "reviewers": 0, "totalDistinctSubagents": 0, "needsHuman": true }
     }
   ],
   "issue29Baseline": {
     "waitAgentCalls": 179,
-    "waitTokenRatio": 0.40,
-    "expectedThreeReviewerHardStop": 6,
-    "targetWaitTokenRatio": 0.10,
-    "targetUsefulWaitRatio": 0.60,
+    "maxConsecutiveNoInformationWaits": 3,
     "reviewerGracePeriodSeconds": 180,
-    "waitTimeoutSeconds": 180,
-    "consecutiveNoInformationStop": 3
+    "waitTimeoutSeconds": 180
   }
 }

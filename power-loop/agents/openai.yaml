@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Loop"
-  short_description: "Plan capability-accurate Codex loops"
-  default_prompt: "Use $power-loop on this persisted Task Contract. Confirm its delivery lane and split decision, inspect subagent capability, then generate separate non-normative Blueprint and Dispatch artifacts plus a compact confirmable reference patch before a Goal Prompt."
+  short_description: "Plan lean, review-gated Codex loops"
+  default_prompt: "Use $power-loop on this persisted Task Contract. Confirm its delivery lane and split decision, generate one non-normative Execution Blueprint and compact confirmable reference patch, then return a thin Goal that defers reviewer routing until the final tree is frozen."

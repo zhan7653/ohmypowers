@@ -1,6 +1,5 @@
 {
-  "schema": "power-loop-review-routing-cases/v2",
-  "executionMode": "strict-model-routing",
+  "schema": "runtime-review-profile-routing-cases/v3",
   "cases": [
     {
       "id": "simple-contract-check",

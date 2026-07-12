@@ -1,194 +1,73 @@
 # Summary
 
-<What changed.>
+<What changed and why.>
 
-# Linked contract
+# Contract and planning identity
 
-<Issue URL, issue number, local brief path, or pasted contract reference>
-
-# Execution mode and capability evidence
-
-- Confirmed execution mode: `<strict-model-routing | inherited-model-routing>`
-- Capability classification: `<strict-selection-supported | inherited-model-only>`
-- Evidence inspected: `<visible host-contract evidence>`
-- User confirmation: `<confirmation evidence>`
-- Runtime recheck: `<result and any drift>`
-- Configuration provenance: `<selected configuration supported by strict evidence, or inherited from parent and not independently selected>`
-- Host-isolation evidence: `<separately observable enforcement, or None; instruction-level boundaries are not host enforcement>`
-
-# Issue curation evidence
-
-Linked contract status:
-
-- <open | in-progress | pr-ready | merged | done | superseded | follow-up-needed | unknown>
-
-closing intent:
-
-- <close after merge | keep open | follow-up-needed | needs-human | not applicable>
-
-follow-up handling:
-
-- <no follow-up needed | linked follow-up issue | follow-up recommended | needs-human>
-
-Curator mutation status:
-
-- <not executed during implementation | confirmed and applied with URL/evidence>
-
-# Rationale
-
-<Why this approach satisfies the contract with the smallest defensible change.>
+- Canonical Issue/local body: `<source, host revision when available, exact complete-body SHA-256>`
+- Task Contract digest: `<sole normative contract SHA-256>`
+- Execution Blueprint: `<source and exact digest; supplementary guidance>`
+- Final Git tree digest: `<frozen tree>`
 
 # Changed files
 
-- `<path>`: <why it changed>
+- `<path>`: <reason>
 
-# Contract and acceptance-criteria evidence
+# Clause and acceptance evidence
 
-Contract sources:
+| Clause / AC | Obligation | Implementation evidence | Validation/review evidence | Status |
+|---|---|---|---|---|
+| `<AC>` | `<obligation>` | `<files>` | `<evidence>` | `<satisfied/blocker>` |
 
-- Canonical Issue/local body: `<source, host revision when available, and exact full-body SHA-256; authoritative persisted-container identity and lifecycle context>`
-- Task Contract digest: `<SHA-256 over exact UTF-8 bytes from document start to byte before Blueprint start marker; sole normative contract>`
-- Execution Blueprint artifact: `<source and exact digest; supplementary operational evidence>`
-- Agent Dispatch Plan artifact: `<source and exact digest; supplementary operational evidence>`
-- Thin Goal Prompt: `<supplementary immutable text/reference; adds no obligations>`
+# Validation
 
-Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decision>`
-
-| Clause / AC | Source reference | Obligation | Evidence | Validation / review | Files | Status / notes |
-|---|---|---|---|---|---|---|
-| AC-1 |  |  |  |  |  |  |
-
-# Stable implementation snapshot
-
-- Repository/ref: `<repository and ref>`
-- Commit: `<full SHA, or not applicable>`
-- Git tree digest: `<digest; authoritative freshness identity>`
-- Dirty/generated boundary: `<status and excluded/generated artifacts>`
-- Captured at: `<ISO-8601 timestamp with timezone>`
-- Evidence freshness: `<all evidence references this snapshot, or stale evidence and required reruns>`
-
-# Validation results
-
-Validation lifecycle:
-
-- `V0 Focused`: `<commands, result, and development tree>`
-- `V1 Integration`: `<commands, result, and integrated candidate tree>`
-- Concentrated adversarial review: `<not applicable or one batched finding set>`
+- `V0 Focused`: `<commands and result>`
+- `V1 Integration`: `<commands and result>`
+- High-risk batched self-review: `<not applicable or findings>`
 - Concentrated repair rounds: `<0 or 1>`
-- Frozen certification candidate: `<Git tree digest>`
-- `V2 Final deterministic`: `<commands and result on frozen tree>`
-- Final certification waves: `<1 normally; 2 only after one unexpected blocker repair>`
-- `V3 External`: `<commands/manual checks and result; exactly once after V2 passed the frozen tree and before final reviewers inspected the unchanged evidence package>`
-- Candidate snapshots recorded: `<count, maximum 3>`
+- Candidate snapshots: `<count; maximum 3>`
+- `V2 Final deterministic`: `<commands and frozen-tree result>`
+- `V3 External`: `<not applicable or one post-V2 frozen-tree run>`
 
-- `<command>`: <tier, pass/fail, snapshot, and relevant output summary>
+# Final review
 
-## Independent validation replay
+- Final Review Plan: `<source or attached evidence>`
+- Reviewer routing provenance: `<selected supported fields | inherited from parent>`
+- Shared frozen Git tree digest: `<digest>`
 
-| Required command | Safety class | Isolated temporary-artifact boundary | Snapshot | Result | Relevant evidence / reason not replayed |
+| Reviewer | Capability | Scope | Result | Findings/notes | Verified tree |
 |---|---|---|---|---|---|
-|  |  |  |  |  |  |
+| `<identity>` | `<contract-conformance | code-review | risk capability>` | `<scope>` | `<result>` | `<summary>` | `<digest>` |
 
-# Review plan and provenance
+Coordination evidence:
 
-Contract-prescribed reviews: `<exact required identities, configurations, providers, and procedures, or None>`
-
-Selection basis when no topology is prescribed: `<contract obligations, final diff, affected interfaces/data, validation, and material risks>`
-
-Minimum sufficient capability coverage: `<contract-conformance plus code review, then each independently justified risk capability>`
-
-Development adversarial review is supplementary feedback and does not count as final independent certification: `<not applicable or evidence>`
-
-Final reviewer wave identity: `<one shared frozen Git tree digest; all decoupled reviewers launched concurrently>`
-
-| Reviewer identity/source | Confirmed mode | Configuration provenance | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Snapshot |
-|---|---|---|---|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |  |  |  |  |
+- Launched reviewers: `<count>`
+- `wait_agent` calls: `<count>`
+- Maximum consecutive no-information timeouts: `<count>`
+- Cumulative wait duration: `<duration>`
 
 # Verifier result
 
-Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
+- Result: `<PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN>`
+- Evidence source: `<result artifact or summary>`
+- Notes/blockers: `<none or exact items>`
+- Smallest next action: `<None or action>`
 
-Aggregation basis: `<conflict/human-decision, blocking nonconformance or missing/stale evidence, nonblocking notes, or complete compliance>`
+# Risks and out of scope
 
-Notes:
-
-- <verifier note>
-
-Smallest next action: `<required for BLOCKED or NEEDS_HUMAN, or None>`
-
-# Dispatch Summary
-
-Use the exact summary fields from the confirmed mode's Agent Dispatch Plan. Do not add fields or guarantees from the other mode.
-
-Confirmed execution mode: `<strict-model-routing | inherited-model-routing>`
-
-Capability evidence: `<visible host-contract evidence>`
-
-Planned tasks: <count>
-
-Actual tasks: <count>
-
-| Task ID | Role | Spawned task identity | Context policy | Execution wave/mode | Status |
-|---|---|---|---|---|---|
-| `<TASK-ID>` | `<role>` | `<identity>` | `<policy>` | `<wave; parallel/sequential>` | `<complete/blocked/incomplete>` |
-
-Mode-specific task and retry evidence:
-
-- `<only fields supported by the confirmed mode>`
-
-Ownership conflicts:
-
-- <conflict and resolution, or None>
-
-Pause reasons:
-
-- <reason, or None>
-
-Coordination metrics:
-
-- `wait_agent` calls: `<count>`
-- Timeouts: `<count>`
-- Useful waits: `<count>`
-- Maximum consecutive no-information timeouts: `<count>`
-- Cumulative wait duration: `<duration>`
-- Circuit-breaker events: `<none or exact threshold/action>`
-- Per-agent substantive follow-ups: `<agent -> count>`
-- `useful_wait_ratio`: `<value or unavailable>`
-- Wait-related input/total tokens: `<value or unavailable>`
-- `wait_token_ratio`: `<value or unavailable>`
-- Total coordination-token ratio: `<value or unavailable>`
-- Telemetry provenance: `<exact source or unavailable; never inferred>`
-- Review-wave budget: `<launched reviewer count; warning at count + 1 and hard stop at count + 3>`
-- Reviewer grace period and wait interval: `<at least 180 seconds before first wait and 180-second waits, or exact interaction-policy limit>`
-- No-information timeout action: `<continue waiting through the first two consecutive timeouts; inspect status and interrupt/replan after the third when no concrete progress is observable>`
-
-Validation and reviewer snapshot identities:
-
-- <snapshot references>
+- Risks/assumptions: `<items>`
+- Out of scope: `<preserved non-goals>`
 
 # Loop decision
 
-Decision: `pr-ready | blocked | needs-human | follow-up-needed | done`
+Decision: `<pr-ready | blocked | needs-human | follow-up-needed | done>`
 
-Reason:
-
-- <reason>
-
-# Risks and assumptions
-
-- <risk or assumption>
-
-# Out of scope
-
-- <explicit non-goal preserved>
+Reason: `<short evidence-based reason>`
 
 # Reviewer checklist
 
-- [ ] Check contract alignment.
-- [ ] Check acceptance criteria evidence.
-- [ ] Check validation relevance.
-- [ ] Check execution mode and capability evidence consistency.
-- [ ] Check configuration and isolation claims against observable evidence.
-- [ ] Check scope and non-goals.
-- [ ] Check verifier result and loop decision.
+- [ ] Task Contract alignment and clause evidence.
+- [ ] V2/V3 and reviewer evidence use the same frozen tree.
+- [ ] Independent contract-conformance and code-review results are present.
+- [ ] Reviewer configuration/isolation claims match observable evidence.
+- [ ] Verifier result supports the loop decision.

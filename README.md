@@ -30,22 +30,19 @@ It does not write implementation code or implementation plans.
 - Explicit safety-guarantee choices instead of deriving strong transaction, audit, rollback, concurrency, or recovery requirements from a broad word such as “safe”.
 - An issue draft for user review.
 - A hosted issue or local issue brief after user confirmation.
-- Reserved compact `Execution Blueprint` and `Agent Dispatch Plan` reference sections for later planning.
+- A reserved compact `Execution Blueprint` reference section for later planning.
 - Requirements-ready handoff guidance for running `power-loop` on the persisted contract.
 
 It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
 
 `power-loop` converts a requirements-ready persisted contract into a confirmed Codex implementation loop:
 
-- Low-cost inspection of the exposed subagent-spawn contract. Conclusive schema evidence avoids a probe spawn and produces one of `strict-selection-supported`, `inherited-model-only`, or `indeterminate`.
-- A reported capability conclusion, supporting evidence, uncertainty, recommended execution mode, and mandatory user confirmation before mode-specific planning.
-- Loop readiness check over a hosted issue, local brief, or pasted task contract after execution-mode confirmation.
+- Loop readiness, delivery-lane, split, and residual-risk gating without putting reviewer capability on the implementation critical path.
 - Confirmed delivery lane, split decision, residual risk level, and execution decision.
 - Repository inspection with source branch and commit baseline.
 - A confirmed delivery-lane and split gate before repository-aware planning; separable high-risk mutation boundaries return to contract clarification instead of being silently bundled.
 - A separately persisted, non-normative fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
-- Exactly one separately persisted, non-normative Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Terra/Sol reviewer profiles, while `inherited-model-routing` assigns review roles, scopes, evidence packets, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, or model-cost control.
-- A short decision summary plus exact compact reference patch; the full planning artifacts are not copied into the Issue body.
+- A short decision summary plus one exact compact Blueprint-reference patch; the full Blueprint is not copied into the Issue body.
 - Minimum-subagent delivery: the main agent owns exploration, implementation, tests, integration, validation, and repair for every lane; subagents are reserved for final review.
 - Review-only parallelism: every final wave includes contract-conformance and code review, then adds decoupled security, test, compatibility, migration, data, permission, concurrency, or domain reviewers up to observed concurrent capacity.
 - Patient `wait_agent` coordination: allow a three-minute reviewer grace period, use three-minute waits when interaction policy permits, tolerate two consecutive no-information timeouts, and stop after the third when no concrete progress is observable.
@@ -54,10 +51,10 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Final Goal Prompt only after the confirmed planning artifacts and compact reference patch are applied and verified. It is a thin launcher that pins the Issue and Task Contract identities plus planning-artifact digests, performs preflight/drift checks, and adds no requirement; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
 - Contract-prescribed reviews plus baseline independent contract-conformance and code-review capabilities, with additional risk-specific reviewers when justified.
-- Mode-accurate capability, dispatch, review, and PR/MR evidence. In inherited mode, fresh context can establish implementation independence, but an instruction-level no-write boundary is not described as host-enforced read-only isolation.
+- One runtime Final Review Plan generated after V2/V3 from the final diff and visible reviewer-spawn capability. Selected fields require direct evidence; otherwise configuration is recorded as inherited.
 - PR/MR evidence requirements and loop decision rules.
 
-Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement code directly, mutate requirements, or automatically run `/goal`. Ultra is a recommended user-selected runtime. Execution-mode selection instead depends on visible spawn capabilities and explicit user confirmation. If capability evidence is incomplete or contradictory, or if inherited routing cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement, planning pauses for a human decision.
+Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement during planning, mutate requirements, or automatically run `/goal`. Reviewer routing is selected only after the final tree is frozen. Human input is required only when an exact Task Contract reviewer or configuration requirement is unavailable.
 
 For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, manual Goal execution, validation, dispatch reporting, and review.
 
@@ -106,11 +103,11 @@ Use them by phase:
 
 - `power-think`: vague idea -> reviewed spec.
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: requirements-ready Issue/local brief -> delivery/split gate -> separate Blueprint and Dispatch artifacts -> confirmed compact reference patch -> ready-to-run `/goal`.
+- `power-loop`: requirements-ready Issue/local brief -> delivery/split gate -> Execution Blueprint -> confirmed compact reference patch -> ready-to-run `/goal` -> runtime Final Review Plan.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill delivery/split decision -> power-loop capability preflight -> user confirms execution mode -> separate Blueprint and mode-specific Dispatch artifacts -> user confirms the decision summary and compact reference patch -> thin manual Codex /goal -> snapshot-bound verifier -> PR evidence -> power-curator final-tree reconciliation -> confirmed lifecycle mutation`.
+- Recommended Loop Engineering flow: `power-grill delivery/split decision -> power-loop Blueprint and compact patch -> thin manual Codex /goal -> main-agent implementation -> frozen-tree Final Review Plan -> snapshot-bound verifier -> compact PR evidence -> power-curator reconciliation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -125,9 +122,7 @@ The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed
 
 The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
 
-On a host classified `strict-selection-supported`, a supported model selector or custom-profile selector is enough to recommend `strict-model-routing`. Model, profile, reasoning, and sandbox selection are still independent capabilities: each field or guarantee requires its own evidence and must not be inferred from another selector. Strict selection applies to Terra High/Sol Medium/Sol High final reviewer tiers selected by contract and risk. If a strict plan requires a reviewer configuration the host cannot select, planning pauses instead of fabricating that guarantee.
-
-On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that review-subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, reviewer-tier, or model-cost guarantee. Implementation remains on the main agent; bounded generic delegation is used only for fresh-context final review with minimal `fork_turns: none` packets. Model selection and sandbox selection are evidenced independently in either mode.
+At final review time, use reviewer model/profile/reasoning/sandbox fields only when each is directly exposed by the runtime spawn contract. Otherwise launch generic fresh-context reviewers and record inherited configuration provenance. Installed TOML files do not prove runtime selectability, and instruction-level no-write boundaries are not host-enforced isolation.
 
 When checking implementation evidence, provide the complete canonical Issue identity and body, exact Task Contract digest and boundary, referenced planning-artifact digests, and thin Goal as supplementary evidence. Extract normative clauses only from the Task Contract. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use Task-Contract-prescribed reviewers exactly, require independent contract-conformance and code-review evidence, and add security, compatibility, migration, test, data, or domain review when justified by implementation risk.
 
@@ -150,7 +145,7 @@ Use $power-grill to grill this feature and draft an issue contract.
 Ask for repository-aware execution planning from an existing persisted task contract:
 
 ```text
-Use $power-loop on this issue to confirm the delivery lane and split decision, generate separate Blueprint and Dispatch artifacts, and show the decision summary plus compact reference patch before generating the Goal Prompt.
+Use $power-loop on this issue to confirm the delivery lane and split decision, generate one Execution Blueprint, and show the decision summary plus compact Blueprint-reference patch before generating the Goal Prompt.
 ```
 
 Ask for independent critique:
@@ -202,9 +197,7 @@ power-loop/
     power-sol-high-reviewer.toml
   assets/
     execution-blueprint.md
-    agent-dispatch-plan.md
-    agent-dispatch-plan-strict.md
-    agent-dispatch-plan-inherited.md
+    final-review-plan.md
     issue-patch.md
     codex-loop-goal.txt
     loop-readiness-checklist.md

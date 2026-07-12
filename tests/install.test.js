@@ -63,7 +63,7 @@ test('installer installs the complete managed inventory idempotently without cha
   }
 
   const installedLoopAssets = path.join(tmp, 'skills', 'power-loop', 'assets')
-  for (const template of ['agent-dispatch-plan-strict.md', 'agent-dispatch-plan-inherited.md']) {
+  for (const template of ['execution-blueprint.md', 'final-review-plan.md']) {
     assert.equal(await exists(path.join(installedLoopAssets, template)), true, `${template} is installed`)
     assert.deepEqual(
       await fs.readFile(path.join(installedLoopAssets, template)),

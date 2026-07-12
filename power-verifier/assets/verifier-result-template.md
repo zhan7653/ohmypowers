@@ -17,18 +17,15 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Supplementary Issue references: `<matching references, drift, missing references, or none>`
 - Task-Contract-internal conflict status: `<none | conflict requiring NEEDS_HUMAN>`
 - Conflicting Task Contract clause IDs and rationale: `<none or cited clause records>`
-- Supplementary planning artifacts and digests: `<Blueprint/Dispatch sources, identity status, drift, or none>`
+- Supplementary planning artifacts and digests: `<Blueprint source/digest, runtime Final Review Plan, drift, or none>`
 
-## Execution Mode And Capability Evidence
+## Runtime Reviewer Routing Evidence
 
-- Confirmed execution mode: `<strict-model-routing | inherited-model-routing | unavailable>`
-- Capability classification: `<strict-selection-supported | inherited-model-only | indeterminate | unavailable>`
-- Evidence inspected: `<tool schema, supported selector evidence, or unavailable>`
-- Recommended mode: `<strict-model-routing | inherited-model-routing | unavailable>`
-- User confirmation: `<source and identity, or unavailable>`
+- Routing provenance: `<selected supported fields | inherited from parent | unavailable>`
+- Evidence inspected: `<runtime spawn schema or supported selector evidence>`
+- Selected fields and independent evidence: `<model/profile/reasoning/sandbox or None>`
 - Uncertainty or contradictory evidence: `<none or details>`
-- Configuration provenance: `<independently selected with evidence | inherited from parent | unavailable>`
-- Mode/evidence consistency: `<consistent | inconsistent | cannot determine>`
+- Routing/evidence consistency: `<consistent | inconsistent | cannot determine>`
 - Unsupported inherited-mode guarantees found: `<none or exact reviewer model/reasoning/profile/sandbox/isolation/tier/cost claims>`
 - Unavailable exact requirements: `<none or exact model/profile/provider/reasoning/sandbox/isolation requirement requiring NEEDS_HUMAN>`
 
@@ -53,9 +50,9 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Capability and risk assessment: `<obligations, diff, interfaces/data, validation, and material risks>`
 - Minimum sufficient planned capabilities: `<contract-conformance plus code review, then independently justified risk capabilities>`
 
-| Reviewer identity/source | Confirmed mode | Inherited configuration provenance | Model / reasoning if exposed | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Verified Git tree digest |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-|  |  | Inherited from parent/Not applicable/Unavailable | Not exposed | Yes/No |  |  |  | None observed |  |  |  |
+| Reviewer identity/source | Routing/configuration provenance | Model / reasoning if exposed | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Verified Git tree digest |
+|---|---|---|---|---|---|---|---|---|---|---|
+|  | Selected/Inherited/Unavailable | Not exposed | Yes/No |  |  |  | None observed |  |  |  |
 
 ## Validation Replay
 

@@ -111,7 +111,7 @@ Record the confirmed delivery lane and any accepted bundling decision in the Tas
 
 Read and fill [assets/issue-body.md](assets/issue-body.md). Treat its `Task Contract` section as the sole canonical source for what and why.
 
-Leave the marked Execution Blueprint and Agent Dispatch Plan reference sections at `Planning status: not-generated`. `power-loop` may later replace only those compact reference blocks after explicit confirmation. Full planning artifacts remain separate and non-normative.
+Leave the marked Execution Blueprint reference section at `Planning status: not-generated`. `power-loop` may later replace only that compact reference block after explicit confirmation. The runtime Final Review Plan is created after implementation and is not stored in the Issue.
 
 Search conservatively for directly related existing issues when hosted or local issue state is available. Recommend:
 
@@ -119,7 +119,7 @@ Search conservatively for directly related existing issues when hosted or local 
 - create a linked follow-up when the prior issue is complete or should not expand;
 - create a new issue when no candidate is a defensible canonical home.
 
-Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. The compact Execution Blueprint and Agent Dispatch Plan blocks record only artifact references, digests, the confirmed delivery lane, and planning status. Full planning artifacts describe the current implementation approach but do not add contract obligations. A later Goal may follow those plans operationally, but only the Task Contract defines conformance.
+Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. The compact Execution Blueprint block records only its artifact reference, digest, confirmed delivery lane, and planning status. The Blueprint and runtime Final Review Plan are non-normative; only the Task Contract defines conformance.
 
 The Task Contract identity is SHA-256 over the exact persisted UTF-8 bytes from the document start to the byte immediately before `<!-- power-loop:execution-blueprint:start -->`, with no whitespace or newline normalization. Preserve the marked planning boundaries so `power-loop` can verify this digest before and after patching.
 

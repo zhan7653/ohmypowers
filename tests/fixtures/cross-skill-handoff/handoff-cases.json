@@ -306,7 +306,7 @@
       },
       "goal": {
         "evidenceRole": "supplementary-launcher",
-        "requiredSections": ["Task Contract", "Execution Blueprint", "Agent Dispatch Plan"],
+        "requiredSections": ["Task Contract", "Execution Blueprint"],
         "preflightChecks": ["issue-identity", "planning-status", "repository-baseline", "capability"],
         "driftBehavior": "stop",
         "manualStart": true,
@@ -334,7 +334,7 @@
       },
       "goal": {
         "evidenceRole": "supplementary-launcher",
-        "requiredSections": ["Task Contract", "Execution Blueprint", "Agent Dispatch Plan"],
+        "requiredSections": ["Task Contract", "Execution Blueprint"],
         "preflightChecks": ["issue-identity", "planning-status", "repository-baseline", "capability"],
         "driftBehavior": "stop",
         "manualStart": true,
