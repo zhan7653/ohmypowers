@@ -95,7 +95,7 @@ Contract-prescribed reviews: `<exact required identities, configurations, provid
 
 Selection basis when no topology is prescribed: `<contract obligations, final diff, affected interfaces/data, validation, and material risks>`
 
-Minimum sufficient capability coverage: `<capabilities selected and why>`
+Minimum sufficient capability coverage: `<contract-conformance plus code review, then each independently justified risk capability>`
 
 Development adversarial review is supplementary feedback and does not count as final independent certification: `<not applicable or evidence>`
 
@@ -159,8 +159,9 @@ Coordination metrics:
 - `wait_token_ratio`: `<value or unavailable>`
 - Total coordination-token ratio: `<value or unavailable>`
 - Telemetry provenance: `<exact source or unavailable; never inferred>`
-- Review-wave budget: `<launched reviewer count; wait hard stop equals this count, maximum 2>`
-- No-information timeout action: `<none, or remaining reviewer wave interrupted after the first timeout>`
+- Review-wave budget: `<launched reviewer count; warning at count + 1 and hard stop at count + 3>`
+- Reviewer grace period and wait interval: `<at least 180 seconds before first wait and 180-second waits, or exact interaction-policy limit>`
+- No-information timeout action: `<continue waiting through the first two consecutive timeouts; inspect status and interrupt/replan after the third when no concrete progress is observable>`
 
 Validation and reviewer snapshot identities:
 

@@ -13,7 +13,7 @@ power-grill
 -> confirmed compact reference patch
 -> ready-to-run Goal Prompt
 -> user manually runs /goal
--> snapshot-bound validation replay and independent contract-conformance review
+-> snapshot-bound validation replay plus independent contract-conformance and code review
 -> PR evidence and human review
 -> power-curator compares verified and final Git trees
 -> confirmed lifecycle update or route-back
@@ -210,7 +210,7 @@ Under `strict-model-routing`, a plausible final-review routing is:
 
 Under `inherited-model-routing`, review subagents inherit the parent configuration. The plan specifies review roles, scopes, evidence packets, batched deliverables, parallelization constraints, and fresh-context boundaries, but it does not select or guarantee a subagent model, reasoning effort, custom profile, reviewer tier, sandbox, escalation, or model-cost outcome. An instruction such as “do not write files” is a behavioral boundary, not host-enforced read-only isolation.
 
-Keep exploration, implementation, tests, integration, validation, and repair on the main agent for every lane. Delegate only final review: `LIGHT` and `STANDARD` use one reviewer, while `HIGH` may use at most two decoupled reviewers concurrently over the same frozen tree and evidence package.
+Keep exploration, implementation, tests, integration, validation, and repair on the main agent. Delegate only final review: always cover contract conformance and code review, then add decoupled risk-specific reviewers up to observed concurrent capacity.
 
 ## Step 4: Review And Confirm The Planning References
 
@@ -223,13 +223,13 @@ Check that:
 - the Blueprint reflects the actual repository;
 - every write task has exact non-overlapping ownership;
 - dependencies and integration order are credible;
-- in `strict-model-routing`, each model, profile, reasoning, and sandbox field is backed by its corresponding selector evidence; when all required selectors are supported, implementation follows the full Luna/Sol policy, replacement is bounded, and the reviewer profile policy is preserved;
-- in `inherited-model-routing`, the plan contains none of the unsupported model, reasoning, profile, sandbox, escalation, cost, reviewer-tier, or assignment-accuracy fields or claims;
+- in `strict-model-routing`, each reviewer model, profile, reasoning, and sandbox field is backed by its corresponding selector evidence;
+- in `inherited-model-routing`, the plan contains none of the unsupported reviewer model, reasoning, profile, sandbox, cost, or tier claims;
 - independent review capabilities are selected from the contract and implementation risks; fresh context is required where independence matters, while read-only isolation is claimed only if the host separately exposes and verifies it;
-- the main agent performs all implementation and repair; implementation subagent ceiling is zero;
-- every final reviewer receives a minimal explicit packet, preferably `fork_turns: none`, and receives no substantive follow-up;
-- the plan records slot capacity, a one-reviewer ceiling for `LIGHT`/`STANDARD`, a two-reviewer ceiling for `HIGH`, and per-wave `wait_agent` thresholds;
-- decoupled reviewers launch concurrently, no 1-, 10-, 20-, or 30-second polling loop is planned, and the first no-information timeout terminates the remaining wave.
+- the main agent performs all implementation and repair, while the Dispatch Plan contains only final-review tasks;
+- every final reviewer receives a minimal explicit packet, preferably `fork_turns: none`, and at most one consolidated clarification/completion follow-up;
+- the plan records at least contract-conformance and code reviewers, adds non-duplicative risk capabilities, and caps the wave only by observed concurrent capacity;
+- decoupled reviewers launch concurrently, receive a three-minute grace period, use three-minute waits when interaction policy permits, and stop only after three consecutive no-information timeouts without observable progress.
 - validation is layered into V0 focused, V1 integration, V2 final deterministic, and V3 external checks;
 - high-risk work has a complete failure matrix before implementation, one batched adversarial review, at most one concentrated repair, and at most three candidate snapshots;
 - V2, V3, and final reviewers use one frozen tree; V3 runs once after V2 and the final reviewers inspect that unchanged evidence package without replaying V3 by default.
@@ -247,7 +247,7 @@ The user starts the returned prompt manually. The orchestrator should:
 3. Check for material drift from the recorded branch and commit.
 4. In strict mode, verify each required selector and configuration independently. In inherited mode, verify generic delegation remains available and do not add per-agent configuration claims.
 5. Create or enter the one task-level branch/worktree.
-6. Execute implementation, tests, integration, and validation in the main agent; do not dispatch implementation subagents.
+6. Execute implementation, tests, integration, and validation in the main agent; the Dispatch Plan begins at final review.
 7. Run V0 focused checks during implementation and V1 integration checks on the integrated candidate.
 8. For high-risk work, the main agent runs one concentrated adversarial self-review over the complete failure matrix and records one batched finding set; perform at most one concentrated repair.
 9. Freeze a certification candidate, capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time, then run V2 full deterministic checks on that tree.
@@ -305,9 +305,8 @@ Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, 
 - Patch not confirmed, rejected, changed, or not applied -> no Goal Prompt.
 - Strict selector/configuration missing at planning or runtime -> pause for a human decision; no silent inherited fallback.
 - Exact model, profile, provider, reasoning, sandbox, or isolation constraint unavailable in inherited mode -> pause for a human decision.
-- Strict-mode permission, environment, dependency, validation-infrastructure, or interface-conflict failure -> no model escalation.
-- Strict-mode evidence-backed Luna capability mismatch -> at most one direct replacement by Sol Medium.
-- Missing the implementation-independent contract-conformance review -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; additional review capabilities are required only when contract or risk justifies them.
+- Strict-mode permission, environment, dependency, validation-infrastructure, or interface-conflict failure -> no reviewer substitution.
+- Missing either the independent contract-conformance or code-review result -> verifier cannot return `PASS` or `PASS_WITH_NOTES`; add other review capabilities when contract or risk justifies them.
 - Material repository drift -> stop for a new `power-loop` pass or confirmed plan revision.
 - Final Git tree differs from the verifier tree without fresh verification or a complete confirmed waiver -> closure remains `unresolved`; never apply the stale PASS to the final tree.
 - Post-verifier change affects requirements, acceptance criteria, public behavior, security, permissions, or migration -> route back to `power-grill` and `power-loop`.

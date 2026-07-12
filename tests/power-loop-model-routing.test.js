@@ -38,22 +38,12 @@ function thinGoalPreflight(body, pinned) {
 }
 
 const expectedProfiles = {
-  power_luna_worker: ['gpt-5.6-luna', 'max', 'workspace-write'],
-  power_sol_worker: ['gpt-5.6-sol', 'medium', 'workspace-write'],
   power_terra_reviewer: ['gpt-5.6-terra', 'high', 'read-only'],
   power_sol_reviewer: ['gpt-5.6-sol', 'medium', 'read-only'],
   power_sol_high_reviewer: ['gpt-5.6-sol', 'high', 'read-only'],
 }
 
 function route(input) {
-  if (input.type === 'implementation') {
-    return { executor: 'main-agent', subagent: null }
-  }
-
-  if (input.type === 'implementation-replacement') {
-    return { executor: 'main-agent', subagent: null, replacement: false }
-  }
-
   assert.equal(input.type, 'review')
   switch (input.reviewClass) {
     case 'explicitly-simple':
@@ -142,10 +132,10 @@ function strictPlanningFields(input) {
   }
 }
 
-test('routing cases keep implementation on the main agent and preserve three reviewer tiers', async () => {
+test('routing cases preserve three final-reviewer tiers', async () => {
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
 
-  assert.equal(fixture.schema, 'power-loop-model-routing-cases/v1')
+  assert.equal(fixture.schema, 'power-loop-review-routing-cases/v2')
   assert.equal(fixture.executionMode, 'strict-model-routing')
   for (const scenario of fixture.cases) {
     assert.deepEqual(route(scenario), scenario.expected, scenario.id)
@@ -260,7 +250,6 @@ test('strict and inherited templates reserve subagents for bounded final review'
     'power_terra_reviewer',
     'power_sol_reviewer',
     'power_sol_high_reviewer',
-    'Implementation subagent budget: `0`',
     'launch all decoupled selected final reviewers concurrently',
   ]) assert.match(strict, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
 
@@ -268,8 +257,6 @@ test('strict and inherited templates reserve subagents for bounded final review'
   assert.match(strict, /Initial model: `<exact selected model when separately supported \| unavailable — not independently selectable>`/)
   assert.match(strict, /Reasoning effort: `<Medium \| High \| Max when separately supported \| unavailable — not independently selectable>`/)
   assert.match(strict, /Sandbox or permission mode: `<host-enforced mode when separately observable \| instruction-level boundary only; host enforcement unavailable>`/)
-  assert.doesNotMatch(strict, /power_luna_worker|power_sol_worker/)
-  assert.doesNotMatch(strict, /Initial Assignment Accuracy/)
   assert.match(strict, /Do not replace, escalate, or retry a reviewer after launch/)
 
   for (const required of [
@@ -284,8 +271,7 @@ test('strict and inherited templates reserve subagents for bounded final review'
     'fork_turns: none',
     'distinct non-implementing subagent',
     'instruction-level no-write boundary',
-    'Implementation subagent budget: `0`',
-    'Launch final reviewers in one parallel wave',
+    'Launch every selected reviewer in one parallel wave',
   ]) assert.match(inherited, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
 
   for (const forbidden of [
@@ -296,7 +282,6 @@ test('strict and inherited templates reserve subagents for bounded final review'
     /^- Allowed direct escalation targets:/m,
     /^- Escalation ceiling:/m,
     /Reviewer tier selection:/,
-    /Initial Assignment Accuracy/,
     /model-cost sav/i,
   ]) assert.doesNotMatch(inherited, forbidden)
 
@@ -327,7 +312,6 @@ test('shared Goal and repository guidance consistently describe dual-track mode 
   assert.match(goal, /Do not launch a probe when its visible schema is conclusive\./)
   assert.match(goal, /Instruction-level no-write behavior is not host-enforced isolation\./)
   assert.match(goal, /Stop before implementation on any Issue identity, Task Contract, planning-reference, planning-artifact, repository-baseline, execution-mode, capability, section, or source-access drift\./)
-  assert.doesNotMatch(goal, /Initial Assignment Accuracy/)
   assert.doesNotMatch(goal, /Luna Max|Sol Medium|Terra High/)
 })
 
@@ -447,10 +431,8 @@ test('workflow guidance places capability preflight and mode confirmation before
 test('managed power-loop profiles exactly match the routing contract', async () => {
   const profileFiles = (await readdir(agentsDir)).filter(name => name.endsWith('.toml')).sort()
   assert.deepEqual(profileFiles, [
-    'power-luna-worker.toml',
     'power-sol-high-reviewer.toml',
     'power-sol-reviewer.toml',
-    'power-sol-worker.toml',
     'power-terra-reviewer.toml',
   ])
 
@@ -462,10 +444,6 @@ test('managed power-loop profiles exactly match the routing contract', async () 
     ])),
     expectedProfiles,
   )
-
-  const implementationProfiles = profiles.filter(profile => profile.sandbox_mode === 'workspace-write')
-  assert.deepEqual(implementationProfiles.map(profile => profile.name).sort(), ['power_luna_worker', 'power_sol_worker'])
-  assert.ok(implementationProfiles.every(profile => profile.model !== 'gpt-5.6-terra'))
 
   const reviewerProfiles = profiles.filter(profile => profile.sandbox_mode === 'read-only')
   assert.deepEqual(reviewerProfiles.map(profile => profile.name).sort(), [

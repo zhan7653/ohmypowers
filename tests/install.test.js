@@ -19,14 +19,14 @@ const managedSkills = [
   'power-critic',
 ]
 const managedProfiles = [
-  ['power-loop/agents/power-luna-worker.toml', 'power_luna_worker', 'gpt-5.6-luna', 'max', 'workspace-write'],
-  ['power-loop/agents/power-sol-worker.toml', 'power_sol_worker', 'gpt-5.6-sol', 'medium', 'workspace-write'],
   ['power-loop/agents/power-terra-reviewer.toml', 'power_terra_reviewer', 'gpt-5.6-terra', 'high', 'read-only'],
   ['power-loop/agents/power-sol-reviewer.toml', 'power_sol_reviewer', 'gpt-5.6-sol', 'medium', 'read-only'],
   ['power-loop/agents/power-sol-high-reviewer.toml', 'power_sol_high_reviewer', 'gpt-5.6-sol', 'high', 'read-only'],
   ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
 ]
 const retiredProfiles = [
+  'power-luna-worker.toml',
+  'power-sol-worker.toml',
   'power-terra-worker.toml',
   'power-terra-complex-worker.toml',
   'power-sol-escalation.toml',

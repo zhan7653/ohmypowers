@@ -149,42 +149,42 @@ For `strict-model-routing`, preserve the following routing policy. A usable mode
 
 Use these installed profiles as selectable capabilities only when the host exposes a usable profile selector and every claimed profile-configured effect is separately evidenced. With a model-only selector, preserve the routing tier through the selected model while marking profile, reasoning, and sandbox fields unavailable unless independently supported. A contract may require a different exact reviewer, agent, model, provider, or procedure; do not substitute it silently.
 
-- `power_luna_worker` and `power_sol_worker`: installed compatibility profiles only. Under the minimum-subagent policy, do not spawn either profile for implementation; the main agent owns implementation regardless of delivery lane.
 - `power_terra_reviewer`: explicitly simple, low-risk, highly structured review route; call the resolved configuration Terra High only when the profile and High reasoning effect are both evidenced.
 - `power_sol_reviewer`: default ordinary-review route; call the resolved configuration Sol Medium only when the profile and Medium reasoning effect are both evidenced.
 - `power_sol_high_reviewer`: high-risk or semantically complex review route; call the resolved configuration Sol High only when the profile and High reasoning effect are both evidenced.
 
-Use no subagents for exploration, implementation, tests, integration, validation, documentation, evidence packaging, or repair. The main agent owns that entire path for `LIGHT`, `STANDARD`, and `HIGH` work. Subagents are reserved for final independent review of a frozen candidate.
+The main agent owns exploration, implementation, tests, integration, validation, documentation, evidence packaging, and repair. The Agent Dispatch Plan contains only final independent review tasks over a frozen candidate.
 
 Inspect both the concurrent slot count and whether the host exposes a reliable retire/close operation. Do not assume a completed thread releases capacity. On a four-slot host without thread retirement, budget the entire Goal as follows:
 
 - root/main agent: one slot;
-- implementation: zero subagent slots;
-- independent review reserve: one slot for `LIGHT` or `STANDARD`, and up to two slots for `HIGH` when two genuinely decoupled review capabilities are justified;
-- total distinct subagent threads: never exceed the capacity that still preserves the review reserve.
+- final review reserve: at least two slots for the contract-conformance and code-review capabilities;
+- additional final reviewers: one per independently justified security, test, compatibility, migration, data, permission, concurrency, or domain capability, up to the observed concurrent capacity;
+- total distinct subagent threads: the selected decoupled reviewer count; never assume completed threads release capacity.
 
 Do not create separate agents for implementation, integration, documentation, validation, evidence packaging, repair, exploration, or status monitoring.
 
-Default every review subagent to a minimal explicit task packet and `fork_turns: none` when exposed. Include only its review capability, the pinned Task Contract, frozen tree identity, complete evidence package, expected batched report, and stop conditions. Do not copy the full main-session history or unrelated tool output. The substantive follow-up limit is `0`: the reviewer must return one complete report, and any clarification or repair is handled by the main agent in a new frozen-candidate cycle rather than an open-ended conversation.
+Default every review subagent to a minimal explicit task packet and `fork_turns: none` when exposed. Include only its review capability, the pinned Task Contract, frozen tree identity, complete evidence package, expected batched report, and stop conditions. Do not copy the full main-session history or unrelated tool output. Allow one consolidated substantive follow-up only to clarify or complete a returned report; never use follow-ups for status polling or incremental finding-by-finding steering.
 
 ### Coordination And `wait_agent` Budget
 
 Treat model-driven waiting as a metered orchestration operation, not a free sleep. Every `wait_agent` result may trigger another model turn over the accumulated context.
 
 - Start all decoupled reviewers in one parallel wave over the same frozen tree and evidence package. Reviewers are decoupled only when none depends on another's findings and their assigned capabilities do not duplicate each other.
-- Use mailbox-driven completion. Each reviewer may account for at most one useful `wait_agent` return; after any return, drain and consolidate every result already available before waiting for another unfinished reviewer.
-- Do not use 1-, 10-, 20-, or 30-second polling loops. Use a timeout of at least 60 seconds, or the longest timeout permitted by the current interaction/update policy, unless completion is known to be imminent.
-- The first no-information timeout terminates the remaining reviewer wave. Interrupt unfinished reviewers and do not spawn replacements merely to obtain a review result.
-- Per review wave, the `wait_agent` hard stop equals the number of launched reviewers: one for `LIGHT` or `STANDARD`, and at most two for `HIGH`. A permitted blocker repair/recertification cycle receives a fresh wave budget, so the whole Goal has an absolute maximum of two waits for `LIGHT`/`STANDARD` or four for `HIGH`.
+- Do not call `wait_agent` immediately after spawning the wave. Finish all useful main-agent evidence consolidation first and allow a reviewer grace period of at least 180 seconds when the interaction policy permits.
+- Use mailbox-driven completion. After any return, drain and consolidate every result already available before waiting for another unfinished reviewer.
+- Do not use 1-, 10-, 20-, 30-, or 60-second polling loops. Use a 180-second timeout, or the longest timeout permitted by the current interaction/update policy when 180 seconds is unavailable.
+- A no-information timeout does not terminate reviewers. Continue waiting while they remain active; three consecutive no-information timeouts trigger one status inspection followed by interruption and replanning if no concrete progress is observable.
+- Per review wave, the `wait_agent` warning threshold is the launched reviewer count plus one and the hard stop is the launched reviewer count plus three. A permitted repair/recertification cycle receives a fresh wave budget.
 - Do not send “status?” messages merely to provoke activity. Agents must return one complete handoff proactively when their bounded task finishes.
 
 The runtime or final Dispatch Summary must record `wait_agent` calls, timeouts, useful waits, consecutive-timeout maximum, cumulative wait duration, per-agent follow-up count, and coordination circuit-breaker events. When token telemetry can be attributed reliably, also record wait-related input/total tokens, `useful_wait_ratio`, and `wait_token_ratio`. Never fabricate unavailable token attribution.
 
 Targets:
 
-- `useful_wait_ratio = useful waits / all waits >= 0.80`;
-- `wait_token_ratio = wait-related tokens / main-session tokens <= 0.05`;
-- all agent-coordination tokens <= 0.15 of main-session tokens when attribution is available.
+- `useful_wait_ratio = useful waits / all waits >= 0.60`;
+- `wait_token_ratio = wait-related tokens / main-session tokens <= 0.10`;
+- all agent-coordination tokens <= 0.20 of main-session tokens when attribution is available.
 
 ### Validation And Review Lifecycle
 
@@ -212,20 +212,18 @@ Do not call an intermediate commit or tree a final snapshot merely because ordin
 
 Normal execution has one integrated candidate, one concentrated repair candidate when needed, and one final certified tree. Set a hard ceiling of three recorded candidate snapshots. Plan one final reviewer wave. If final certification unexpectedly finds a blocker, allow one unfreeze/repair/recertification cycle; a second blocking certification wave stops for replanning instead of creating another rolling snapshot.
 
-Do not classify, route, replace, or escalate implementation subagents. The main agent performs implementation and repair; strict capability selection is used only for the bounded final reviewer wave.
-
 Plan final certification only after the final implementation diff, affected interfaces/data, validation requirements, and material risks are known. The earlier concentrated adversarial review is development feedback and cannot satisfy the independent final certification requirement. Preserve the final review-plan record with the stable snapshot:
 
 - If the contract names reviewers, agents, models, providers, or procedures, assign and verify those requirements exactly. Record an unavailable prescribed capability as a blocker or `NEEDS_HUMAN` decision; do not substitute it silently.
-- Otherwise, select the minimum sufficient independent, read-only review capabilities for contract conformance and the identified code, test, security, compatibility, migration, data, permission, concurrency, or domain risks. Use one reviewer for `LIGHT` or `STANDARD`; use at most two concurrently for `HIGH`, and only when their capabilities are non-duplicative and neither depends on the other's output.
-- Require at least one reviewer independent from implementation to check contract conformance before a `PASS` or `PASS_WITH_NOTES` result. Add a separate code-review capability only when the contract or final-diff risk justifies it.
+- Otherwise, always select at least two independent, read-only capabilities: one contract-conformance reviewer and one code reviewer. Add separate test, security, compatibility, migration, data, permission, concurrency, or domain reviewers whenever the final diff exposes those risks. Each reviewer must have a non-duplicative scope and no dependency on another reviewer's findings.
+- Require both contract-conformance and code-review results before a `PASS` or `PASS_WITH_NOTES` result.
 - Select the default Sol reviewer route for ordinary review. Use the Terra reviewer route only when the review is demonstrably small, low risk, highly structured, and does not require deep cross-source reasoning or security, permission, migration, compatibility, concurrency, or complex lifecycle analysis. Use the higher-complexity Sol reviewer route for those high-risk areas, large cross-module diffs, conflicting evidence, or other semantically complex verification. Use Medium or High effort labels only when that reasoning effect is separately evidenced. Populate `power_sol_reviewer`, `power_terra_reviewer`, or `power_sol_high_reviewer` only when profile selection is supported; otherwise use a supported model selector and mark the custom-agent field unavailable.
 - For every selected reviewer, record identity/source, supported configuration evidence, model-selection rationale, implementation independence, capability, scope, boundary provenance, evidence inspected, result, and snapshot identity. Record model, reasoning effort, and host-enforced isolation only when each is separately evidenced. Tailor packets to that scope; give the contract-conformance reviewer the exact Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and Goal, clause evidence, snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals.
 - A reviewer that cannot produce a reliable conclusion within its assigned tier must return `BLOCKED` with reclassification evidence. The orchestrator may select a higher appropriate reviewer directly; do not silently walk every tier.
 
-Run selected final reviews in one parallel wave over the same stable snapshot and complete V2/V3 evidence package. Do not serialize reviewers whose scopes are decoupled. If the Task Contract prescribes more reviewers than the lane ceiling or available slots, return `NEEDS_HUMAN` instead of partially executing or silently dropping a reviewer. Do not replay V3 merely to create reviewer independence.
+Run selected final reviews in one parallel wave over the same stable snapshot and complete V2/V3 evidence package. Do not serialize reviewers whose scopes are decoupled. Reviewer count is determined by minimum capability coverage and observed concurrent capacity, not the delivery lane. If the required decoupled reviewers exceed available slots, return `NEEDS_HUMAN` instead of partially executing or silently dropping a capability. Do not replay V3 merely to create reviewer independence.
 
-For `inherited-model-routing`, review subagents inherit the parent configuration. Do not specify or report an independently selected model, reasoning effort, custom profile, profile-specific sandbox, reviewer tier, assignment accuracy, or model-cost guarantee. Plan only the bounded final review roles, scopes, evidence packets, parallelism, and failure behavior. Do not use inherited-mode subagents for implementation or retry a timed-out reviewer.
+For `inherited-model-routing`, review subagents inherit the parent configuration. Do not specify or report an independently selected model, reasoning effort, custom profile, profile-specific sandbox, reviewer tier, or model-cost guarantee. Plan only the bounded final review roles, scopes, evidence packets, parallelism, and failure behavior. Do not use inherited-mode subagents for implementation or retry a timed-out reviewer.
 
 Inherited-mode independent review may require a distinct non-implementing subagent and `fork_turns: none` when exposed. A no-write or read-only instruction is an instruction-level boundary unless the host separately exposes verifiable enforcement; never call it a host-enforced sandbox or isolation guarantee without that evidence.
 

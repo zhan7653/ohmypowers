@@ -23,9 +23,6 @@ const fixedTopologyPaths = [
 ]
 const fixedTopologyPatterns = [
   /two (independent )?Sol High/i,
-  /both required review tracks/i,
-  /mandatory separate code review/i,
-  /fixed dual/i,
   /Sol High code review \+ evidence verification/i,
   /separate Sol High tasks/i,
 ]
@@ -113,6 +110,13 @@ function aggregate(input) {
       review.capability === 'contract-conformance' &&
       isPassingReview(review),
   )
+  const hasIndependentCodeReview = selectedReviews.some(
+    review =>
+      isFresh(review) &&
+      review.independentFromImplementation &&
+      review.capability === 'code-review' &&
+      isPassingReview(review),
+  )
 
   if (hasHumanRequiredReview) return 'NEEDS_HUMAN'
 
@@ -122,7 +126,8 @@ function aggregate(input) {
     failedReplay ||
     !reviewsMeetRequirements ||
     hasBlockingSelectedReview ||
-    !hasIndependentConformanceReview
+    !hasIndependentConformanceReview ||
+    !hasIndependentCodeReview
   ) {
     return 'BLOCKED'
   }
@@ -209,7 +214,7 @@ test('authoritative body identity survives differing host revision metadata', as
   assert.equal(aggregate(scenario.input), 'PASS_WITH_NOTES')
 })
 
-test('repository guidance does not reintroduce fixed Sol High review topology', async () => {
+test('repository guidance does not require a fixed Sol High reviewer topology', async () => {
   const files = await Promise.all(
     fixedTopologyPaths.map(async relativePath => ({
       relativePath,
@@ -345,12 +350,10 @@ test('verifier guidance requires mode evidence and rejects unsupported inherited
 
   const skill = await readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8')
   for (const unsupported of [
-    'per-subagent model or reasoning assignments',
+    'reviewer model or reasoning assignments',
     'custom profiles',
     'sandbox or host-isolation guarantees',
-    'model escalation',
     'reviewer tiers',
-    'assignment-accuracy claims',
     'model-cost savings',
   ]) assert.match(skill, new RegExp(unsupported))
   assert.match(skill, /return `NEEDS_HUMAN`/)

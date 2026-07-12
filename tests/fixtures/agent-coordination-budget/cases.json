@@ -1,92 +1,85 @@
 {
-  "schema": "agent-coordination-budget-cases/v1",
+  "schema": "review-coordination-budget-cases/v2",
   "cases": [
     {
-      "id": "light-four-slots-no-retire",
+      "id": "four-slots-contract-code-review",
       "input": {
-        "deliveryLane": "LIGHT",
-        "hostSlots": 4,
-        "reliableRetire": false,
-        "requiredReviewers": 1
-      },
-      "expected": {
-        "implementationSubagents": 0,
-        "reservedReviewSlots": 1,
-        "totalDistinctSubagents": 1,
-        "waitHardStop": 1,
-        "needsHuman": false
-      }
-    },
-    {
-      "id": "standard-four-slots-one-reviewer",
-      "input": {
-        "deliveryLane": "STANDARD",
-        "hostSlots": 4,
-        "reliableRetire": false,
-        "requiredReviewers": 1
-      },
-      "expected": {
-        "implementationSubagents": 0,
-        "reservedReviewSlots": 1,
-        "totalDistinctSubagents": 1,
-        "waitHardStop": 1,
-        "needsHuman": false
-      }
-    },
-    {
-      "id": "standard-four-slots-two-reviewers",
-      "input": {
-        "deliveryLane": "STANDARD",
         "hostSlots": 4,
         "reliableRetire": false,
         "requiredReviewers": 2
       },
       "expected": {
-        "implementationSubagents": 0,
-        "reservedReviewSlots": 0,
+        "reviewers": 2,
+        "totalDistinctSubagents": 2,
+        "waitHardStop": 5,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "four-slots-three-decoupled-reviews",
+      "input": {
+        "hostSlots": 4,
+        "reliableRetire": false,
+        "requiredReviewers": 3
+      },
+      "expected": {
+        "reviewers": 3,
+        "totalDistinctSubagents": 3,
+        "waitHardStop": 6,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "three-slots-contract-code-review",
+      "input": {
+        "hostSlots": 3,
+        "reliableRetire": false,
+        "requiredReviewers": 2
+      },
+      "expected": {
+        "reviewers": 2,
+        "totalDistinctSubagents": 2,
+        "waitHardStop": 5,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "insufficient-slots-for-decoupled-reviews",
+      "input": {
+        "hostSlots": 2,
+        "reliableRetire": false,
+        "requiredReviewers": 2
+      },
+      "expected": {
+        "reviewers": 0,
         "totalDistinctSubagents": 0,
         "waitHardStop": 0,
         "needsHuman": true
       }
     },
     {
-      "id": "high-four-slots-two-reviewers",
+      "id": "required-reviewers-exceed-wave-capacity",
       "input": {
-        "deliveryLane": "HIGH",
         "hostSlots": 4,
         "reliableRetire": false,
-        "requiredReviewers": 2
+        "requiredReviewers": 4
       },
       "expected": {
-        "implementationSubagents": 0,
-        "reservedReviewSlots": 2,
-        "totalDistinctSubagents": 2,
-        "waitHardStop": 2,
-        "needsHuman": false
-      }
-    },
-    {
-      "id": "high-three-slots-two-reviewers",
-      "input": {
-        "deliveryLane": "HIGH",
-        "hostSlots": 3,
-        "reliableRetire": false,
-        "requiredReviewers": 2
-      },
-      "expected": {
-        "implementationSubagents": 0,
-        "reservedReviewSlots": 2,
-        "totalDistinctSubagents": 2,
-        "waitHardStop": 2,
-        "needsHuman": false
+        "reviewers": 0,
+        "totalDistinctSubagents": 0,
+        "waitHardStop": 0,
+        "needsHuman": true
       }
     }
   ],
   "issue29Baseline": {
     "waitAgentCalls": 179,
     "waitTokenRatio": 0.40,
-    "expectedHighRiskHardStop": 2,
-    "targetWaitTokenRatio": 0.05,
-    "targetUsefulWaitRatio": 0.80
+    "expectedThreeReviewerHardStop": 6,
+    "targetWaitTokenRatio": 0.10,
+    "targetUsefulWaitRatio": 0.60,
+    "reviewerGracePeriodSeconds": 180,
+    "waitTimeoutSeconds": 180,
+    "consecutiveNoInformationStop": 3
   }
 }

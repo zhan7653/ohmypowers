@@ -75,7 +75,7 @@ Pause-and-ask conditions:
 - Execution decision: `ALLOW_GOAL`
 - Exact files and validation commands: discovered from the repository and added to the separate Execution Blueprint artifact
 - Execution Blueprint artifact: `proposed`, with source and digest
-- Agent Dispatch Plan artifact: `proposed` from `agent-dispatch-plan-inherited.md`, with source and digest; it records roles, ownership, dependencies, deliverables, parallelism, and fresh-context independent review without a per-agent model, reasoning, profile, sandbox, escalation, reviewer-tier, assignment-accuracy, or model-cost claim
+- Agent Dispatch Plan artifact: `proposed` from `agent-dispatch-plan-inherited.md`, with source and digest; it records review roles, scopes, evidence packets, deliverables, parallelism, and fresh-context independent review without a reviewer model, reasoning, profile, sandbox, tier, or model-cost claim
 - Decision summary and compact reference patch: displayed in full
 - Goal Prompt: withheld until the artifacts and exact compact patch are confirmed, persisted, and verified
 

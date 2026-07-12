@@ -29,7 +29,7 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Uncertainty or contradictory evidence: `<none or details>`
 - Configuration provenance: `<independently selected with evidence | inherited from parent | unavailable>`
 - Mode/evidence consistency: `<consistent | inconsistent | cannot determine>`
-- Unsupported inherited-mode guarantees found: `<none or exact model/reasoning/profile/sandbox/isolation/escalation/reviewer-tier/assignment-accuracy/cost claims>`
+- Unsupported inherited-mode guarantees found: `<none or exact reviewer model/reasoning/profile/sandbox/isolation/tier/cost claims>`
 - Unavailable exact requirements: `<none or exact model/profile/provider/reasoning/sandbox/isolation requirement requiring NEEDS_HUMAN>`
 
 ## Implementation Snapshot
@@ -51,7 +51,7 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 
 - Contract-specified review requirements: `<none or exact requirements and status>`
 - Capability and risk assessment: `<obligations, diff, interfaces/data, validation, and material risks>`
-- Minimum sufficient planned capabilities: `<capabilities and justification>`
+- Minimum sufficient planned capabilities: `<contract-conformance plus code review, then independently justified risk capabilities>`
 
 | Reviewer identity/source | Confirmed mode | Inherited configuration provenance | Model / reasoning if exposed | Independent from implementation | Capability | Scope | Instruction boundary | Observable host-isolation evidence | Evidence inspected | Result | Verified Git tree digest |
 |---|---|---|---|---|---|---|---|---|---|---|---|

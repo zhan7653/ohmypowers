@@ -111,14 +111,16 @@ Review gates:
 
 - Host concurrent-agent slots: `<observed count or unavailable>`
 - Reliable agent retire/close capability: `<supported with evidence | unavailable>`
-- Total distinct subagent-thread ceiling: `<1 for LIGHT or STANDARD | maximum 2 for HIGH>`
-- Implementation subagent ceiling: `0`
-- Reserved review slots: `<1 for LIGHT or STANDARD | 1-2 for HIGH when scopes are decoupled>`
-- Per-agent substantive follow-up limit: `0`
-- wait_agent warning threshold: `<1 for LIGHT or STANDARD | 2 for HIGH>`
-- wait_agent hard stop per review wave: `<number of launched reviewers; maximum 2>`
-- No-information timeout stop: `the first no-information timeout terminates the remaining reviewer wave`
-- Wait polling rule: `no 1-, 10-, 20-, or 30-second polling; use at least 60 seconds or the longest permitted interaction timeout`
+- Minimum reviewer capabilities: `contract-conformance reviewer plus code reviewer`
+- Additional reviewer capabilities: `<independent risk capabilities justified by the final diff>`
+- Selected reviewer count: `<minimum 2; increase up to observed concurrent capacity while scopes remain decoupled>`
+- Total distinct subagent-thread ceiling: `<selected reviewer count>`
+- Per-agent substantive follow-up limit: `1 consolidated clarification/completion request`
+- Reviewer grace period before first wait: `at least 180 seconds when interaction policy permits`
+- wait_agent warning threshold: `launched reviewer count + 1`
+- wait_agent hard stop per review wave: `launched reviewer count + 3`
+- Consecutive no-information timeout stop: `3`
+- Wait polling rule: `no 1-, 10-, 20-, 30-, or 60-second polling; use 180 seconds or the longest permitted interaction timeout`
 - Coordination telemetry: `<wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and token ratios when available>`
 - Candidate snapshot ceiling: `3`
 - Concentrated adversarial review waves: `<0 or 1 main-agent self-review>`

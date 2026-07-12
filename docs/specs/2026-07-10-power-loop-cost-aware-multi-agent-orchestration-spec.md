@@ -4,7 +4,7 @@
 
 `ohmypowers` separates task clarification, repository-aware planning, implementation, and verification across `power-grill`, `power-loop`, a manually started Codex Goal, and `power-verifier`.
 
-`power-loop` originally described one universally selectable custom-agent routing design. That assumption is not portable. A host can install Luna, Sol, and Terra profile declarations while exposing a `spawn_agent` contract that cannot select a model, reasoning effort, custom profile, or sandbox. Installed configuration files alone are therefore not evidence that strict routing is executable.
+`power-loop` originally described one universally selectable custom-agent routing design. That assumption is not portable. A host can install reviewer profile declarations while exposing a `spawn_agent` contract that cannot select a model, reasoning effort, custom profile, or sandbox. Installed configuration files alone are therefore not evidence that strict routing is executable.
 
 The orchestration protocol retains strict reviewer routing where the current host demonstrably supports it and provides an inherited-model review workflow where generic subagents inherit the parent configuration. Implementation delegation is disabled because its coordination and waiting cost is not reliably offset by wall-clock savings; fresh-context final review remains the bounded use of subagents.
 
@@ -103,7 +103,7 @@ The default strict routing policy is:
 | Ordinary review | `gpt-5.6-sol` | Medium | Default strict reviewer tier |
 | Most complex or high-risk review | `gpt-5.6-sol` | High | Requires contract or material-risk justification |
 
-Installed Luna and Sol worker profiles are not dispatched by the minimum-subagent policy. Implementation and repair remain main-agent work.
+Implementation and repair remain main-agent work; selectable profiles are reviewer-only.
 
 Every strict field remains conditional on evidence for the corresponding selector. If a required strict configuration is unavailable, the workflow pauses; it does not silently switch to inherited behavior or use undocumented arguments.
 
@@ -117,10 +117,8 @@ The inherited template must not require, populate, calculate, or guarantee:
 - Per-subagent reasoning effort.
 - Custom-agent profile or provider selection.
 - Profile-specific or host-enforced sandbox behavior without separate host evidence.
-- Luna-to-Sol or any other model escalation.
 - Reviewer model tiers.
 - Model-cost optimization or savings.
-- Initial Assignment Accuracy or any equivalent model-assignment metric.
 
 Inherited mode assigns explicit final-review roles, objectives, scopes, evidence packets, parallelization constraints, and failure behavior. Generic delegation is not used for implementation.
 
@@ -146,10 +144,10 @@ If the Task Contract requires an exact model, custom profile, provider, reasonin
 - The implementation loop uses one task-level branch or worktree rather than one worktree per subagent.
 - Write-capable, exploratory, validation, documentation, evidence, and repair tasks are not delegated.
 - Bounded generic delegation is preserved only for stable-snapshot fresh-context final review.
-- `LIGHT` and `STANDARD` use one final reviewer. `HIGH` may use at most two reviewers when their scopes are decoupled, non-duplicative, and independent of each other's output.
-- On a four-slot host without reliable thread retirement, the total distinct-thread budget is root plus the required final-review reserve; completed threads are not assumed to release capacity.
-- Review subagents default to minimal explicit task packets with `fork_turns: none` when exposed and receive no substantive follow-up.
-- `wait_agent` is metered: launch the complete decoupled reviewer wave concurrently, allow at most one useful return per reviewer, use no 1-, 10-, 20-, or 30-second polling loops, and terminate the remaining wave after the first no-information timeout.
+- Every final wave includes contract-conformance and code-review capabilities. Add separate test, security, compatibility, migration, data, permission, concurrency, or domain reviewers when the final diff justifies them.
+- Reviewer count is limited by independently useful scopes and observed concurrent capacity, not by delivery lane. Completed threads are not assumed to release capacity.
+- Review subagents default to minimal explicit task packets with `fork_turns: none` when exposed and receive at most one consolidated clarification/completion follow-up.
+- `wait_agent` is metered but patient: launch the complete decoupled reviewer wave concurrently, allow at least 180 seconds before the first wait when interaction policy permits, use 180-second waits, and interrupt/replan only after three consecutive no-information timeouts without observable progress. The per-wave hard stop is the launched reviewer count plus three.
 - Dispatch evidence reports wait calls, timeouts, useful waits, cumulative duration, follow-ups, circuit breakers, and wait/coordination token ratios when reliable telemetry is available.
 
 ### Compact Planning Reference Patch And Goal Protocol
@@ -207,7 +205,7 @@ Strict evidence may additionally record exposed final-reviewer models, reasoning
 
 Inherited evidence must omit those strict-only metrics and guarantees. When the host happens to expose the inherited parent model, the evidence may record it as inherited runtime provenance, not as selected subagent routing. Missing model, reasoning, profile, or sandbox evidence must remain visibly unavailable rather than being inferred.
 
-At least one implementation-independent contract-conformance review is required before `PASS` or `PASS_WITH_NOTES`. Additional review capabilities are selected from the contract and material implementation risks; no fixed reviewer count, identity, specialization, profile, or model tier is universal.
+Independent contract-conformance and code-review results are both required before `PASS` or `PASS_WITH_NOTES`. Additional capabilities are selected from material implementation risks; reviewer identity, specialization, profile, and model tier remain dynamic.
 
 ## Non-Functional Requirements
 
@@ -227,7 +225,7 @@ At least one implementation-independent contract-conformance review is required 
 - Depending on undocumented hidden `spawn_agent` arguments.
 - Using failed tool calls or paid subagent work as the default capability probe.
 - Building a separate `codex exec --model` orchestration system.
-- Removing the strict Luna/Sol/Terra profiles or strict routing template.
+- Removing the remaining strict reviewer profiles or strict routing template.
 - Automatically executing the final Goal Prompt.
 - Automatically mutating an issue or local brief without explicit confirmation.
 - Changing unrelated skills' model policies.
@@ -264,7 +262,7 @@ Then `power-loop` does not generate a mode-specific Agent Dispatch Plan or final
 
 Given the user confirms `strict-model-routing`
 When planning proceeds with independently sufficient evidence for every required selector
-Then the separate strict template preserves the existing Luna, Sol, and Terra profile and routing guarantees without inferring reasoning, profile, model, or sandbox support from a different selector.
+Then the separate strict template preserves the existing Terra and Sol reviewer profile guarantees without inferring reasoning, profile, model, or sandbox support from a different selector.
 
 ### AC-6: Inherited Routing Uses A Separate Template
 
@@ -276,7 +274,7 @@ Then `power-loop` uses the separate inherited template rather than populating th
 
 Given inherited mode
 When the Dispatch Plan and Goal are reviewed
-Then they do not specify unsupported per-subagent models, reasoning efforts, custom profiles, sandbox guarantees, model escalation, reviewer tiers, model-cost savings, or assignment-accuracy metrics.
+Then they do not specify unsupported reviewer models, reasoning efforts, custom profiles, sandbox guarantees, reviewer tiers, or model-cost savings.
 
 ### AC-8: Inherited Mode Retains Useful Delegation
 

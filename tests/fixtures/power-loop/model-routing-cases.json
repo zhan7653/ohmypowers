@@ -1,36 +1,7 @@
 {
-  "schema": "power-loop-model-routing-cases/v1",
+  "schema": "power-loop-review-routing-cases/v2",
   "executionMode": "strict-model-routing",
   "cases": [
-    {
-      "id": "simple-through-lower-medium-implementation",
-      "type": "implementation",
-      "implementationClass": "lower-medium-or-below",
-      "expected": {
-        "executor": "main-agent",
-        "subagent": null
-      }
-    },
-    {
-      "id": "slightly-complex-implementation",
-      "type": "implementation",
-      "implementationClass": "slightly-complex-or-above",
-      "expected": {
-        "executor": "main-agent",
-        "subagent": null
-      }
-    },
-    {
-      "id": "underclassified-luna-replacement",
-      "type": "implementation-replacement",
-      "fromProfile": "power_luna_worker",
-      "failureClass": "capability-underclassification",
-      "expected": {
-        "executor": "main-agent",
-        "subagent": null,
-        "replacement": false
-      }
-    },
     {
       "id": "simple-contract-check",
       "type": "review",

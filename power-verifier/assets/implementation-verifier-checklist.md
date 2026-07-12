@@ -21,7 +21,7 @@ Use this checklist for a read-only contract-conformance pass.
 - Record capability classification as exactly `strict-selection-supported`, `inherited-model-only`, or `indeterminate`, plus evidence inspected, recommended mode, uncertainty or unavailable evidence, and user confirmation.
 - Verify that the confirmed mode matches capability evidence. Do not infer a mode from installed profiles, inherited values, or incomplete or contradictory evidence.
 - For strict mode, verify each claimed selector independently; model/profile selection does not prove reasoning, sandbox, or isolation selection.
-- For inherited mode, record configuration as inherited provenance, not independently selected routing. Reject unsupported per-subagent model or reasoning assignments, custom profiles, sandbox or host-isolation guarantees, model escalation, reviewer tiers based on unavailable selection, assignment-accuracy claims, and model-cost savings.
+- For inherited mode, record configuration as inherited provenance, not independently selected routing. Reject unsupported reviewer model or reasoning assignments, custom profiles, sandbox or host-isolation guarantees, reviewer tiers based on unavailable selection, and model-cost savings.
 - Capture the implementation snapshot before accepting validation or review evidence: repository/ref, commit or explicitly `unavailable`, Git tree digest, dirty/generated-artifact boundary, and capture time.
 - Map each applicable Task Contract clause to implementation, execution, validation, or review evidence and record its Git tree digest.
 - Check freshness by Git tree digest. Different commits with the same tree are reusable; different trees invalidate affected evidence.
@@ -33,8 +33,8 @@ Use this checklist for a read-only contract-conformance pass.
 - Identify contract-specified reviewers, agents, models, profiles, providers, reasoning, sandbox, isolation, or procedures and verify each exactly.
 - If an exact requirement is unavailable in the confirmed mode, do not substitute inherited behavior or a weaker instruction boundary; select `NEEDS_HUMAN` when interpretation, authorization, mode change, or contract change is required.
 - If topology is not prescribed, derive the minimum sufficient capabilities from obligations, final diff, interfaces, data, validation, and security, compatibility, migration, permission, concurrency, test, and domain risks.
-- Do not require a fixed reviewer count, identity, model, provider, or specialization.
-- Require at least one reviewer independent from implementation who checked contract conformance before `PASS` or `PASS_WITH_NOTES`.
+- Require independent contract-conformance and code-review capabilities; normally assign them to distinct decoupled reviewers over the same frozen tree.
+- Add risk-specific reviewers only when justified; do not require a fixed identity, model, provider, or specialization for those dynamic capabilities.
 - For every reviewer, record identity/source, confirmed execution mode, inherited configuration provenance (or `not applicable` in strict mode), implementation independence, capability, scope, instruction boundary, observable host-isolation evidence if any, evidence inspected, result, and verified Git tree digest.
 - Record model or reasoning only when the host directly exposes it. Never infer either value from the parent, a profile name, documentation, or task difficulty.
 - Treat an allowed-path or no-write instruction as an instruction boundary, not host-enforced isolation, unless enforcement is separately observable.

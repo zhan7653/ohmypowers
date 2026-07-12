@@ -30,8 +30,6 @@ for skill in "${skills[@]}"; do
 done
 
 agent_sources=(
-  power-loop/agents/power-luna-worker.toml
-  power-loop/agents/power-sol-worker.toml
   power-loop/agents/power-terra-reviewer.toml
   power-loop/agents/power-sol-reviewer.toml
   power-loop/agents/power-sol-high-reviewer.toml
@@ -39,6 +37,8 @@ agent_sources=(
 )
 
 retired_agent_profiles=(
+  power-luna-worker.toml
+  power-sol-worker.toml
   power-terra-worker.toml
   power-terra-complex-worker.toml
   power-sol-escalation.toml

@@ -44,16 +44,16 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Repository inspection with source branch and commit baseline.
 - A confirmed delivery-lane and split gate before repository-aware planning; separable high-risk mutation boundaries return to contract clarification instead of being silently bundled.
 - A separately persisted, non-normative fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
-- Exactly one separately persisted, non-normative Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Luna/Sol/Terra profiles and their routing policy, while `inherited-model-routing` assigns roles, objectives, ownership, dependencies, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, escalation, or model-cost control.
+- Exactly one separately persisted, non-normative Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Terra/Sol reviewer profiles, while `inherited-model-routing` assigns review roles, scopes, evidence packets, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, or model-cost control.
 - A short decision summary plus exact compact reference patch; the full planning artifacts are not copied into the Issue body.
 - Minimum-subagent delivery: the main agent owns exploration, implementation, tests, integration, validation, and repair for every lane; subagents are reserved for final review.
-- Review-only parallelism: `LIGHT` and `STANDARD` use one final reviewer, while `HIGH` may launch at most two decoupled reviewers concurrently over one frozen tree and evidence package.
-- Metered `wait_agent` coordination with at most one useful return per reviewer, no reviewer follow-ups, no short polling loops, and immediate wave termination after the first no-information timeout.
+- Review-only parallelism: every final wave includes contract-conformance and code review, then adds decoupled security, test, compatibility, migration, data, permission, concurrency, or domain reviewers up to observed concurrent capacity.
+- Patient `wait_agent` coordination: allow a three-minute reviewer grace period, use three-minute waits when interaction policy permits, tolerate two consecutive no-information timeouts, and stop after the third when no concrete progress is observable.
 - Four validation layers (`V0` focused, `V1` integration, `V2` final deterministic, `V3` external), one batched adversarial review, at most one concentrated repair, a three-candidate ceiling, and one external run after V2 on the frozen tree immediately before final review.
 - Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
 - Final Goal Prompt only after the confirmed planning artifacts and compact reference patch are applied and verified. It is a thin launcher that pins the Issue and Task Contract identities plus planning-artifact digests, performs preflight/drift checks, and adds no requirement; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
-- Contract-prescribed reviews or a minimum sufficient capability-based review plan, including an implementation-independent contract-conformance review.
+- Contract-prescribed reviews plus baseline independent contract-conformance and code-review capabilities, with additional risk-specific reviewers when justified.
 - Mode-accurate capability, dispatch, review, and PR/MR evidence. In inherited mode, fresh context can establish implementation independence, but an instruction-level no-write boundary is not described as host-enforced read-only isolation.
 - PR/MR evidence requirements and loop decision rules.
 
@@ -100,7 +100,7 @@ It does not run as a daemon, scheduler, webhook, database, persistent index, or 
 
 `power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
 
-For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. In strict mode, selectable Terra High, Sol Medium, and Sol High reviewer profiles provide risk tiers for those capabilities. In inherited mode, verification records fresh-context independence and only the configuration or isolation provenance actually exposed by the host. Neither mode imposes a universal reviewer identity or topology.
+For implementation evidence correctness, use `power_verifier`. It is a portable, read-only verification workflow: exact reviewers are honored when the contract requires them, while independent contract-conformance and code-review results form the baseline final gate. Additional capabilities are selected from the final diff, validation, and material risks. In strict mode, selectable Terra High, Sol Medium, and Sol High reviewer profiles provide risk tiers for those capabilities. In inherited mode, verification records fresh-context independence and only the configuration or isolation provenance actually exposed by the host. Reviewer identities and risk-specific topology remain dynamic.
 
 Use them by phase:
 
@@ -125,11 +125,11 @@ The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed
 
 The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
 
-On a host classified `strict-selection-supported`, a supported model selector or custom-profile selector is enough to recommend `strict-model-routing`. Model, profile, reasoning, and sandbox selection are still independent capabilities: each field or guarantee requires its own evidence and must not be inferred from another selector. The minimum-subagent branch keeps implementation on the main agent even when Luna and Sol worker profiles are installed; strict selection applies only to Terra High/Sol Medium/Sol High final reviewer tiers selected by contract and risk. If a strict plan requires a reviewer configuration the host cannot select, planning pauses instead of fabricating that guarantee.
+On a host classified `strict-selection-supported`, a supported model selector or custom-profile selector is enough to recommend `strict-model-routing`. Model, profile, reasoning, and sandbox selection are still independent capabilities: each field or guarantee requires its own evidence and must not be inferred from another selector. Strict selection applies to Terra High/Sol Medium/Sol High final reviewer tiers selected by contract and risk. If a strict plan requires a reviewer configuration the host cannot select, planning pauses instead of fabricating that guarantee.
 
-On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that review-subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, reviewer-tier, model-cost, or Initial Assignment Accuracy guarantee. Implementation remains on the main agent; bounded generic delegation is used only for fresh-context final review with minimal `fork_turns: none` packets. Model selection and sandbox selection are evidenced independently in either mode.
+On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that review-subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, reviewer-tier, or model-cost guarantee. Implementation remains on the main agent; bounded generic delegation is used only for fresh-context final review with minimal `fork_turns: none` packets. Model selection and sandbox selection are evidenced independently in either mode.
 
-When checking implementation evidence, provide the complete canonical Issue identity and body, exact Task Contract digest and boundary, referenced planning-artifact digests, and thin Goal as supplementary evidence. Extract normative clauses only from the Task Contract. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use Task-Contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
+When checking implementation evidence, provide the complete canonical Issue identity and body, exact Task Contract digest and boundary, referenced planning-artifact digests, and thin Goal as supplementary evidence. Extract normative clauses only from the Task Contract. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use Task-Contract-prescribed reviewers exactly, require independent contract-conformance and code-review evidence, and add security, compatibility, migration, test, data, or domain review when justified by implementation risk.
 
 Restart Codex after installing or updating skills or custom agents.
 
@@ -197,8 +197,6 @@ power-loop/
   SKILL.md
   agents/
     openai.yaml
-    power-luna-worker.toml
-    power-sol-worker.toml
     power-terra-reviewer.toml
     power-sol-reviewer.toml
     power-sol-high-reviewer.toml

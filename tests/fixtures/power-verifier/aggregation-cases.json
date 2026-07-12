@@ -12,7 +12,7 @@
         "requiredEvidence": [{ "id": "implementation", "present": true, "commit": "commit-b", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
         "validationReplays": [{ "required": true, "result": "passed", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
         "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:catalog-v3", "stale": false }, { "identity": "independent-code-reviewer", "independentFromImplementation": true, "capability": "code-review", "result": "PASS", "gitTreeDigest": "tree:catalog-v3", "stale": false }],
         "notes": []
       },
       "expected": { "result": "PASS", "smallestNextAction": "None." }
@@ -28,7 +28,7 @@
         "requiredEvidence": [{ "id": "validation", "present": true, "commit": "commit-old", "gitTreeDigest": "tree:same-content", "stale": false }],
         "validationReplays": [{ "required": true, "result": "passed", "gitTreeDigest": "tree:same-content", "stale": false }],
         "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "commit": "commit-old", "gitTreeDigest": "tree:same-content", "stale": false }],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "commit": "commit-old", "gitTreeDigest": "tree:same-content", "stale": false }, { "identity": "independent-code-reviewer", "independentFromImplementation": true, "capability": "code-review", "result": "PASS", "commit": "commit-old", "gitTreeDigest": "tree:same-content", "stale": false }],
         "notes": []
       },
       "expected": { "result": "PASS", "smallestNextAction": "None; commits differ but Git trees are equivalent." }
@@ -41,7 +41,7 @@
         "observedIssue": { "source": "https://example.test/issues/27", "revision": "rev-2", "fullBodyDigest": "sha256:body-1" },
         "snapshot": { "repositoryRef": "example/repo@develop", "commit": "commit-b", "gitTreeDigest": "tree:v3", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:10:00Z" },
         "clauses": [{ "id": "issue:AC-4", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:v3", "stale": false }],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:v3", "stale": false }, { "identity": "independent-code-reviewer", "independentFromImplementation": true, "capability": "code-review", "result": "PASS", "gitTreeDigest": "tree:v3", "stale": false }],
         "notes": [{ "source": "Issue provenance", "text": "Host revision metadata differs, but the authoritative full-body digest matches." }]
       },
       "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the host revision provenance note." }
@@ -137,7 +137,7 @@
         "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
         "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:40:00Z" },
         "clauses": [{ "id": "issue:AC-4", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:t1", "stale": false }],
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS", "gitTreeDigest": "tree:t1", "stale": false }, { "identity": "independent-code-reviewer", "independentFromImplementation": true, "capability": "code-review", "result": "PASS", "gitTreeDigest": "tree:t1", "stale": false }],
         "notes": [{ "source": "external-auditor", "text": "Optional wording improvement." }]
       },
       "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; preserve the nonblocking note." }
@@ -174,7 +174,7 @@
         "observedIssue": { "source": "issue.md", "revision": "rev-1", "fullBodyDigest": "sha256:one" },
         "snapshot": { "repositoryRef": "repo@develop", "commit": "c1", "gitTreeDigest": "tree:t1", "dirtyGeneratedBoundary": "clean", "capturedAt": "2026-07-12T04:55:00Z" },
         "clauses": [{ "id": "issue:AC-8", "applicable": true, "status": "satisfied" }], "requiredEvidence": [], "validationReplays": [], "reviewRequirements": [],
-        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "gitTreeDigest": "tree:t1", "stale": false }], "notes": []
+        "reviews": [{ "identity": "external-auditor", "independentFromImplementation": true, "capability": "contract-conformance", "result": "PASS_WITH_NOTES", "gitTreeDigest": "tree:t1", "stale": false }, { "identity": "independent-code-reviewer", "independentFromImplementation": true, "capability": "code-review", "result": "PASS", "gitTreeDigest": "tree:t1", "stale": false }], "notes": []
       },
       "expected": { "result": "PASS_WITH_NOTES", "smallestNextAction": "None; retain the review note." }
     }

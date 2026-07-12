@@ -51,21 +51,23 @@ Repeat this section only for selected final review-capability tasks. Implementat
 |---|---|---|---|---|
 | `WAVE-1` | `<TASK-IDs>` | `<parallel | sequential>` | `<condition>` | `<stable deliverable/interface>` |
 
-Use no implementation subagents. Launch final reviewers in one parallel wave only when their scopes are decoupled: no reviewer depends on another, their capabilities do not duplicate each other, and all inspect the same frozen tree and evidence package. Use one reviewer for `LIGHT` or `STANDARD`; use at most two for `HIGH`.
+The task graph contains only final review tasks. Launch every selected reviewer in one parallel wave when their scopes are decoupled: no reviewer depends on another, their capabilities do not duplicate each other, and all inspect the same frozen tree and evidence package.
 
 ## Agent capacity and coordination budget
 
 - Host concurrent slots: `<observed count or unavailable>`
 - Reliable thread retire/close operation: `<supported with evidence | unavailable>`
 - Root slot: `1`
-- Implementation subagent budget: `0`
-- Reserved review slots: `<1 for LIGHT or STANDARD | 1-2 for HIGH when two decoupled review capabilities are justified>`
-- Total distinct subagent-thread ceiling: `<value that preserves the review reserve; never assume completed threads release capacity>`
-- Per-agent substantive follow-up limit: `0`
-- `wait_agent` warning threshold: `<1 for LIGHT or STANDARD | 2 for HIGH>`
-- `wait_agent` hard stop per review wave: `<1 for LIGHT or STANDARD | number of launched reviewers, maximum 2 for HIGH>`
-- No-information timeout stop: `the first no-information timeout terminates the remaining reviewer wave`
-- Polling rule: `no 1-, 10-, 20-, or 30-second loops; use at least 60 seconds or the longest permitted interaction timeout`
+- Minimum reviewer capabilities: `contract-conformance reviewer plus code reviewer`
+- Additional reviewer capabilities: `<independent test, security, compatibility, migration, data, permission, concurrency, or domain scopes justified by the final diff>`
+- Selected reviewer count: `<minimum 2; increase for decoupled capabilities up to observed concurrent capacity>`
+- Total distinct subagent-thread ceiling: `<selected reviewer count; never assume completed threads release capacity>`
+- Per-agent substantive follow-up limit: `1 consolidated clarification/completion request; no status polling`
+- Reviewer grace period before first wait: `at least 180 seconds when interaction policy permits`
+- `wait_agent` warning threshold: `launched reviewer count + 1`
+- `wait_agent` hard stop per review wave: `launched reviewer count + 3`
+- Consecutive no-information timeout stop: `3`
+- Polling rule: `no 1-, 10-, 20-, 30-, or 60-second loops; use 180 seconds or the longest permitted interaction timeout`
 - Context rule: `minimal explicit packet; fork_turns: none when exposed; no full-session history by default`
 
 ## Ownership conflict rules
@@ -107,9 +109,10 @@ Main-agent implementation scope: `all implementation and repair paths for every 
 - Stable snapshot: `<repository/ref, commit, Git tree digest, dirty/generated boundary, capture time, and validation evidence; tree digest controls freshness>`
 - Contract-prescribed reviews: `<exact required identities or procedures, or None; unavailable exact requirements require NEEDS_HUMAN>`
 - Selection basis: `<contract obligations; final diff; affected interfaces/data; validation; and material risks>`
-- Minimum sufficient capabilities: `<one for LIGHT/STANDARD; one or two decoupled capabilities for HIGH, including contract-conformance review>`
+- Minimum sufficient capabilities: `<contract-conformance plus code review; add every independently justified risk capability>`
 - Independent contract-conformance reviewer: `<distinct non-implementing subagent identity/source; required for PASS or PASS_WITH_NOTES>`
-- Additional review capabilities: `<code, test, security, compatibility, migration, data, or domain review only when justified, or None>`
+- Independent code reviewer: `<distinct non-implementing subagent identity/source; required for PASS or PASS_WITH_NOTES>`
+- Additional review capabilities: `<test, security, compatibility, migration, data, permission, concurrency, or domain reviewers justified by the final diff, or None>`
 - Configuration provenance: `<inherited from the parent; not independently selected>`
 - Review isolation provenance: `<instruction-level no-write boundary; observable host enforcement if separately exposed, otherwise None>`
 - Reviewer records: `<for each: identity/source, confirmed mode, configuration provenance, implementation independence, capability, scope, instruction boundary, observable host-isolation evidence if any, evidence inspected, result, and snapshot identity>`
