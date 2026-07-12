@@ -70,20 +70,21 @@ Pause-and-ask conditions:
 ### Expected power-loop result after execution-mode confirmation
 
 - Readiness result: `LOOP_READY`
-- Risk level: `LOW`
+- Delivery lane: `LIGHT`; split decision: not needed
+- Residual risk level: `LOW`
 - Execution decision: `ALLOW_GOAL`
-- Exact files and validation commands: discovered from the repository and added to the Execution Blueprint
-- Execution Blueprint: `proposed`
-- Agent Dispatch Plan: `proposed` from `agent-dispatch-plan-inherited.md`, likely one generic implementation task plus a review plan selected from the final diff, contract requirements, and material risks; it records roles, ownership, dependencies, deliverables, parallelism, and fresh-context independent review without a per-agent model, reasoning, profile, sandbox, escalation, reviewer-tier, assignment-accuracy, or model-cost claim
-- Issue Patch: displayed in full
-- Goal Prompt: withheld until the exact patch is confirmed, applied, and verified
+- Exact files and validation commands: discovered from the repository and added to the separate Execution Blueprint artifact
+- Execution Blueprint artifact: `proposed`, with source and digest
+- Agent Dispatch Plan artifact: `proposed` from `agent-dispatch-plan-inherited.md`, with source and digest; it records roles, ownership, dependencies, deliverables, parallelism, and fresh-context independent review without a per-agent model, reasoning, profile, sandbox, escalation, reviewer-tier, assignment-accuracy, or model-cost claim
+- Decision summary and compact reference patch: displayed in full
+- Goal Prompt: withheld until the artifacts and exact compact patch are confirmed, persisted, and verified
 
 ### Expected result after confirmation
 
-- Issue/local brief execution sections: updated and verified
+- Issue/local brief compact planning references: updated and verified
 - Canonical Issue identity: source plus host revision when available plus SHA-256 of the exact complete persisted body; the body digest is authoritative
 - Task Contract identity: SHA-256 of exact UTF-8 bytes from document start to the byte before the Blueprint start marker
-- Final Goal Prompt: a thin launcher containing only the pinned identities, confirmed-section references, preflight/drift stop, and manual-start instruction; it adds no budget, scope, validation, review, PR, lifecycle, permission, retry, or reporting obligation
+- Final Goal Prompt: a thin launcher containing only the pinned Issue/Task Contract identities, planning-artifact references and digests, preflight/drift stop, and manual-start instruction; it adds no requirement
 - Identity drift: stops before implementation and requires the Issue-owned re-read/replan path
 - Goal execution: left to the user
 

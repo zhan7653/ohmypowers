@@ -4,12 +4,14 @@ Use this checklist for a read-only contract-conformance pass.
 
 ## Canonical Issue And Clauses
 
-- Read the complete canonical Issue or persisted local contract at the pinned identity.
-- Record its source, host revision metadata when available, and SHA-256 of the exact full persisted UTF-8 body without normalization; the full-body digest is the authoritative content identity, and the observed identity must match the pin.
+- Read the complete canonical Issue or persisted local contract at the pinned identity for container identity and lifecycle context.
+- Locate the exact Task Contract byte range and verify its SHA-256; extract normative clauses only from that range.
+- Treat embedded or separate Blueprint/Dispatch plans as supplementary operational evidence, not clause sources.
+- Record its source, host revision metadata when available, and SHA-256 of the exact full persisted UTF-8 body without normalization; the full-body digest is the authoritative container identity, and the observed identity must match the pin.
 - Keep the Goal Prompt, session, comments, discussions, summaries, PR/MR text, and runner output supplementary. They cannot add or override obligations.
-- Extract every applicable Issue clause into a record containing clause ID, source location, obligation, applicability, evidence, status, and notes. Do not extract Goal clauses.
+- Extract every applicable Task Contract clause into a record containing clause ID, source location, obligation, applicability, evidence, status, and notes. Do not extract planning-artifact or Goal clauses.
 - Treat a consistent contract as authoritative; do not criticize, rewrite, complete, or add requirements.
-- Identify Issue clauses that cannot be satisfied together. Cite both records and select `NEEDS_HUMAN` without choosing either clause.
+- Identify Task Contract clauses that cannot be satisfied together. Cite both records and select `NEEDS_HUMAN` without choosing either clause.
 - Treat a source or authoritative full-body digest mismatch as stale evidence and `BLOCKED`, not as a second-contract conflict. Record a host revision metadata difference with an identical digest as provenance rather than content drift.
 - For historical records, mark missing revision, digest, or tree identity unavailable; never reconstruct or fabricate it.
 
@@ -21,7 +23,7 @@ Use this checklist for a read-only contract-conformance pass.
 - For strict mode, verify each claimed selector independently; model/profile selection does not prove reasoning, sandbox, or isolation selection.
 - For inherited mode, record configuration as inherited provenance, not independently selected routing. Reject unsupported per-subagent model or reasoning assignments, custom profiles, sandbox or host-isolation guarantees, model escalation, reviewer tiers based on unavailable selection, assignment-accuracy claims, and model-cost savings.
 - Capture the implementation snapshot before accepting validation or review evidence: repository/ref, commit or explicitly `unavailable`, Git tree digest, dirty/generated-artifact boundary, and capture time.
-- Map each applicable Issue clause to implementation, execution, validation, or review evidence and record its Git tree digest.
+- Map each applicable Task Contract clause to implementation, execution, validation, or review evidence and record its Git tree digest.
 - Check freshness by Git tree digest. Different commits with the same tree are reusable; different trees invalidate affected evidence.
 - After a tree-changing repair, record a new snapshot; mark affected prior validation and review evidence stale and rerun affected checks.
 - Record unresolved or unavailable evidence without guessing.

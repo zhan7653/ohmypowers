@@ -5,11 +5,12 @@ This tutorial exercises the full `ohmypowers` flow on a small linear-regression 
 ```text
 power-grill
 -> confirmed requirements issue/local brief
+-> confirmed delivery lane and split decision
 -> capability preflight and confirmed execution mode
 -> power-loop repository inspection
--> Execution Blueprint
--> Agent Dispatch Plan
--> confirmed Issue Patch
+-> separate Execution Blueprint artifact
+-> separate Agent Dispatch Plan artifact
+-> confirmed compact reference patch
 -> ready-to-run Goal Prompt
 -> user manually runs /goal
 -> snapshot-bound validation replay and independent contract-conformance review
@@ -69,6 +70,14 @@ The repository needs a concrete low-risk task that demonstrates Loop Engineering
 ## Goal
 
 Add a minimal batch-gradient-descent linear-regression optimizer that trains on deterministic synthetic data and exposes enough metrics to prove convergence or non-convergence.
+
+## Delivery lane and split decision
+
+- Delivery lane: `LIGHT`
+- Split assessment: `not needed`
+- Delivery boundaries: one bounded, reversible example and its deterministic tests
+- Required safety guarantees: unsafe learning rates must not claim success
+- Stronger guarantees out of scope: no persistence, permission, migration, concurrency, audit, rollback, or recovery guarantees
 
 ## User-observable behavior
 
@@ -146,12 +155,22 @@ All acceptance criteria have concrete implementation and validation evidence.
 # Execution Blueprint
 
 Planning status: `not-generated`
+
+Artifact: `None`
+
+Artifact digest: `None`
+
+Delivery lane: `LIGHT`
 <!-- power-loop:execution-blueprint:end -->
 
 <!-- power-loop:agent-dispatch-plan:start -->
 # Agent Dispatch Plan
 
 Planning status: `not-generated`
+
+Artifact: `None`
+
+Artifact digest: `None`
 <!-- power-loop:agent-dispatch-plan:end -->
 
 # Curation status
@@ -159,7 +178,7 @@ Planning status: `not-generated`
 State: open
 ```
 
-The issue or local brief must exist before final Goal generation because its complete persisted body is the sole normative contract. Record host revision metadata as provenance and use SHA-256 of the exact full persisted UTF-8 body, without normalization, as the authoritative identity. The Task Contract identity is the SHA-256 of exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`.
+The issue or local brief must exist before final Goal generation. Its exact full persisted body digest is the authoritative container identity, while the Task Contract byte range is the sole normative contract. Record host revision metadata as provenance. The Task Contract identity is the SHA-256 of exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`. Embedded planning references, separate planning artifacts, comments, and lifecycle text do not add requirements.
 
 ## Step 3: Run power-loop
 
@@ -175,12 +194,12 @@ Use $power-loop on <issue-url-or-local-brief>.
    - `inherited-model-only` recommends `inherited-model-routing` when no supported model, reasoning, or custom-profile selector is exposed;
    - `indeterminate` asks the user for more evidence instead of guessing.
 3. Ask the user to confirm the execution mode. Do not run readiness/risk gating or generate a mode-specific Agent Dispatch Plan or final Goal Prompt before confirmation.
-4. Run readiness and risk gating; for this example, return `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
+4. Run readiness, delivery-lane, split, and residual-risk gating; for this example, confirm `LIGHT`, no split needed, `LOOP_READY`, risk `LOW`, and `ALLOW_GOAL`.
 5. Inspect the repository and record its source branch and commit.
-6. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, instruction boundaries, and integration order in the Execution Blueprint.
-7. Split independently useful work into the separate Agent Dispatch Plan template for the confirmed mode.
-8. Display an exact Issue Patch whose replacement blocks say `Planning status: confirmed`.
-9. Withhold the Goal Prompt and ask for confirmation of the exact patch.
+6. Derive exact affected files, internal interfaces, error handling, test seams, validation commands, instruction boundaries, and integration order in a separately persisted, non-normative Execution Blueprint artifact.
+7. Split independently useful work into a separately persisted, non-normative Agent Dispatch Plan artifact for the confirmed mode.
+8. Display a short decision summary and exact compact reference patch whose blocks contain artifact paths, digests, and `Planning status: confirmed`.
+9. Withhold the Goal Prompt and ask for confirmation of the decision summary and exact compact patch.
 
 The supported model-or-profile selector establishes the strict recommendation; it does not prove reasoning, profile, model, or sandbox selection that the evidence did not show. Record those capabilities independently. Preserve the full Luna/Sol/Terra profile routing only when the selectors it requires are demonstrably supported, and pause if a required strict configuration is unavailable.
 
@@ -195,11 +214,13 @@ Under `inherited-model-routing`, subagents inherit the parent configuration. The
 
 Do not combine independently useful tasks merely to reduce agent count. Do not run write tasks concurrently when they own overlapping paths or unstable interfaces.
 
-## Step 4: Review And Confirm The Issue Patch
+## Step 4: Review And Confirm The Planning References
 
 Check that:
 
 - the Task Contract is unchanged;
+- the delivery lane, split decision, required safety guarantees, and stronger guarantees out of scope are visible in the short decision summary;
+- both separate planning artifacts have exact digests and explicitly say they are non-normative;
 - the capability classification, inspected evidence, recommended mode, and confirmed mode are recorded consistently;
 - the Blueprint reflects the actual repository;
 - every write task has exact non-overlapping ownership;
@@ -211,7 +232,7 @@ Check that:
 
 If anything is wrong, request a revision. The revised patch requires fresh confirmation.
 
-After confirmation, `power-loop` applies only the two marked blocks, re-reads the issue/local brief, verifies the exact content and Task Contract byte boundary, and only then computes the authoritative full-body SHA-256 and generates the final Goal Prompt.
+After confirmation, `power-loop` verifies both separate planning artifacts, applies only the two compact marked reference blocks, re-reads the issue/local brief, verifies the exact content and Task Contract byte boundary, and only then computes the authoritative full-body SHA-256 and generates the final Goal Prompt.
 
 ## Step 5: Manually Run The Goal Prompt
 
@@ -291,8 +312,8 @@ Persist only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, 
 2. Confirm and persist the issue or local brief.
 3. Use $power-loop on that persisted source.
 4. Review the capability evidence and confirm `strict-model-routing` or `inherited-model-routing`.
-5. Review the Blueprint, mode-specific Dispatch Plan, and exact Issue Patch.
-6. Confirm the exact patch.
+5. Review the separate Blueprint and mode-specific Dispatch artifacts, decision summary, and exact compact reference patch.
+6. Confirm the decision summary and exact compact patch.
 7. Receive the ready-to-run Goal Prompt.
 8. Manually start the Goal Prompt.
 9. Review the snapshot-bound contract-conformance result and any additional capability-specific review results.

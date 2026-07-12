@@ -7,7 +7,7 @@ description: Turn a vague or half-clear coding task, or an existing reviewed spe
 
 ## Overview
 
-Produce a requirements-ready issue contract before implementation starts. The persisted Issue body is the sole normative contract source. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
+Produce a requirements-ready issue contract before implementation starts. The Task Contract is the sole normative contract. The complete persisted Issue body still supplies source identity and lifecycle context, but later planning references and execution artifacts are non-normative. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
 
 Leave exact files, private interfaces, internal flow, test seams, concrete commands, implementation order, ownership, and subagent routing to `power-loop`.
 
@@ -89,11 +89,29 @@ Readiness check:
 
 Generate the draft when all requirement fields are resolved, the user explicitly asks to proceed with visible assumptions, or only low-risk assumptions remain after the readiness check. Keep grilling when a missing choice changes public behavior, compatibility, schema, security, permissions, migration, or a business rule.
 
+Before offering one combined Issue, run a complexity and risk split gate. Classify the proposed delivery lane as:
+
+- `LIGHT`: one bounded behavior or documentation change with no persistent global state, permission, migration, concurrency, destructive, or compatibility boundary;
+- `STANDARD`: a multi-module or compatibility-sensitive feature whose risks remain local and reversible;
+- `HIGH`: work involving persistent global or project configuration, authentication or authorization, sensitive data, migration, concurrency, destructive or irreversible behavior, or another security-critical boundary.
+
+Recommend separate Issues when any of these are true:
+
+- an independently useful `LIGHT` or `STANDARD` feature is bundled with a `HIGH`-risk mutation boundary;
+- the request contains two or more independent risk domains that can be delivered and reviewed separately;
+- generation, application, audit, revision, and deletion form separable lifecycle capabilities rather than one inseparable user outcome;
+- the combined contract would require different implementation or review capabilities for independently valuable parts;
+- the user can receive meaningful value before the high-risk boundary is implemented.
+
+For a split recommendation, show the proposed Issue boundaries, dependencies, user value of each part, and recommended order. Ask the user to choose split delivery, one explicitly high-risk combined contract, or a safer reduced behavior such as generating an exact diff for manual application. Do not silently select the strongest transaction, concurrency, audit, recovery, or rollback guarantee from a broad word such as “safe”. Those guarantees require an explicit requirement-level decision when they materially change scope or cost.
+
+Record the confirmed delivery lane and any accepted bundling decision in the Task Contract. If the user accepts a combined high-risk contract, state which safety guarantees are required and which stronger guarantees remain out of scope.
+
 ### 4. Produce The Issue Draft
 
 Read and fill [assets/issue-body.md](assets/issue-body.md). Treat its `Task Contract` section as the sole canonical source for what and why.
 
-Leave the marked Execution Blueprint and Agent Dispatch Plan sections at `Planning status: not-generated`. `power-loop` owns those sections and may populate them only through a displayed, explicitly confirmed Issue Patch.
+Leave the marked Execution Blueprint and Agent Dispatch Plan reference sections at `Planning status: not-generated`. `power-loop` may later replace only those compact reference blocks after explicit confirmation. Full planning artifacts remain separate and non-normative.
 
 Search conservatively for directly related existing issues when hosted or local issue state is available. Recommend:
 
@@ -101,7 +119,7 @@ Search conservatively for directly related existing issues when hosted or local 
 - create a linked follow-up when the prior issue is complete or should not expand;
 - create a new issue when no candidate is a defensible canonical home.
 
-Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. Reserve the confirmed Execution Blueprint and Agent Dispatch Plan for runtime budget, delivery/PR, validation/review, pause/stop, ownership, and execution policy that `power-loop` derives without changing requirements. A later Goal may reference those Issue-owned obligations but may not add to them.
+Treat comments as supplementary evidence. Put durable requirement changes in the Task Contract and its `Change history`; put lifecycle truth in `Curation status`. The compact Execution Blueprint and Agent Dispatch Plan blocks record only artifact references, digests, the confirmed delivery lane, and planning status. Full planning artifacts describe the current implementation approach but do not add contract obligations. A later Goal may follow those plans operationally, but only the Task Contract defines conformance.
 
 The Task Contract identity is SHA-256 over the exact persisted UTF-8 bytes from the document start to the byte immediately before `<!-- power-loop:execution-blueprint:start -->`, with no whitespace or newline normalization. Preserve the marked planning boundaries so `power-loop` can verify this digest before and after patching.
 
@@ -117,7 +135,7 @@ After explicit confirmation, create, update, or save the contract:
 
 Before hosted mutation, inspect project host guidance and remotes. For GitHub read [references/github-issue-creation.md](references/github-issue-creation.md); for GitLab read [references/gitlab-issue-creation.md](references/gitlab-issue-creation.md). Preserve any project-required full GitLab repository URL. Stop if the canonical host or target is unclear.
 
-Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for final Goal generation because the confirmed execution sections need a canonical home and the complete persisted body needs a stable identity.
+Record the resulting issue URL/number or local brief path. For a hosted Issue, also record host revision metadata when the host exposes it. A pasted-only contract is not sufficient for final Goal generation because the compact confirmed planning references need a canonical home and the complete persisted body needs a stable identity.
 
 ### 6. Hand Off To power-loop
 
@@ -133,4 +151,4 @@ Do not include internal interfaces, exact implementation paths, worktree choices
 
 Before persistence, output the clarified summary, complete issue draft, related-issue recommendation, and confirmation request.
 
-After persistence, output the canonical reference, readiness summary, and the instruction to run `power-loop` for the Execution Blueprint, Agent Dispatch Plan, confirmable Issue Patch, and final manual Goal Prompt.
+After persistence, output the canonical reference, readiness summary, confirmed delivery lane or split decision, and the instruction to run `power-loop` for separate planning artifacts, a compact confirmable reference patch, and the final manual Goal Prompt.

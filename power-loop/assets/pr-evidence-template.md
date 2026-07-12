@@ -46,8 +46,10 @@ Curator mutation status:
 
 Contract sources:
 
-- Canonical Issue/local body: `<source, host revision when available, and exact full-body SHA-256; sole normative contract and body digest authoritative>`
-- Task Contract digest: `<SHA-256 over exact UTF-8 bytes from document start to byte before Blueprint start marker>`
+- Canonical Issue/local body: `<source, host revision when available, and exact full-body SHA-256; authoritative persisted-container identity and lifecycle context>`
+- Task Contract digest: `<SHA-256 over exact UTF-8 bytes from document start to byte before Blueprint start marker; sole normative contract>`
+- Execution Blueprint artifact: `<source and exact digest; supplementary operational evidence>`
+- Agent Dispatch Plan artifact: `<source and exact digest; supplementary operational evidence>`
 - Thin Goal Prompt: `<supplementary immutable text/reference; adds no obligations>`
 
 Conflict status: `<none, or conflicting clause references and NEEDS_HUMAN decision>`

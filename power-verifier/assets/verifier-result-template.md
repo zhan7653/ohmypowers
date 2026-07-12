@@ -7,13 +7,17 @@ Result: `PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN`
 - Canonical Issue or local contract source: `<URL or persisted path>`
 - Pinned host revision: `<revision metadata or unavailable>`
 - Pinned exact full-body SHA-256: `<sha256:... or unavailable>`
+- Pinned exact Task Contract SHA-256: `<sha256:... or unavailable>`
+- Task Contract byte boundary: `<exact marker/range or unavailable>`
 - Observed host revision: `<revision metadata or unavailable>`
 - Observed exact full-body SHA-256: `<sha256:... or unavailable>`
+- Observed exact Task Contract SHA-256: `<sha256:... or unavailable>`
 - Identity status: `<matched | matched body with differing host revision metadata | mismatched source/body | insufficient historical identity>`
 - Supplementary evidence considered: `<Goal Prompt, session, PR/MR, runner summary, comments, or none>`
 - Supplementary Issue references: `<matching references, drift, missing references, or none>`
-- Issue-internal conflict status: `<none | conflict requiring NEEDS_HUMAN>`
-- Conflicting Issue clause IDs and rationale: `<none or cited clause records>`
+- Task-Contract-internal conflict status: `<none | conflict requiring NEEDS_HUMAN>`
+- Conflicting Task Contract clause IDs and rationale: `<none or cited clause records>`
+- Supplementary planning artifacts and digests: `<Blueprint/Dispatch sources, identity status, drift, or none>`
 
 ## Execution Mode And Capability Evidence
 

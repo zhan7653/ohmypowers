@@ -5,6 +5,12 @@ Planning status: `<proposed | confirmed | stale>`
 
 Contract source: `<hosted issue URL/number or local brief path>`
 
+Task Contract digest: `sha256:<exact normative Task Contract bytes>`
+
+Delivery lane: `<LIGHT | STANDARD | HIGH>`
+
+Normative boundary: `The Task Contract is the sole normative contract. This Dispatch Plan is confirmed operational guidance and cannot add requirements.`
+
 Blueprint baseline: `<source branch>@<full commit SHA>`
 
 Generated at: `<ISO-8601 timestamp with timezone>`
@@ -76,7 +82,7 @@ Narrow main-agent implementation exception: `<None, or exact paths and reason ex
 
 ## Verification and review plan
 
-- Verification contract: `<the pinned complete canonical Issue/local body is the sole normative contract; the thin Goal, comments, discussions, PR body, and runner summaries are supplementary execution evidence and add no obligations>`
+- Verification contract: `<the pinned Task Contract byte range is the sole normative contract; the complete Issue body supplies identity/lifecycle context, while this plan, the thin Goal, comments, discussions, PR body, and runner summaries are supplementary execution evidence and add no obligations>`
 - Confirmed mode evidence: `<inherited-model-routing plus capability evidence and confirmation>`
 - Stable snapshot: `<repository/ref, commit, Git tree digest, dirty/generated boundary, capture time, and validation evidence; tree digest controls freshness>`
 - Contract-prescribed reviews: `<exact required identities or procedures, or None; unavailable exact requirements require NEEDS_HUMAN>`
@@ -89,7 +95,7 @@ Narrow main-agent implementation exception: `<None, or exact paths and reason ex
 - Reviewer records: `<for each: identity/source, confirmed mode, configuration provenance, implementation independence, capability, scope, instruction boundary, observable host-isolation evidence if any, evidence inspected, result, and snapshot identity>`
 - Validation replay: `<exact command, safety class, isolated temporary-artifact boundary when applicable, result, evidence, and snapshot identity>`
 - Evidence freshness: `<repair/new snapshot invalidates affected validation and review evidence; required reruns>`
-- Contract-conformance packet: `<pinned complete canonical Issue/local body and identity, supplementary thin Goal, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
+- Contract-conformance packet: `<pinned Task Contract bytes and digest, complete Issue identity/lifecycle context, supplementary planning artifacts and thin Goal, clause/AC evidence, stable snapshot, validation replay, changed-path/scope manifest, PR/MR evidence, risks, assumptions, and non-goals>`
 - Other review packets: `<tailored to each selected capability and scope>`
 - Execution: `<run independent fresh-context reviews in parallel over the same snapshot when possible; use fork_turns: none when exposed>`
 

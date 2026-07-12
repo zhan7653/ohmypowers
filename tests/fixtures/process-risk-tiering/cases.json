@@ -1,0 +1,80 @@
+{
+  "schema": "process-risk-tiering-cases/v1",
+  "cases": [
+    {
+      "id": "small-documentation-change",
+      "input": {
+        "boundedReversibleBehavior": true,
+        "multiModuleOrCompatibilitySensitive": false,
+        "highRiskBoundaries": [],
+        "independentOrdinaryValue": false,
+        "highRiskBoundarySeparable": false,
+        "splitDecision": "not-needed"
+      },
+      "expected": {
+        "deliveryLane": "LIGHT",
+        "recommendSplit": false,
+        "result": "READY"
+      }
+    },
+    {
+      "id": "multi-module-local-feature",
+      "input": {
+        "boundedReversibleBehavior": false,
+        "multiModuleOrCompatibilitySensitive": true,
+        "highRiskBoundaries": [],
+        "independentOrdinaryValue": false,
+        "highRiskBoundarySeparable": false,
+        "splitDecision": "not-needed"
+      },
+      "expected": {
+        "deliveryLane": "STANDARD",
+        "recommendSplit": false,
+        "result": "READY"
+      }
+    },
+    {
+      "id": "issue-29-report-insights-plus-agents-mutation",
+      "input": {
+        "boundedReversibleBehavior": false,
+        "multiModuleOrCompatibilitySensitive": true,
+        "highRiskBoundaries": [
+          "persistent-global-or-project-configuration",
+          "concurrency",
+          "permission-sensitive-write"
+        ],
+        "independentOrdinaryValue": true,
+        "highRiskBoundarySeparable": true,
+        "splitDecision": "missing"
+      },
+      "expected": {
+        "deliveryLane": "HIGH",
+        "recommendSplit": true,
+        "result": "NEEDS_GRILL",
+        "recommendedContracts": [
+          "STANDARD: personal memo and reusable insight generation",
+          "HIGH: confirmed AGENTS.md mutation lifecycle"
+        ],
+        "saferReducedAlternative": "Generate and display an exact diff for manual application"
+      }
+    },
+    {
+      "id": "explicitly-confirmed-combined-high-risk-contract",
+      "input": {
+        "boundedReversibleBehavior": false,
+        "multiModuleOrCompatibilitySensitive": true,
+        "highRiskBoundaries": [
+          "persistent-global-or-project-configuration"
+        ],
+        "independentOrdinaryValue": true,
+        "highRiskBoundarySeparable": true,
+        "splitDecision": "explicitly-declined-with-guarantees"
+      },
+      "expected": {
+        "deliveryLane": "HIGH",
+        "recommendSplit": true,
+        "result": "READY_WITH_STRICT_GATE"
+      }
+    }
+  ]
+}

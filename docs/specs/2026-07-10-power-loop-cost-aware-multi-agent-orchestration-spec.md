@@ -27,11 +27,20 @@ Classification is an evidence conclusion. Execution mode is a user-confirmed pla
 
 ### Requirements Contract And Repository Planning
 
-- `power-grill` owns the requirement-level contract: problem, goal, user-observable behavior, scope, non-goals, dependencies, external contracts, constraints, risks, validation expectations, acceptance criteria, stop condition, and pause conditions.
+- `power-grill` owns the requirement-level contract: problem, goal, delivery lane and split decision, user-observable behavior, scope, non-goals, dependencies, external contracts, constraints, explicitly required safety guarantees, stronger guarantees out of scope, risks, validation expectations, acceptance criteria, stop condition, and pause conditions.
 - `power-loop` may derive private interfaces, exact affected files, control flow, error handling, test seams, validation commands, ownership, dependencies, and integration order after repository inspection.
 - Unresolved user behavior, public API, schema, compatibility, security, permission, migration, provider, or business decisions return `NEEDS_GRILL` or `NEEDS_HUMAN` rather than being decided silently.
-- The complete persisted Issue body is the sole normative contract. The Task Contract owns requirements; the confirmed Execution Blueprint and Agent Dispatch Plan own execution obligations. The Goal, comments, session, PR/MR text, and runner summaries are supplementary evidence and cannot add obligations.
+- The Task Contract byte range is the sole normative contract. The complete persisted Issue body is the authoritative container identity and lifecycle context. Confirmed Execution Blueprint and Agent Dispatch Plan artifacts are non-normative operational guidance. The Goal, comments, session, PR/MR text, and runner summaries are supplementary evidence and cannot add obligations.
 - Canonical Issue identity uses SHA-256 of the exact full persisted UTF-8 body without normalization as unconditionally authoritative content identity; host revision metadata is provenance. Task Contract identity covers exact bytes from document start to the byte before `<!-- power-loop:execution-blueprint:start -->`.
+
+### Delivery Lanes And Split Gate
+
+- `LIGHT` covers one bounded, reversible behavior with no persistent global state, permission, migration, concurrency, destructive, or material compatibility boundary.
+- `STANDARD` covers multi-module or compatibility-sensitive work whose risks remain local and reversible.
+- `HIGH` covers persistent global or project configuration, authentication or authorization, sensitive data, migration, concurrency, destructive or irreversible behavior, or another security-critical boundary.
+- An independently valuable `LIGHT` or `STANDARD` outcome bundled with a separable `HIGH`-risk mutation boundary must produce a split recommendation before planning.
+- Broad terms such as “safe”, “atomic”, or “recoverable” must not silently select transaction, concurrency, audit, rollback, or recovery guarantees. Material guarantees belong in the Task Contract; stronger guarantees not selected are recorded as out of scope.
+- A fully specified `HIGH` lane may receive a strictly gated Goal. `HUMAN_ONLY` is reserved for unresolved decisions, unavailable authority, or unauthorized irreversible action rather than high-risk classification alone.
 
 ### Capability Preflight
 
@@ -49,7 +58,7 @@ Classification is an evidence conclusion. Execution mode is a user-confirmed pla
 
 ### Shared Execution Blueprint
 
-The Execution Blueprint is shared by both modes and uses a fixed Markdown structure containing at least:
+The separately persisted, non-normative Execution Blueprint is shared by both modes and uses a fixed Markdown structure containing at least:
 
 - Planning status: `proposed`, `confirmed`, or `stale`.
 - Contract source, source branch and commit, and generation time.
@@ -69,6 +78,8 @@ The Blueprint must not call an instruction-level no-write boundary a sandbox. Ho
 ### Separate Agent Dispatch Plan Templates
 
 `power-loop` must maintain two separate templates rather than a single conditional schema dominated by unavailable fields.
+
+The selected Agent Dispatch Plan is persisted separately and is non-normative. The Issue body stores only its compact source and exact digest.
 
 Both templates include:
 
@@ -129,7 +140,7 @@ If the Task Contract requires an exact model, custom profile, provider, reasonin
 - Tasks with overlapping files, unstable shared interfaces, or unresolved dependencies are serialized.
 - Useful generic delegation, ownership, dependencies, parallelism, stable-snapshot review, and fresh-context review are preserved in both modes.
 
-### Issue Patch And Goal Protocol
+### Compact Planning Reference Patch And Goal Protocol
 
 The required order is:
 
@@ -138,21 +149,21 @@ Read and validate the Task Contract
 -> inspect the exposed spawn capability
 -> report classification, evidence, uncertainty, and recommended mode
 -> wait for explicit execution-mode confirmation
--> run readiness and risk gating
--> inspect the repository and generate the shared Execution Blueprint
--> generate exactly one mode-specific Agent Dispatch Plan
--> generate and display the Issue Patch
--> wait for explicit patch confirmation
--> apply and verify the Issue Patch
+-> run readiness, delivery-lane, split, and residual-risk gating
+-> inspect the repository and generate the separate shared Execution Blueprint artifact
+-> generate exactly one separate mode-specific Agent Dispatch Plan artifact
+-> generate and display a short decision summary plus compact reference patch
+-> wait for explicit decision-summary and patch confirmation
+-> verify the artifacts and apply the compact reference patch
 -> generate the mode-specific final Goal Prompt
 -> return the Goal Prompt for manual execution
 ```
 
-No mode-specific Dispatch Plan or Goal Prompt may be generated before execution-mode confirmation. No final Goal Prompt may be generated before the exact confirmed Issue Patch is applied and verified.
+No mode-specific Dispatch Plan or Goal Prompt may be generated before execution-mode confirmation. No final Goal Prompt may be generated before the exact confirmed planning artifacts and compact reference patch are persisted and verified.
 
-The Issue Patch may update only the marked Execution Blueprint, Agent Dispatch Plan, and execution metadata. A revised patch requires fresh confirmation. Pasted-only contracts must be persisted as a hosted issue or local brief before the execution sections can be confirmed.
+The compact planning-reference patch may update only the marked Execution Blueprint and Agent Dispatch Plan reference blocks. It records artifact sources, exact digests, delivery lane, timestamps, and non-normative notices rather than embedding the complete artifacts. A revised patch requires fresh confirmation. Pasted-only contracts must be persisted as a hosted issue or local brief before the planning references can be confirmed.
 
-The Goal is a thin launcher that pins the canonical Issue identity, names the confirmed sections to read, performs identity/planning/baseline/capability preflight, stops on drift, and instructs manual start. It must not introduce budget, scope, validation, review, PR, lifecycle, permission, retry, reporting, or other obligations absent from the Issue. The user starts it manually; `power-loop` does not execute it.
+The Goal is a thin launcher that pins the canonical Issue identity and normative Task Contract digest, names the compact planning references and exact artifact digests, performs identity/planning/baseline/capability preflight, stops on drift, and instructs manual start. It must not turn planning choices into requirements or introduce obligations absent from the Task Contract. The user starts it manually; `power-loop` does not execute it.
 
 ### Snapshot Freshness, Waiver, And Lifecycle Handoff
 
@@ -294,7 +305,7 @@ Then dual-track tests and all relevant existing tests pass, and documentation, s
 - Does a no-write instruction prove read-only isolation? -> No. Host-enforced isolation requires separate observable evidence.
 - What happens to exact model, provider, profile, reasoning, sandbox, or isolation requirements in inherited mode? -> Planning pauses for a human decision.
 - Is reducing agent count a goal? -> No. Preserve independently useful work and safe parallelism.
-- When is the final Goal Prompt generated? -> Only after mode confirmation and successful application of the separately confirmed Issue Patch.
+- When is the final Goal Prompt generated? -> Only after mode confirmation and successful persistence of the separately confirmed planning artifacts and compact reference patch.
 
 ## Premises
 

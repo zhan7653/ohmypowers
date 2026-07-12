@@ -184,7 +184,7 @@ test('mode-specific planning and the Goal stay withheld until confirmation', asy
   }
 
   const skill = await readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8')
-  assert.match(skill, /Until the user confirms, do not generate a mode-specific Agent Dispatch Plan, Issue Patch, or final Goal Prompt\./)
+  assert.match(skill, /Until the user confirms, do not generate a mode-specific Agent Dispatch Plan, compact reference patch, or final Goal Prompt\./)
 })
 
 test('confirmed modes select separate templates and exact unavailable requirements pause inherited planning', async () => {
@@ -327,7 +327,7 @@ test('shared Goal and repository guidance consistently describe dual-track mode 
   const goal = await readFile(path.join(assetsDir, 'codex-loop-goal.txt'), 'utf8')
   assert.match(goal, /Do not launch a probe when its visible schema is conclusive\./)
   assert.match(goal, /Instruction-level no-write behavior is not host-enforced isolation\./)
-  assert.match(goal, /Stop before implementation on any Issue identity, Task Contract, planning-status, repository-baseline, execution-mode, capability, section, or source-access drift\./)
+  assert.match(goal, /Stop before implementation on any Issue identity, Task Contract, planning-reference, planning-artifact, repository-baseline, execution-mode, capability, section, or source-access drift\./)
   assert.doesNotMatch(goal, /Initial Assignment Accuracy/)
   assert.doesNotMatch(goal, /Luna Max|Sol Medium|Terra High/)
 })
@@ -364,7 +364,7 @@ test('Goal template is a pinned launcher and contains no independent operational
     'Exact Task Contract SHA-256:',
     'Required confirmed references:',
     'Preflight:',
-    'sole normative contract',
+    'sole normative Task Contract',
     'body digest is authoritative',
     'The user must start this Goal manually',
   ]) assert.match(goal, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
@@ -384,7 +384,7 @@ test('Goal template is a pinned launcher and contains no independent operational
   ]) assert.doesNotMatch(goal, forbidden)
 })
 
-test('Issue-owned templates persist identity, runtime, delivery, validation, review, and stop policy', async () => {
+test('separate planning artifacts preserve identity, operational policy, and a Task-Contract-only normative boundary', async () => {
   const [skill, blueprint, inherited, strict, patchTemplate, evidence] = await Promise.all([
     readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8'),
     readFile(path.join(assetsDir, 'execution-blueprint.md'), 'utf8'),
@@ -398,14 +398,19 @@ test('Issue-owned templates persist identity, runtime, delivery, validation, rev
   assert.match(skill, /The complete-body digest is authoritative/)
   assert.match(blueprint, /## Runtime budget and delivery policy/)
   assert.match(blueprint, /Evidence invalidation:/)
+  assert.match(blueprint, /confirmed operational guidance and cannot add acceptance criteria/)
   for (const dispatch of [inherited, strict]) {
     assert.match(dispatch, /sole normative contract/)
     assert.match(dispatch, /Git tree digest/)
-    assert.match(dispatch, /supplementary thin Goal/)
+    assert.match(dispatch, /planning artifacts and thin Goal/)
+    assert.match(dispatch, /cannot add requirements/)
   }
   assert.match(patchTemplate, /Canonical Issue identity before application:/)
+  assert.match(patchTemplate, /Decision summary/)
+  assert.match(patchTemplate, /Artifact digest:/)
   assert.match(patchTemplate, /Do not write that digest into the body it hashes\./)
-  assert.match(evidence, /body digest authoritative/)
+  assert.match(evidence, /authoritative persisted-container identity/)
+  assert.match(evidence, /sole normative contract/)
   assert.match(evidence, /Git tree digest:/)
 })
 
@@ -413,11 +418,11 @@ test('workflow guidance places capability preflight and mode confirmation before
   const orderedMarkers = [
     ['power-loop/SKILL.md', '### 1. Preflight Subagent Capability And Confirm The Mode', '### 2. Gate Readiness And Risk'],
     ['README.md', 'Low-cost inspection of the exposed subagent-spawn contract', 'Loop readiness check'],
-    ['docs/loop-engineering-tutorial.md', 'Ask the user to confirm the execution mode.', 'Run readiness and risk gating'],
+    ['docs/loop-engineering-tutorial.md', 'Ask the user to confirm the execution mode.', 'Run readiness, delivery-lane, split, and residual-risk gating'],
     [
       'docs/specs/2026-07-10-power-loop-cost-aware-multi-agent-orchestration-spec.md',
       '-> wait for explicit execution-mode confirmation',
-      '-> run readiness and risk gating',
+      '-> run readiness, delivery-lane, split, and residual-risk gating',
     ],
   ]
 

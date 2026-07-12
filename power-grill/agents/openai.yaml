@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Grill"
   short_description: "Convert tasks or specs into issue contracts"
-  default_prompt: "Use $power-grill to turn this task or reviewed spec into a persisted requirements-focused issue contract."
+  default_prompt: "Use $power-grill to classify the delivery lane, split separable high-risk boundaries, and turn this task or reviewed spec into a persisted requirements-focused Task Contract."

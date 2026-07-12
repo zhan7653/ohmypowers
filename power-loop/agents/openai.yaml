@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Loop"
   short_description: "Plan capability-accurate Codex loops"
-  default_prompt: "Use $power-loop on this persisted task contract. Inspect subagent spawn capability, ask me to confirm strict-model-routing or inherited-model-routing, then generate the matching Blueprint, Dispatch Plan, and confirmable Issue Patch before a Goal Prompt."
+  default_prompt: "Use $power-loop on this persisted Task Contract. Confirm its delivery lane and split decision, inspect subagent capability, then generate separate non-normative Blueprint and Dispatch artifacts plus a compact confirmable reference patch before a Goal Prompt."

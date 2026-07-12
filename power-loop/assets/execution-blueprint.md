@@ -7,6 +7,10 @@ Contract source: `<hosted issue URL/number or local brief path>`
 
 Task Contract digest: `sha256:<exact UTF-8 bytes from document start to the byte before the Blueprint start marker>`
 
+Delivery lane: `<LIGHT | STANDARD | HIGH>`
+
+Normative boundary: `The Task Contract is the sole normative contract. This Blueprint is confirmed operational guidance and cannot add acceptance criteria or requirement-level guarantees.`
+
 Pre-patch Issue identity at planning: `<source plus host revision when available plus exact full-body SHA-256; body digest is authoritative; provenance only because patch application changes the body>`
 
 Source branch: `<branch>`
@@ -39,6 +43,8 @@ Assumptions:
 - `<assumption that does not change the Task Contract>`
 
 Requirement conflicts: `<None, NEEDS_GRILL reason, or NEEDS_HUMAN reason>`
+
+Requirement decisions exposed during planning: `<None, or stop and route each public behavior, compatibility, permission, security, migration, transaction, concurrency, audit, rollback, or recovery choice back to the Task Contract>`
 
 ## Affected files and modules
 

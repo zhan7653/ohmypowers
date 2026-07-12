@@ -1,4 +1,4 @@
-/goal Start the confirmed work from the sole normative contract at <contract-source>.
+/goal Start the confirmed work from the sole normative Task Contract at <contract-source>.
 
 Pinned Issue identity:
 - Source: <contract-source>
@@ -8,14 +8,17 @@ Pinned Issue identity:
 
 Required confirmed references:
 - Task Contract: <heading or anchor>
-- Execution Blueprint: <heading or anchor; must say Planning status: confirmed>
-- Agent Dispatch Plan: <heading or anchor; must say Planning status: confirmed>
+- Execution Blueprint reference: <heading or anchor; must say Planning status: confirmed>
+- Execution Blueprint artifact: <source and exact SHA-256>
+- Agent Dispatch Plan reference: <heading or anchor; must say Planning status: confirmed>
+- Agent Dispatch Plan artifact: <source and exact SHA-256>
 
 Preflight:
-1. Re-read the exact complete persisted body from Source. Treat it as the sole normative contract; this Goal is supplementary execution evidence and adds no obligations.
+1. Re-read the exact complete persisted body from Source. Treat only its Task Contract byte range as normative. The remaining Issue body, both planning artifacts, and this Goal are supplementary execution evidence and add no requirements.
 2. Hash the exact body bytes without normalization and require the complete-body SHA-256 above to match. The body digest is authoritative; stop on a mismatch even if Host revision is unchanged.
-3. Hash the exact Task Contract byte range and require its SHA-256 above to match. Require both referenced planning sections to be present and confirmed.
-4. Verify the repository baseline and current subagent capability against the referenced confirmed sections. Do not launch a probe when its visible schema is conclusive. `strict-model-routing` and `inherited-model-routing` claims remain limited to the capability evidence persisted there. Instruction-level no-write behavior is not host-enforced isolation.
-5. Stop before implementation on any Issue identity, Task Contract, planning-status, repository-baseline, execution-mode, capability, section, or source-access drift. Use the Issue's own pause/replan rules; do not repair drift by changing this Goal.
+3. Hash the exact Task Contract byte range and require its SHA-256 above to match. Require both compact planning references to be present and confirmed.
+4. Read both planning artifacts, hash their exact bytes, and require their referenced SHA-256 values to match.
+5. Verify the repository baseline and current subagent capability against the referenced planning artifacts. Do not launch a probe when its visible schema is conclusive. `strict-model-routing` and `inherited-model-routing` claims remain limited to the capability evidence persisted there. Instruction-level no-write behavior is not host-enforced isolation.
+6. Stop before implementation on any Issue identity, Task Contract, planning-reference, planning-artifact, repository-baseline, execution-mode, capability, section, or source-access drift. Replan operational details without changing the Task Contract unless a new requirement-level decision is exposed.
 
-If preflight passes, follow the referenced confirmed Issue sections exactly. The user must start this Goal manually; do not invoke it automatically.
+If preflight passes, satisfy the Task Contract and use the confirmed planning artifacts as the current operational approach. The user must start this Goal manually; do not invoke it automatically.

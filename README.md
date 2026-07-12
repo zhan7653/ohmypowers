@@ -26,9 +26,11 @@ It does not write implementation code or implementation plans.
 - Requirement-fact inspection before asking the user, without precomputing implementation files or commands.
 - A fast path that maps an existing reviewed `power-think` spec and asks only for missing contract fields.
 - Focused grill-style questions over behavior, scope, external contracts, risks, validation expectations, and stop conditions.
+- A `LIGHT` / `STANDARD` / `HIGH` delivery-lane decision and a split gate that separates independently valuable ordinary work from persistent, permission-sensitive, migratory, concurrent, destructive, or irreversible boundaries.
+- Explicit safety-guarantee choices instead of deriving strong transaction, audit, rollback, concurrency, or recovery requirements from a broad word such as “safe”.
 - An issue draft for user review.
 - A hosted issue or local issue brief after user confirmation.
-- Reserved `Execution Blueprint` and `Agent Dispatch Plan` sections for later planning.
+- Reserved compact `Execution Blueprint` and `Agent Dispatch Plan` reference sections for later planning.
 - Requirements-ready handoff guidance for running `power-loop` on the persisted contract.
 
 It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
@@ -38,13 +40,14 @@ It does not require exact internal interfaces, files, task ownership, validation
 - Low-cost inspection of the exposed subagent-spawn contract. Conclusive schema evidence avoids a probe spawn and produces one of `strict-selection-supported`, `inherited-model-only`, or `indeterminate`.
 - A reported capability conclusion, supporting evidence, uncertainty, recommended execution mode, and mandatory user confirmation before mode-specific planning.
 - Loop readiness check over a hosted issue, local brief, or pasted task contract after execution-mode confirmation.
-- Risk level and execution decision.
+- Confirmed delivery lane, split decision, residual risk level, and execution decision.
 - Repository inspection with source branch and commit baseline.
-- Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
-- Exactly one separate Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Luna/Sol/Terra profiles and their routing policy, while `inherited-model-routing` assigns roles, objectives, ownership, dependencies, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, escalation, or model-cost control.
-- Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
+- A confirmed delivery-lane and split gate before repository-aware planning; separable high-risk mutation boundaries return to contract clarification instead of being silently bundled.
+- A separately persisted, non-normative fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
+- Exactly one separately persisted, non-normative Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Luna/Sol/Terra profiles and their routing policy, while `inherited-model-routing` assigns roles, objectives, ownership, dependencies, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, escalation, or model-cost control.
+- A short decision summary plus exact compact reference patch; the full planning artifacts are not copied into the Issue body.
 - Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
-- Final Goal Prompt only after the confirmed patch is applied and verified. It is a thin launcher that pins the Issue identity, reads the confirmed sections, performs preflight/drift checks, and adds no budget, scope, validation, review, PR, lifecycle, permission, or other obligation; the user starts it manually.
+- Final Goal Prompt only after the confirmed planning artifacts and compact reference patch are applied and verified. It is a thin launcher that pins the Issue and Task Contract identities plus planning-artifact digests, performs preflight/drift checks, and adds no requirement; the user starts it manually.
 - One task-level branch/worktree rather than one worktree per subagent.
 - Contract-prescribed reviews or a minimum sufficient capability-based review plan, including an implementation-independent contract-conformance review.
 - Mode-accurate capability, dispatch, review, and PR/MR evidence. In inherited mode, fresh context can establish implementation independence, but an instruction-level no-write boundary is not described as host-enforced read-only isolation.
@@ -56,7 +59,7 @@ For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop
 
 `power-verifier` checks implementation evidence after a bounded loop has run:
 
-- The exact pinned Issue revision as the sole normative contract; the Goal, session, PR/MR text, comments, and runner summaries remain supplementary evidence.
+- The exact pinned Task Contract byte range as the sole normative contract. The complete Issue identifies the persisted container and lifecycle state; planning artifacts, Goal, session, PR/MR text, comments, and runner summaries remain supplementary evidence.
 - Issue contract, implementation diff, validation output, and PR/MR evidence.
 - Acceptance-criteria coverage.
 - Scope and non-goal preservation.
@@ -99,11 +102,11 @@ Use them by phase:
 
 - `power-think`: vague idea -> reviewed spec.
 - `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: requirements-ready issue/local brief -> Blueprint and Dispatch Plan -> confirmed Issue Patch -> ready-to-run `/goal`.
+- `power-loop`: requirements-ready Issue/local brief -> delivery/split gate -> separate Blueprint and Dispatch artifacts -> confirmed compact reference patch -> ready-to-run `/goal`.
 - `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
 - `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
 - `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop capability preflight -> user confirms execution mode -> Blueprint, mode-specific Dispatch Plan, and Issue Patch -> user confirms patch -> thin manual Codex /goal -> snapshot-bound verifier -> PR evidence -> power-curator final-tree reconciliation -> confirmed lifecycle mutation`.
+- Recommended Loop Engineering flow: `power-grill delivery/split decision -> power-loop capability preflight -> user confirms execution mode -> separate Blueprint and mode-specific Dispatch artifacts -> user confirms the decision summary and compact reference patch -> thin manual Codex /goal -> snapshot-bound verifier -> PR evidence -> power-curator final-tree reconciliation -> confirmed lifecycle mutation`.
 - `power-critic`: spec, plan, issue, or model reply -> critique findings.
 
 ## Install
@@ -122,7 +125,7 @@ On a host classified `strict-selection-supported`, a supported model selector or
 
 On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, model-escalation, reviewer-tier, model-cost, or Initial Assignment Accuracy guarantee. It retains useful generic delegation, explicit ownership and dependencies, safe parallelism, and fresh-context independent review. Model selection and sandbox selection are evidenced independently in either mode.
 
-When checking implementation evidence, provide the complete canonical Issue identity and body plus the thin Goal as supplementary evidence. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
+When checking implementation evidence, provide the complete canonical Issue identity and body, exact Task Contract digest and boundary, referenced planning-artifact digests, and thin Goal as supplementary evidence. Extract normative clauses only from the Task Contract. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use Task-Contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
 
 Restart Codex after installing or updating skills or custom agents.
 
@@ -143,7 +146,7 @@ Use $power-grill to grill this feature and draft an issue contract.
 Ask for repository-aware execution planning from an existing persisted task contract:
 
 ```text
-Use $power-loop on this issue to generate the Blueprint, Dispatch Plan, and Issue Patch. Show the patch for confirmation before generating the Goal Prompt.
+Use $power-loop on this issue to confirm the delivery lane and split decision, generate separate Blueprint and Dispatch artifacts, and show the decision summary plus compact reference patch before generating the Goal Prompt.
 ```
 
 Ask for independent critique:

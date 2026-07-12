@@ -357,7 +357,7 @@ test('verifier guidance requires mode evidence and rejects unsupported inherited
   assert.match(skill, /Record model or reasoning only when the host directly exposes it; never infer either value\./)
 })
 
-test('verifier artifacts define the Issue as sole normative source and bind results to Git trees', async () => {
+test('verifier artifacts define the Task Contract as normative, preserve Issue identity, and bind results to Git trees', async () => {
   const files = [
     'power-verifier/SKILL.md',
     'power-verifier/assets/implementation-verifier-checklist.md',
@@ -373,6 +373,9 @@ test('verifier artifacts define the Issue as sole normative source and bind resu
 
   const skill = await readFile(path.join(root, 'power-verifier', 'SKILL.md'), 'utf8')
   assert.match(skill, /sole normative verification contract/)
+  assert.match(skill, /Task Contract byte range/)
+  assert.match(skill, /full-body digest is the authoritative container identity; the Task Contract digest controls normative clauses/)
+  assert.match(skill, /planning artifacts.*supplementary evidence/i)
   assert.match(skill, /Different commits with the same Git tree digest are tree-equivalent/)
   assert.match(skill, /do not fabricate/i)
   assert.doesNotMatch(skill, /verification contract is exactly:[\s\S]*Final Goal Prompt/)
