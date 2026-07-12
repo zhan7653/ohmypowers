@@ -338,7 +338,7 @@ test('verifier guidance requires honest runtime routing evidence without duplica
 
   for (const relativePath of files) {
     const content = await readFile(path.join(root, relativePath), 'utf8')
-    assert.match(content, /routing|configuration/i)
+    assert.match(content, /routing|configuration|路由|配置/i)
     assert.match(content, /Final Review Record/)
   }
 
@@ -359,7 +359,7 @@ test('verifier artifacts define the Task Contract as normative, preserve Issue i
 
   for (const relativePath of files) {
     const content = await readFile(path.join(root, relativePath), 'utf8')
-    assert.match(content, /full-body SHA-256|complete-body SHA-256|execution body digest/i)
+    assert.match(content, /full-body SHA-256|complete-body SHA-256|execution body digest|执行正文 digest/i)
     assert.match(content, /Git tree digest/)
   }
 
@@ -369,6 +369,7 @@ test('verifier artifacts define the Task Contract as normative, preserve Issue i
   assert.match(skill, /supplementary evidence and cannot add requirements/)
   assert.match(skill, /different commits with the same tree are equivalent/i)
   assert.match(skill, /Do not invent requirements or historical identity/)
+  assert.match(skill, /默认使用简体中文输出验证过程摘要/)
 
   await assert.rejects(
     readFile(path.join(root, 'power-verifier', 'assets', 'implementation-verifier-checklist.md'), 'utf8'),

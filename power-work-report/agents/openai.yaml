@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Work Report"
-  short_description: "Generate and finalize manual Codex daily work reports"
-  default_prompt: "Use $power-work-report to generate a Codex daily work report draft for today, then ask before finalizing."
+  short_description: "生成并确认中文 Codex 每日工作报告"
+  default_prompt: "使用 $power-work-report 生成今天的简体中文 Codex 工作日报草稿，并在最终确认前询问。"

@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Loop"
-  short_description: "Plan lean, review-gated Codex loops"
-  default_prompt: "Use $power-loop on this persisted Task Contract. Verify readiness and the recorded delivery lane. Prefer direct execution for LIGHT work; generate a compact confirmed Execution Blueprint only for STANDARD/HIGH or explicit handoff needs."
+  short_description: "规划精简、带评审门禁的中文 Codex 流程"
+  default_prompt: "对这个持久化 Task Contract 使用 $power-loop。验证 readiness 和已记录的交付等级；LIGHT 优先直接执行，仅为 STANDARD/HIGH 或明确交接需求生成精简且已确认的中文 Execution Blueprint。"

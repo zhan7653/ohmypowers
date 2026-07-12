@@ -5,6 +5,10 @@ description: Check whether a requirements-ready Issue can execute directly or ne
 
 # Power Loop
 
+## 输出语言
+
+默认使用简体中文输出 readiness 结果、执行计划、Blueprint、确认 Patch、最终评审记录和交接内容。代码标识符、路径、命令、digest、状态枚举及必须精确匹配的原文保持不变。仅当用户明确要求其他语言时切换。
+
 ## Overview
 
 Use the smallest applicable path:

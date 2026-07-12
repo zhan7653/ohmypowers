@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Think"
-  short_description: "Turn vague ideas into reviewed specs"
-  default_prompt: "Use $power-think to clarify this feature idea and write a spec."
+  short_description: "把模糊想法整理成已审查的中文规格说明"
+  default_prompt: "使用 $power-think 澄清这个功能想法，并输出简体中文规格说明。"

@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Grill"
-  short_description: "Convert tasks or specs into issue contracts"
-  default_prompt: "Use $power-grill to classify the delivery lane, split separable high-risk boundaries, and turn this task or reviewed spec into a persisted requirements-focused Task Contract."
+  short_description: "把任务或规格整理成中文 Issue 合同"
+  default_prompt: "使用 $power-grill 判断交付等级、拆分可分离的高风险边界，并把任务或已审查规格整理成持久化的简体中文 Task Contract。"

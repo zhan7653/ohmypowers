@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Curator"
-  short_description: "Curate Loop Engineering issue and PR state"
-  default_prompt: "Use $power-curator to curate Loop Engineering issues, PRs, comments, and follow-up state."
+  short_description: "整理 Loop Engineering 的 Issue 和 PR 状态"
+  default_prompt: "使用 $power-curator，以简体中文整理 Loop Engineering Issue、PR、评论和后续状态。"

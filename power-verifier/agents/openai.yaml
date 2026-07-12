@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Verifier"
-  short_description: "Verify implementation evidence against a canonical Issue contract"
-  default_prompt: "Use $power-verifier for a compact read-only conformance review against the canonical Task Contract and final frozen tree. Report exceptions instead of duplicating passing evidence or reviewer telemetry."
+  short_description: "根据规范 Issue 合同验证实现证据"
+  default_prompt: "使用 $power-verifier 对规范 Task Contract 和最终冻结树进行精简只读验证，并使用简体中文报告异常，不重复通过证据或 reviewer telemetry。"

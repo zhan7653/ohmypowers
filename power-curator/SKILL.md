@@ -5,6 +5,10 @@ description: Manually curate Loop Engineering issue, PR, comment, label, branch,
 
 # Power Curator
 
+## 输出语言
+
+默认使用简体中文输出整理计划、Issue/PR 映射、确认请求、生命周期记录和最终结果。代码标识符、URL、路径、命令、digest、状态枚举及证据原文保持不变。仅当用户明确要求其他语言时切换。
+
 ## Overview
 
 Curate Loop Engineering issue and PR lifecycle state after task contracts, implementation loops, reviews, or merges. The skill produces a curation plan first, asks for explicit confirmation before every GitHub or GitLab mutation, and treats the issue body as canonical.
@@ -130,34 +134,34 @@ Use the issue body as canonical. Preserve the `Task Contract` and optional `Exec
 Append this section to old issues only when curation is confirmed or when drafting a new issue contract:
 
 ```markdown
-# Curation status
+# 整理状态（Curation status）
 
-State: open | in-progress | pr-ready | merged | done | superseded | follow-up-needed
+状态：open | in-progress | pr-ready | merged | done | superseded | follow-up-needed
 
-Linked PRs:
-- <PR URL>: <status and relevance>
+关联 PR：
+- <PR URL>：<状态和关联性>
 
-Follow-up issues:
-- <issue URL or none>
+后续 Issue：
+- <Issue URL 或“无”>
 
-Closure evidence:
-- <merged PR, commit, validation, verifier, human confirmation>
+关闭证据：
+- <已合并 PR、commit、验证、verifier、人工确认>
 
-Snapshot reconciliation:
-- Canonical Issue: <URL/path, host revision when exposed, exact full-body SHA-256>
-- Verified snapshot: <repository/ref, commit, tree digest, dirty/generated boundary, capture time>
-- Final snapshot: <repository/ref, commit, tree digest, dirty/generated boundary, capture time>
-- Changed paths and diff summary: <none when tree-equivalent, otherwise exact inventory>
-- Behavior impact: <impact assessment>
-- Validations run: <commands/results bound to snapshot>
-- Uncovered content: <none or content outside verifier coverage>
-- Freshness classification: tree-equivalent | reverified | human-waived | contract-changing | unresolved
+快照协调：
+- 规范 Issue：<URL/path、可用时的 host revision、精确完整正文 SHA-256>
+- 已验证快照：<repository/ref、commit、tree digest、dirty/generated 边界、捕获时间>
+- 最终快照：<repository/ref、commit、tree digest、dirty/generated 边界、捕获时间>
+- 修改路径和 diff 摘要：<tree-equivalent 时填“无”，否则列出精确清单>
+- 行为影响：<影响评估>
+- 已运行验证：<绑定到快照的命令和结果>
+- 未覆盖内容：<无或 verifier 未覆盖的内容>
+- 新鲜度分类：tree-equivalent | reverified | human-waived | contract-changing | unresolved
 
-Human waiver (only for human-waived):
-- Reason and scope: <why and exactly what is accepted>
-- Confirmer and confirmation time: <identity and timestamp>
-- Residual risks: <remaining risks>
-- Verifier coverage statement: <old result covers only verified snapshot; final tree is human-waived, not verifier PASS>
+人工豁免（仅适用于 human-waived）：
+- 原因和范围：<为什么接受，以及准确接受哪些内容>
+- 确认人和确认时间：<身份和时间戳>
+- 剩余风险：<风险>
+- Verifier 覆盖声明：<旧结果只覆盖已验证快照；最终树是 human-waived，不是 verifier PASS>
 ```
 
 Use `Change history` for contract changes. Use `Curation status` only for lifecycle state, issue/PR linkage, closure evidence, and snapshot reconciliation.
@@ -203,35 +207,35 @@ Labels are helpful but not required for correctness. Use them only after confirm
 For a plan, output:
 
 ```markdown
-Curator decision: plan-ready | needs-human | blocked
+整理决定：plan-ready | needs-human | blocked
 
-Evidence inspected:
-- <issue, PR/MR, comments, branch, commit, local files>
+已检查证据：
+- <Issue、PR/MR、评论、branch、commit、本地文件>
 
-Issue/PR map:
-- <issue>: <lifecycle assessment and evidence>
+Issue/PR 映射：
+- <Issue>：<生命周期评估和证据>
 
-Snapshot reconciliation:
-- <verified snapshot, final snapshot, changed paths/diff summary, behavior impact, validations, uncovered content, and exactly one freshness classification>
+快照协调：
+- <已验证快照、最终快照、修改路径/diff 摘要、行为影响、验证、未覆盖内容，以及唯一的新鲜度分类>
 
-Recommended mutations:
-- <exact mutation>: pending user confirmation
+建议变更：
+- <精确变更>：等待用户确认
 
-Do not mutate yet:
-- <explicitly state no hosted state was changed>
+暂不执行变更：
+- <明确说明尚未修改托管状态>
 
-Open questions:
-- <only if needed>
+待确认问题：
+- <仅在需要时填写>
 ```
 
 After confirmed mutations, output:
 
 ```markdown
-Curator result: applied | partially-applied | blocked
+整理结果：applied | partially-applied | blocked
 
-Applied mutations:
-- <URL or ref>: <mutation>
+已应用变更：
+- <URL 或 ref>：<变更>
 
-Remaining unresolved items:
-- <item or none>
+剩余未解决事项：
+- <事项或“无”>
 ```

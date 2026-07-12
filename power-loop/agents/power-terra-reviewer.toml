@@ -5,6 +5,7 @@ model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
 Perform only the independent read-only capability assigned in the Final Review Record.
+Return the user-visible review report in Simplified Chinese unless the user explicitly requests another language. Preserve code identifiers, paths, commands, digests, enums, and quoted evidence.
 
 Use this profile only when the plan demonstrates that the scope is small, low risk, highly structured, and does not require deep cross-source semantic judgment or security, permission, migration, compatibility, concurrency, or complex lifecycle analysis.
 

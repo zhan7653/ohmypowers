@@ -1,52 +1,52 @@
 <!-- power-loop:execution-blueprint:start -->
-# Execution Blueprint
+# 执行蓝图（Execution Blueprint）
 
-Planning status: `<proposed | confirmed | stale>`
+规划状态：`<proposed | confirmed | stale>`
 
-Contract source: `<hosted issue URL/number or local brief path>`
+合同来源：`<托管 Issue URL/编号或本地合同路径>`
 
-Task Contract digest: `sha256:<exact normative Task Contract bytes>`
+任务合同 digest：`sha256:<规范性任务合同的精确字节>`
 
-Source baseline: `<branch>@<full commit SHA>`
+来源基线：`<branch>@<完整 commit SHA>`
 
-Generated at: `<ISO-8601 timestamp with timezone>`
+生成时间：`<带时区的 ISO-8601 时间>`
 
-Boundary: `Non-normative operational guidance; cannot add Task Contract requirements.`
+边界：`非规范性执行指导，不得增加任务合同要求。`
 
-## Implementation plan
+## 实施计划
 
-| Path or module | Smallest required change | Contract linkage | Focused validation |
+| 路径或模块 | 最小必要修改 | 对应合同条款 | 聚焦验证 |
 |---|---|---|---|
-| `<path-or-module>` | `<change>` | `<clause or AC>` | `<check>` |
+| `<path-or-module>` | `<修改>` | `<条款或 AC>` | `<检查>` |
 
-Implementation order: `<short ordered sequence when dependencies exist, otherwise follow the table>`
+实施顺序：`<存在依赖时填写简短顺序，否则按表格执行>`
 
-## Material interfaces, risks, and assumptions
+## 重要接口、风险与假设
 
-- `<Only items that change implementation or validation; otherwise None>`
+- `<只记录会影响实现或验证的事项，否则填“无”>`
 
-## Work isolation
+## 工作隔离
 
-- Implementation branch: `<branch>`
-- Task worktree/current-worktree handling: `<path, not required, or preserve unrelated changes>`
+- 实施分支：`<branch>`
+- 工作树或当前工作区处理：`<路径、不需要，或保留无关修改>`
 
-## Validation
+## 验证
 
-- `V0 Focused`: `<task-owned checks>`
-- `V1 Integration`: `<relevant regression checks>`
-- `V2 Final deterministic`: `<full deterministic checks>`
-- `V3 External`: `<post-V2 external check or not applicable>`
-- `HIGH` failure matrix: `<material failure cases or not applicable>`
+- `V0 Focused`：`<任务相关检查>`
+- `V1 Integration`：`<相关回归检查>`
+- `V2 Final deterministic`：`<完整确定性检查>`
+- `V3 External`：`<V2 后的外部检查或“不适用”>`
+- `HIGH` 失败矩阵：`<重要失败场景或“不适用”>`
 
-## Execution bounds
+## 执行边界
 
-- Sequence: `main implementation -> V0 -> V1 -> optional HIGH self-review -> at most one repair -> freeze -> V2 -> V3 when applicable -> Final Review Record -> verifier -> PR/MR evidence`
-- No-progress stop: `<stop after the same diagnosed failure repeats, normally twice>`
-- Pause conditions: `<contract, authority, source, repository, or validation drift>`
+- 顺序：`主 Agent 实施 -> V0 -> V1 -> 可选 HIGH 自查 -> 最多一次修复 -> 冻结 -> V2 -> 适用时 V3 -> Final Review Record -> verifier -> PR/MR 证据`
+- 无进展停止条件：`<同一已诊断失败重复时停止，通常为两次>`
+- 暂停条件：`<合同、权限、来源、仓库或验证发生漂移>`
 
-## Staleness
+## 失效条件
 
-This Blueprint is stale when the Task Contract changes, the source baseline materially invalidates an affected path/interface/check, or implementation exposes a new requirement-level decision.
+任务合同发生变化、来源基线使受影响路径/接口/检查失效，或实施过程中暴露新的需求级决定时，此 Blueprint 失效。
 
-Reviewer routing and waiting are decided only after the final tree is frozen and are recorded once in the Final Review Record.
+Reviewer 路由和等待策略只在最终树冻结后决定，并且只记录在 Final Review Record 中。
 <!-- power-loop:execution-blueprint:end -->

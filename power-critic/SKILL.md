@@ -5,6 +5,10 @@ description: Use only when the user explicitly invokes $power-critic or explicit
 
 # Power Critic
 
+## 输出语言
+
+默认使用简体中文输出批量批评报告和降级说明。代码标识符、路径、命令、状态枚举、引用证据及必须精确匹配的原文保持不变。仅当用户明确要求其他语言时切换。
+
 ## Overview
 
 Produce a read-only batch critique of requirements, conversations, specs, plans, or model replies. The goal is to reduce agreement bias by using a fresh critic context when the host supports subagents.
@@ -107,25 +111,25 @@ The critic must:
 Each finding must use this format:
 
 ```markdown
-### Finding N: <short title>
-- Severity: Blocker | Should fix | Nice to have
-- Category: Requirements | Spec | Plan | Scope | UX | Model reply quality | Risk
-- Problem: <specific issue>
-- Evidence: <verbatim excerpt, file reference, or user-provided material>
-- Why it matters: <impact if left unresolved>
-- Suggested follow-up question: <question the user or agent should answer>
-- Recommended handling: <revise, defer, ask user, reduce scope, add constraint, etc.>
-- Confidence: High | Medium | Low
+### 发现 N：<简短标题>
+- 严重程度：Blocker | Should fix | Nice to have
+- 类别：Requirements | Spec | Plan | Scope | UX | Model reply quality | Risk
+- 问题：<具体问题>
+- 证据：<原文摘录、文件引用或用户提供的材料>
+- 影响：<不处理的后果>
+- 建议追问：<用户或 Agent 需要回答的问题>
+- 建议处理方式：<修改、推迟、询问用户、缩小范围、增加约束等>
+- 置信度：High | Medium | Low
 ```
 
 If fewer than 3 findings are justified, do not stretch. Include:
 
 ```markdown
-## Insufficient Material Assessment
-- Why fewer than 3 findings are justified:
-- Missing information needed:
-- Best next questions:
-- Should critique be rerun after more material is available: Yes | No
+## 材料不足评估
+- 为什么不足以支持 3 条发现：
+- 缺少的信息：
+- 最值得继续询问的问题：
+- 补充材料后是否应重新评审：Yes | No
 ```
 
 Keep the tone direct and rigorous, not hostile.

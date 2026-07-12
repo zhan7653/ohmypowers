@@ -68,7 +68,7 @@ test('loop and verifier artifacts separate V0-V3, batch adversarial findings, an
   for (const tier of ['V0 Focused', 'V1 Integration', 'V2 Final deterministic', 'V3 External']) {
     assert.match(combined, new RegExp(tier, 'i'))
   }
-  assert.match(combined, /failure matrix/i)
+  assert.match(combined, /failure[- ]matrix|失败矩阵/i)
   assert.match(combined, /one batched failure-matrix|one batched finding/i)
   assert.match(combined, /at most one concentrated repair|at most one repair/i)
   assert.doesNotMatch(combined, /Candidate snapshot ceiling|Max implementation iterations/)

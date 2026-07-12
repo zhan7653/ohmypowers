@@ -5,6 +5,10 @@ description: Generate a manual Codex daily work report draft, review it with the
 
 # Power Work Report
 
+## 输出语言
+
+默认使用简体中文生成用户可见的报告、审阅清单和确认信息，并使用 `zh-CN`。仅当用户或显式 `--lang` 参数要求其他语言时切换。代码标识符、路径、命令和证据原文保持不变。
+
 ## Overview
 
 Generate a local daily work report from Codex session history.

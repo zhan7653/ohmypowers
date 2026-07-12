@@ -5,6 +5,10 @@ description: Use when the user asks to brainstorm, clarify requirements, think t
 
 # Power Think
 
+## 输出语言
+
+默认使用简体中文与用户沟通并编写持久化规格文档。代码标识符、路径、命令、API、状态枚举和必须精确匹配的原文保持不变。仅当用户明确要求其他语言时切换。
+
 ## Overview
 
 Turn a vague idea into a precise, reviewed spec through structured dialogue. The output is a Markdown spec, normally saved to `docs/specs/YYYY-MM-DD-<feature-name>-spec.md` unless the user requests another location.
@@ -152,32 +156,32 @@ Save the spec to `docs/specs/YYYY-MM-DD-<feature-name>-spec.md` unless the user 
 Use this structure:
 
 ```markdown
-# [Feature Name] Spec
+# [功能名称] 规格说明
 
-## Background
-[Why this exists, who has the problem, and what they do today.]
+## 背景
+[为什么需要此功能、谁遇到了问题、目前如何处理。]
 
-## Requirements
-### Functional Requirements
-- FR-1: [requirement]
+## 需求
+### 功能需求
+- FR-1：[需求]
 
-### Non-Functional Requirements
-- NFR-1: [requirement]
+### 非功能需求
+- NFR-1：[需求]
 
-## Chosen Approach
-[Approved approach and rationale.]
+## 已选方案
+[已确认的方案及理由。]
 
-## Out Of Scope
-- [explicit exclusion]
+## 范围外
+- [明确排除项]
 
-## Acceptance Criteria
-[Given/When/Then criteria.]
+## 验收标准
+[Given/When/Then 标准。]
 
-## Open Questions Resolved
-- [question] -> [decision]
+## 已解决问题
+- [问题] -> [决定]
 
-## Premises
-- [premise]
+## 前提
+- [前提]
 ```
 
 Before delivery, self-review the spec:
@@ -192,4 +196,4 @@ Fix issues found during review.
 
 If the user wants an independent critique of the requirement, conversation, plan, or final spec, briefly suggest invoking `$power-critic`. Do not embed the `power-critic` workflow here.
 
-Finish with: "Spec complete and saved to `docs/specs/<filename>.md`. I reviewed it for ambiguity, contradictions, coverage, scope, and premises."
+Finish with: "规格说明已完成并保存到 `docs/specs/<filename>.md`。已检查歧义、矛盾、覆盖范围、范围边界和前提。"

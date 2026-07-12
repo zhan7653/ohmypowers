@@ -187,3 +187,35 @@ test('artifact lint keeps identity, snapshot, waiver, freshness, and lifecycle v
   assert.match(combined, /old PASS.*only.*verified|old result covers only verified snapshot/i)
   assert.match(combined, /not verifier PASS/i)
 })
+
+test('all workflow skills and user-facing templates default to Simplified Chinese', async () => {
+  const skills = [
+    'power-think/SKILL.md',
+    'power-grill/SKILL.md',
+    'power-loop/SKILL.md',
+    'power-verifier/SKILL.md',
+    'power-curator/SKILL.md',
+    'power-work-report/SKILL.md',
+    'power-critic/SKILL.md',
+  ]
+  for (const relativePath of skills) {
+    const content = await readFile(path.join(root, relativePath), 'utf8')
+    assert.match(content, /默认使用简体中文/, relativePath)
+    assert.match(content, /仅当用户.*明确.*其他语言|显式 `--lang` 参数/, relativePath)
+  }
+
+  const templates = await Promise.all([
+    'power-grill/assets/issue-body.md',
+    'power-loop/assets/execution-blueprint.md',
+    'power-loop/assets/issue-patch.md',
+    'power-loop/assets/final-review-record.md',
+    'power-loop/assets/pr-evidence-template.md',
+    'power-verifier/assets/verifier-result-template.md',
+  ].map(file => readFile(path.join(root, file), 'utf8')))
+  const combined = templates.join('\n')
+  for (const heading of ['任务合同', '执行蓝图', '最终评审记录', '合同证据', 'Verifier 结果']) {
+    assert.match(combined, new RegExp(heading), heading)
+  }
+  assert.match(combined, /<!-- power-loop:execution-blueprint:start -->/)
+  assert.match(combined, /PASS \| PASS_WITH_NOTES \| BLOCKED \| NEEDS_HUMAN/)
+})

@@ -1,82 +1,82 @@
-# Task Contract
+# 任务合同（Task Contract）
 
-## Problem and observable outcome
+## 问题与可观察结果
 
-- Current problem: `<what is wrong today>`
-- Required outcome: `<what users, operators, or integrations must observe when complete>`
+- 当前问题：`<目前存在什么问题>`
+- 必须实现的结果：`<完成后用户、运维人员或集成方能观察到什么>`
 
-## Delivery lane and split decision
+## 交付等级与拆分决定
 
-- Delivery lane: `<LIGHT | STANDARD | HIGH>`
-- Split assessment and boundaries: `<not needed, accepted split, or explicitly accepted combined boundary>`
-- Required safety guarantees: `<confirmed guarantees>`
-- Stronger guarantees out of scope: `<explicit exclusions>`
+- 交付等级：`<LIGHT | STANDARD | HIGH>`
+- 拆分评估与边界：`<无需拆分、已确认拆分，或明确接受合并边界>`
+- 必须保证的安全性：`<已确认的保证>`
+- 不在范围内的更强保证：`<明确排除项>`
 
-## Scope and non-goals
+## 范围与非目标
 
-In scope:
+范围内：
 
-- `<item>`
+- `<事项>`
 
-Out of scope:
+范围外：
 
-- `<item>`
+- `<事项>`
 
-## External constraints and dependencies
+## 外部约束与依赖
 
-- Dependencies/blockers: `<items or None known>`
-- Public API/data/config/compatibility/security/permission/migration decisions: `<items or None expected>`
-- Other constraints or repository context: `<items or None known>`
+- 依赖或阻塞项：`<事项或“无已知项”>`
+- 公共 API、数据、配置、兼容性、安全、权限或迁移决定：`<事项或“预计无”>`
+- 其他约束或仓库背景：`<事项或“无已知项”>`
 
-## Risks and assumptions
+## 风险与假设
 
-- `<material risk or assumption>`
+- `<重要风险或假设>`
 
-## Acceptance and validation
+## 验收与验证
 
-| AC | Observable acceptance | Required validation/evidence |
+| AC | 可观察验收结果 | 必须提供的验证或证据 |
 |---|---|---|
-| AC-1 | `<Given/When/Then or equivalent outcome>` | `<test category, manual check, or evidence>` |
+| AC-1 | `<Given/When/Then 或等价结果>` | `<测试类别、人工检查或证据>` |
 
-Completion condition: `Every applicable AC has implementation and validation evidence.`
+完成条件：`每个适用 AC 都有实现证据和验证证据。`
 
-## Pause-and-ask conditions
+## 暂停并询问用户的条件
 
-- `<condition requiring user input>`
+- `<需要用户输入的情况>`
 
-## Change history
+## 变更历史
 
-- YYYY-MM-DD: Initial task contract created.
+- YYYY-MM-DD：创建初始任务合同。
 
-The Task Contract is the sole normative contract. Later planning and lifecycle sections are supplementary.
+任务合同是唯一规范性合同。后续规划和生命周期章节只作为补充信息。
 
 <!-- power-loop:execution-blueprint:start -->
-# Execution Blueprint
+# 执行蓝图（Execution Blueprint）
 
-Planning status: `not-generated`
+规划状态：`not-generated`
 
-Artifact: `None`
+产物：`None`
 
-Artifact digest: `None`
+产物 digest：`None`
 
-Task Contract digest: `None`
+任务合同 digest：`None`
 
-Delivery lane: `<copied from the confirmed Task Contract>`
+交付等级：`<从已确认任务合同复制>`
 
-Execution entry: `LIGHT may execute directly from this Issue after readiness checks. STANDARD/HIGH require a confirmed Blueprint unless the user explicitly chooses direct execution.`
+执行入口：`LIGHT 可在 readiness 检查后直接执行此 Issue。STANDARD/HIGH 需要已确认的 Blueprint，除非用户明确选择直接执行。`
 
-This compact block may later reference a separately persisted, non-normative repository-aware plan after explicit user confirmation.
+此区块以后可以在用户明确确认后引用单独持久化的非规范性仓库实施计划。
 <!-- power-loop:execution-blueprint:end -->
 
-# Curation status
+# 整理状态（Curation status）
 
-State: open
+状态：`open`
 
-Linked PRs:
-- None yet.
+关联 PR：
+- 暂无。
 
-Follow-up issues:
-- None.
+后续 Issue：
+- 暂无。
 
-Closure evidence:
-- None yet.
+关闭证据：
+- 暂无。

@@ -1,39 +1,39 @@
-# Compact Blueprint Reference Patch
+# 精简 Blueprint 引用 Patch
 
-Target: `<hosted issue URL/number or local brief path>`
+目标：`<托管 Issue URL/编号或本地合同路径>`
 
-Reviewed Issue identity: `<source, host revision when available, exact complete-body SHA-256>`
+已审查 Issue 身份：`<来源、可用时的 host revision、精确完整正文 SHA-256>`
 
-Task Contract digest: `sha256:<exact normative Task Contract bytes>`
+任务合同 digest：`sha256:<规范性任务合同的精确字节>`
 
-Blueprint: `<persisted path>@sha256:<exact UTF-8 bytes>`
+Blueprint：`<持久化路径>@sha256:<精确 UTF-8 字节>`
 
-Repository baseline: `<source branch>@<full commit SHA>`
+仓库基线：`<source branch>@<完整 commit SHA>`
 
-## Exact replacement block
+## 精确替换区块
 
 ```markdown
 <!-- power-loop:execution-blueprint:start -->
-# Execution Blueprint
+# 执行蓝图（Execution Blueprint）
 
-Planning status: `confirmed`
+规划状态：`confirmed`
 
-Artifact: `<persisted path or durable source>`
+产物：`<持久化路径或稳定来源>`
 
-Artifact digest: `sha256:<exact UTF-8 bytes>`
+产物 digest：`sha256:<精确 UTF-8 字节>`
 
-Task Contract digest: `sha256:<exact normative Task Contract bytes>`
+任务合同 digest：`sha256:<规范性任务合同的精确字节>`
 
-Generated at: `<ISO-8601 timestamp with timezone>`
+生成时间：`<带时区的 ISO-8601 时间>`
 
-Execution entry: `This persisted Issue is the execution entry. Verify the Task Contract and Blueprint digests before implementation.`
+执行入口：`此持久化 Issue 是执行入口。实施前验证任务合同和 Blueprint digest。`
 <!-- power-loop:execution-blueprint:end -->
 ```
 
-Apply only this marked block after confirmation. Preserve the Task Contract and `Curation status` exact bytes, then re-read the Issue and verify both digests.
+确认后只应用此标记区块。保持任务合同和 `Curation status` 的精确字节不变，然后重新读取 Issue 并验证两个 digest。
 
-Confirmation request:
+确认请求：
 
 ```text
-Please confirm this Blueprint and exact reference patch for <target>. After application, the Issue will be ready for direct execution.
+请确认用于 <target> 的 Blueprint 和精确引用 Patch。应用后，此 Issue 即可直接执行。
 ```

@@ -5,6 +5,10 @@ description: Verify a completed implementation read-only against its canonical p
 
 # Power Verifier
 
+## 输出语言
+
+默认使用简体中文输出验证过程摘要、异常项、结论和下一步。代码标识符、路径、命令、digest、状态枚举及证据原文保持不变。仅当用户明确要求其他语言时切换。
+
 ## Purpose And Boundary
 
 Verify implementation conformance without changing source, Git, Issue, PR/MR, labels, comments, or merge state.

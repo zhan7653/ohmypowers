@@ -6,6 +6,8 @@ Codex ecosystem skills for Loop Engineering.
 
 The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex. It includes custom-agent templates for hosts that can select them, plus generic role-based delegation for hosts where subagents inherit the parent configuration.
 
+All skills default user-facing messages and persisted workflow artifacts to Simplified Chinese, including specs, Issues, Blueprints, confirmation patches, review records, verifier results, curation plans, PR evidence, and reports. Code identifiers, paths, commands, digests, enums, APIs, and quoted evidence remain unchanged. An explicit user language request overrides this default.
+
 ## What It Does
 
 `power-think` guides an agent through:

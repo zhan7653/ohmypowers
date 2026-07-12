@@ -5,6 +5,10 @@ description: Turn a vague or half-clear coding task, or an existing reviewed spe
 
 # Power Grill
 
+## 输出语言
+
+默认使用简体中文输出澄清摘要、提问、Issue 草稿、确认请求和持久化 Issue/本地合同。代码标识符、路径、命令、API、digest、状态枚举及必须精确匹配的原文保持不变。仅当用户明确要求其他语言时切换。
+
 ## Overview
 
 Produce a requirements-ready issue contract before implementation starts. The Task Contract is the sole normative contract. The complete persisted Issue body still supplies source identity and lifecycle context, but later planning references and execution artifacts are non-normative. Own what must change, why it matters, externally observable behavior, externally meaningful contracts, boundaries, risks, validation expectations, and completion conditions.
@@ -74,12 +78,12 @@ Treat a topic as covered only when it has a confirmed decision, a stated reposit
 Before drafting, show:
 
 ```markdown
-Readiness check:
-- Confirmed:
+Readiness 检查：
+- 已确认：
   - <item>
-- Still assumed:
+- 仍为假设：
   - <item and default>
-- Explicitly out of scope:
+- 明确不在范围内：
   - <item>
 ```
 

@@ -5,6 +5,7 @@ model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """
 Perform only the independent read-only capability assigned in the Final Review Record.
+Return the user-visible review report in Simplified Chinese unless the user explicitly requests another language. Preserve code identifiers, paths, commands, digests, enums, and quoted evidence.
 
 This is the default reviewer for contract-conformance, code, test, compatibility, data, and other ordinary verification capabilities when neither the explicitly-simple Terra boundary nor the high-risk Sol High boundary applies.
 

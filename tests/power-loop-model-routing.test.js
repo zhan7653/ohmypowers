@@ -49,10 +49,10 @@ test('runtime reviewer capability is inspected after implementation without mode
 
 test('one runtime Final Review Record owns reviewer results and wait telemetry', async () => {
   const finalRecord = await readFile(path.join(assetsDir, 'final-review-record.md'), 'utf8')
-  assert.match(finalRecord, /Routing provenance/)
-  assert.match(finalRecord, /contract-conformance and code-review capabilities/)
-  assert.match(finalRecord, /180-second waits|180 seconds/)
-  assert.match(finalRecord, /Reviewer wave and results/)
+  assert.match(finalRecord, /路由来源/)
+  assert.match(finalRecord, /合同符合性评审和代码评审/)
+  assert.match(finalRecord, /180-second waits|180 seconds|180 秒/)
+  assert.match(finalRecord, /Reviewer 分工与结果/)
 
   for (const removed of [
     'agent-dispatch-plan.md',
@@ -86,14 +86,14 @@ test('Issue patch makes the confirmed Issue directly executable without a launch
     readFile(path.join(assetsDir, 'execution-blueprint.md'), 'utf8'),
   ])
 
-  assert.match(patchTemplate, /Exact replacement block/)
-  assert.match(patchTemplate, /Task Contract digest: `sha256:/)
-  assert.match(patchTemplate, /Execution entry: `This persisted Issue/)
-  assert.match(patchTemplate, /ready for direct execution/i)
-  assert.doesNotMatch(patchTemplate, /Decision summary|User-visible scope|Required safety guarantees/)
+  assert.match(patchTemplate, /精确替换区块/)
+  assert.match(patchTemplate, /任务合同 digest：`sha256:/)
+  assert.match(patchTemplate, /执行入口：`此持久化 Issue/)
+  assert.match(patchTemplate, /即可直接执行/)
+  assert.doesNotMatch(patchTemplate, /Decision summary|User-visible scope|Required safety guarantees|决策摘要/)
   assert.equal((await readdir(assetsDir)).some(name => /goal/i.test(name)), false, 'no launcher asset remains')
-  assert.match(blueprint, /Reviewer routing and waiting are decided only after the final tree is frozen/)
-  assert.match(blueprint, /main implementation -> V0 -> V1/)
+  assert.match(blueprint, /Reviewer 路由和等待策略只在最终树冻结后决定/)
+  assert.match(blueprint, /主 Agent 实施 -> V0 -> V1/)
   assert.doesNotMatch(blueprint, /Candidate snapshot ceiling|Max implementation iterations|Same-failure retry limit/)
 })
 
@@ -102,10 +102,11 @@ test('LIGHT direct execution skips persisted planning while STANDARD and HIGH re
     readFile(path.join(assetsDir, 'final-review-record.md'), 'utf8'),
     readFile(path.join(root, 'power-loop', 'SKILL.md'), 'utf8'),
   ])
-  assert.match(finalRecord, /Frozen Git tree digest/)
+  assert.match(finalRecord, /冻结 Git tree digest/)
   assert.match(skill, /For `LIGHT`, prefer direct execution/)
   assert.match(skill, /Use a persisted Blueprint for `STANDARD`, `HIGH`/)
   assert.doesNotMatch(skill, /residual risk|ALLOW_EXECUTION|EXECUTION_WITH_STRICT_GATE/i)
+  assert.match(skill, /默认使用简体中文输出 readiness 结果/)
 })
 
 async function parseToml(filePath) {

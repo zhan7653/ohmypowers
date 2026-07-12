@@ -182,9 +182,10 @@ test('skill documents the fixed interfaces without making labels normative', asy
   const skill = await readFile(path.join(root, 'power-curator', 'SKILL.md'), 'utf8')
 
   assert.match(skill, /Git tree digest controls freshness/i)
-  assert.match(skill, /old result covers only verified snapshot; final tree is human-waived, not verifier PASS/i)
+  assert.match(skill, /旧结果只覆盖已验证快照；最终树是 human-waived，不是 verifier PASS/i)
   assert.match(skill, /route those decisions to `power-grill`; use `power-loop` only when the revised work needs a persisted Blueprint/i)
   assert.doesNotMatch(skill, /Latest canonical context|Decisions since contract/)
   assert.match(skill, /Persist only these Issue states: `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, and `follow-up-needed`/)
   assert.match(skill, /Labels are optional, non-normative presentation aids/i)
+  assert.match(skill, /默认使用简体中文输出整理计划/)
 })
