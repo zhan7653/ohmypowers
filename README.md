@@ -28,7 +28,7 @@ Use the smallest durable record justified by repository conventions and coordina
 
 Materiality alone does not authorize hosted mutation or force creation of an Issue.
 
-An Issue body contains the current `Decision Record`: status, revision, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, and stop/reopen conditions. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
+An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
 When persistence is needed, `$power-gan` loads a compact GitHub/GitLab reference for repository discovery, authenticated creation or update, read-back verification, Decision Notes, and PR/MR linkage.
 

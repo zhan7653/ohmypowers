@@ -107,6 +107,21 @@ test('issue persistence supports verified GitHub and GitLab mutations without re
   }
 })
 
+test('decision revisions remain optional and repository-defined', async () => {
+  const [skill, reference, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-gan/references/issue-persistence.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(skill, /If the repository uses decision revisions/i)
+  assert.match(reference, /omit when the repository does not use revisions/i)
+  assert.match(readme, /a revision only when the repository uses one/i)
+  assert.match(spec, /仅在仓库采用 revision 时记录 revision/)
+  assert.doesNotMatch(readme, /status, revision, outcome/i)
+})
+
 test('delivery evidence records final facts without recreating an implementation plan', async () => {
   const reference = await read('power-gan/references/delivery-evidence.md')
 
