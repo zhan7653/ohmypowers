@@ -25,7 +25,7 @@ Use the smallest durable record that fits the task:
 - PR: normal PR-sized delivery rationale and evidence.
 - Commit: tiny local changes.
 
-An Issue body contains the current `Decision Record`: status, revision, outcome, scope/non-goals, confirmed material decisions, short rationale and rejected alternative, accepted cost/risk, and stop/reopen conditions. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
+An Issue body contains the current `Decision Record`: status, revision, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, and stop/reopen conditions. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
 When persistence is needed, `$power-gan` loads a compact GitHub/GitLab reference for repository discovery, authenticated creation or update, read-back verification, Decision Notes, and PR/MR linkage.
 

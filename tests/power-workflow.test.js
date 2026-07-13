@@ -24,6 +24,8 @@ test('power-gan keeps decisions firm and implementation adaptive', async () => {
   assert.match(skill, /strongest credible argument against/i)
   assert.match(skill, /Working Strategy in the current session/i)
   assert.match(skill, /Comments alone never add current obligations/i)
+  assert.match(skill, /optional closest alternative not chosen/i)
+  assert.match(skill, /Do not invent an alternative merely to fill the record/i)
   assert.match(skill, /read relevant comments only for re-alignment, decision conflict, revision change, or check provenance/i)
   assert.match(skill, /code to commit, commit to PR\/MR, PR\/MR to Decision Issue/i)
   assert.match(skill, /delivery PR\/MR for a material Decision Issue must link it explicitly/i)
@@ -70,6 +72,9 @@ test('issue persistence supports verified GitHub and GitLab mutations without re
   assert.match(reference, /glab issue view/i)
   assert.match(reference, /full repository URL when required/i)
   assert.match(reference, /delivery PR\/MR must explicitly mention the Decision Issue/i)
+  assert.match(reference, /Alternative not chosen: <include only when/i)
+  assert.match(reference, /Do not invent alternatives to complete the template/i)
+  assert.doesNotMatch(reference, /rejected: <main alternative>/i)
   for (const field of ['Change', 'New evidence or objection', 'Confirmed decision', 'Rationale', 'Confirmed by']) {
     assert.match(reference, new RegExp(field, 'i'))
   }

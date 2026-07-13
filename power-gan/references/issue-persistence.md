@@ -26,7 +26,9 @@ Decision revision: 1
 - Out: <boundary>
 
 ## Material decisions
-- <decision> — <short rationale>; rejected: <main alternative>
+- Decision: <confirmed material decision>
+  Why: <short rationale>
+  Alternative not chosen: <include only when it explains a non-obvious boundary or avoids repeated debate; otherwise omit this line>
 
 ## Accepted cost / risk
 - <accepted tradeoff or none>
@@ -34,6 +36,8 @@ Decision revision: 1
 ## Stop / reopen conditions
 - <condition>
 ```
+
+Do not invent alternatives to complete the template or preserve a full option history.
 
 Use this compact comment shape for a Decision Note:
 
