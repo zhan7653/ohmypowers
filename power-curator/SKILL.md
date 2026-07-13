@@ -19,6 +19,7 @@ Inspect and propose lifecycle cleanup. Never mutate hosted state until the user 
 ## Workflow
 
 1. Read the relevant Issue body, necessary Decision Notes, linked PRs or commits, and current hosted state.
+   Match candidates conservatively using explicit links, affected code or paths, branch/commit evidence, and narrow keywords. Never collapse or supersede Issues from title similarity alone.
 2. Map each Issue to one state:
    - `active`: the confirmed result is unfinished;
    - `delivered`: implementation and necessary validation exist with a linked PR or commit;
@@ -39,6 +40,8 @@ Inspect and propose lifecycle cleanup. Never mutate hosted state until the user 
 ## Close, Reopen, And Supersede
 
 Recommend closing an Issue only when its result is implemented, necessary validation is complete, and a PR or commit is linked. Independent check evidence is required only when the Decision Record, user, delivery risk, or `$power-gan` requires it.
+
+When check evidence exists, verify that it covers the final implementation. A later tree or diff change invalidates the old result for changed content until the affected checks are repeated. A user may explicitly accept a non-material uncovered change, but that acceptance cannot authorize a material decision change.
 
 Do not keep a closed Issue synchronized with later internal refactors or compatible bug fixes. Create a new Issue linked with `supersedes` when a later request changes a material decision. Reopen the old Issue only when its original delivery was incomplete or its completion evidence was wrong.
 

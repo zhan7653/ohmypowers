@@ -27,6 +27,8 @@ Use the smallest durable record that fits the task:
 
 An Issue body contains the current `Decision Record`: status, revision, outcome, scope/non-goals, confirmed material decisions, short rationale and rejected alternative, accepted cost/risk, and stop/reopen conditions. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
+When persistence is needed, `$power-gan` loads a compact GitHub/GitLab reference for repository discovery, authenticated creation or update, read-back verification, Decision Notes, and PR/MR linkage.
+
 Do not create repository decision Markdown by default. Code, tests, schema, types, and configuration remain the primary current implementation truth.
 
 ## Skills

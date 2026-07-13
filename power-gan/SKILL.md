@@ -51,11 +51,15 @@ Ask one question at a time. Resolve upstream choices before dependent branches. 
 - A tiny local change may rely on its commit.
 - Do not create repository decision Markdown unless the document itself is requested as a deliverable.
 
+When an Issue is needed, read [references/issue-persistence.md](references/issue-persistence.md) in full before creating or updating hosted state.
+
 Keep an Issue body as the current `Decision Record` with only: `Decision status`, `Decision revision`, outcome, scope/non-goals, confirmed material decisions with short rationale and main rejected alternative, accepted cost/risk, and stop/reopen conditions. Exclude blueprints, file lists, internal interfaces, test matrices, agent assignments, and full transcripts.
 
-Increment `Decision revision` only after the user confirms a changed material decision and the body is updated. Use short `Decision Note` comments for the change, evidence, objection, final choice, rationale, and confirmation source. Comments alone never add current obligations.
+Increment `Decision revision` only after the user confirms a changed material decision and the body is updated. Use short `Decision Note` comments for the change, evidence, objection, final choice, rationale, and confirmation source. Comments alone never add current obligations. Normal delivery reads the Issue body; read relevant comments only for re-alignment, decision conflict, revision change, or check provenance.
 
-Close the Issue after delivery, necessary validation, and a linked PR or commit. Later material change gets a new Issue linked with `supersedes`; reopen the old Issue only when its original delivery was incomplete or its evidence was wrong.
+For historical context, start from the user-provided Issue/PR or affected code, then follow code to commit, commit to PR/MR, PR/MR to Decision Issue, and any `supersedes` link. Use narrow keyword search only when no code or link provides an entry point; do not scan every closed Issue for a small task.
+
+The delivery PR/MR for a material Decision Issue must link it explicitly. Close the Issue after delivery, necessary validation, and a linked PR/MR or commit. Later material change gets a new Issue linked with `supersedes`; reopen the old Issue only when its original delivery was incomplete or its evidence was wrong.
 
 ## Deliver Adaptively
 

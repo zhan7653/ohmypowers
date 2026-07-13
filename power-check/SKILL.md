@@ -29,6 +29,8 @@ Do not turn a Working Strategy, Blueprint, rejected option, historical proposal,
 4. Replay safe, proportionate validation when it will not mutate the canonical source or external state. Otherwise state what evidence was used and what could not be replayed.
 5. Report findings before the conclusion. Do not add preferences or imagined requirements.
 
+Bind the result to the inspected final implementation identity. If the tree or diff changes afterward, the old result covers only the earlier content; inspect the delta and repeat affected checks before reporting the final implementation as passed. Equivalent content may reuse still-relevant evidence.
+
 Return one result:
 
 - `PASS`: current decisions are satisfied with sufficient evidence.

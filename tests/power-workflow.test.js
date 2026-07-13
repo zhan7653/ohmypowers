@@ -24,6 +24,10 @@ test('power-gan keeps decisions firm and implementation adaptive', async () => {
   assert.match(skill, /strongest credible argument against/i)
   assert.match(skill, /Working Strategy in the current session/i)
   assert.match(skill, /Comments alone never add current obligations/i)
+  assert.match(skill, /read relevant comments only for re-alignment, decision conflict, revision change, or check provenance/i)
+  assert.match(skill, /code to commit, commit to PR\/MR, PR\/MR to Decision Issue/i)
+  assert.match(skill, /delivery PR\/MR for a material Decision Issue must link it explicitly/i)
+  assert.match(skill, /references\/issue-persistence\.md/)
   assert.match(skill, /CHECK_REQUIRED/)
   assert.doesNotMatch(skill, /Task Contract|Execution Blueprint|Agent Dispatch Plan/)
 })
@@ -40,6 +44,22 @@ test('power-check is read-only and checks only current decisions and final evide
   assert.match(skill, /`BLOCKED`/)
   assert.match(skill, /`NEEDS_HUMAN`/)
   assert.match(skill, /`CHECK_REQUIRED`/)
+  assert.match(skill, /If the tree or diff changes afterward, the old result covers only the earlier content/i)
+})
+
+test('issue persistence supports verified GitHub and GitLab mutations without repo Markdown', async () => {
+  const reference = await read('power-gan/references/issue-persistence.md')
+
+  assert.match(reference, /\/tmp\/power-gan-decision-record\.md/)
+  assert.match(reference, /explicitly requested or confirmed that mutation/i)
+  assert.match(reference, /gh issue create .*--body-file/i)
+  assert.match(reference, /gh issue edit .*--body-file/i)
+  assert.match(reference, /gh issue view .*--json/i)
+  assert.match(reference, /glab issue create .*<repository-or-full-url>/i)
+  assert.match(reference, /glab issue update/i)
+  assert.match(reference, /glab issue view/i)
+  assert.match(reference, /full repository URL when required/i)
+  assert.match(reference, /delivery PR\/MR must explicitly mention the Decision Issue/i)
 })
 
 test('critic and curator route material changes back to power-gan', async () => {
@@ -53,6 +73,8 @@ test('critic and curator route material changes back to power-gan', async () => 
   assert.match(curator, /Send material decision changes back through `\$power-gan`/i)
   assert.match(curator, /Comments are history and evidence only/i)
   assert.match(curator, /Do not keep a closed Issue synchronized/i)
+  assert.match(curator, /Never collapse or supersede Issues from title similarity alone/i)
+  assert.match(curator, /later tree or diff change invalidates the old result/i)
 })
 
 test('retired core skill directories are absent', async () => {
