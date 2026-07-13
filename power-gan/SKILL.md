@@ -1,82 +1,87 @@
 ---
 name: power-gan
-description: Align and deliver coding work with progressive commitment. Use when the user invokes $power-gan, asks to clarify and implement a coding task, needs a deep design grill, or wants an existing Decision Issue delivered without freezing reversible implementation details.
+description: Align and deliver coding work through repository-grounded, decision-tree-driven grilling and adaptive implementation. Use when the user invokes $power-gan, wants a coding task clarified then implemented, requests a deep design interview, or asks to deliver an existing Decision Issue without freezing reversible implementation details.
 ---
 
 # Power Gan
 
-Work in Simplified Chinese by default. Keep the process proportional to the task.
+Work in Simplified Chinese by default. Keep the process proportional to the task and match the user's conversational level.
 
-## Start With Two Choices
+## Infer The Job
 
-1. Set the work goal:
-   - `ALIGN_ONLY`: inspect and align decisions, then stop without implementation.
-   - `DELIVER`: align what is necessary, implement, and self-validate.
-2. Set alignment depth:
-   - `FAST`: resolve only blockers and material decisions. This is the default.
-   - `DEEP`: run Deep Grill for a dependent or high-risk decision tree.
+Infer whether the user wants discussion only or delivery. Honor `ALIGN_ONLY`, `DELIVER`, `FAST`, and `DEEP` when the user supplies them as shorthand. Keep any required skill announcement to one brief clause, then speak directly about the task without narrating mode names or process phases.
 
-Infer an explicit goal from the user's request. If implementation intent is unclear, ask only whether they want alignment or delivery. Never switch from `ALIGN_ONLY` to `DELIVER` without explicit authorization.
+A direct request to implement authorizes reversible source changes within the stated scope. If implementation intent is unclear, ask only whether the user wants implementation. Never move from discussion-only work to source writes without authorization.
 
-Inspect repository, Git, Issue, and PR facts instead of asking the user for discoverable information.
+Use focused alignment for isolated decisions. Use Deep Grill when the user asks for it or when unresolved material decisions form a dependent or high-risk tree. If the deeper interview would materially expand the expected time or scope, explain why and ask before expanding it; otherwise ask the next useful question directly.
 
-## Align Material Decisions
+## Run The Grill Loop First
 
-The user owns observable outcomes, scope, public contracts, material cost and risk, irreversible choices, and authorization. The agent has default authority over local, cheap-to-reverse details such as files, private helpers and interfaces, algorithms, work order, and test technique.
+Whenever a material user-owned boundary remains unresolved, make the first and every later grill turn do exactly this:
 
-A decision is material when it changes observable behavior, scope or non-goals, public API/data/config/compatibility, security/privacy/permission/migration/concurrency/persistent state, an independently deliverable feature, or a cost or operational burden the user must accept.
+1. State only the facts and current judgment needed for the current branch.
+2. Ask exactly one highest-leverage unresolved question.
+3. Give the recommended answer and why.
+4. Stop and wait for the user's answer.
 
-Treat an architecture or interface choice as material even when internal if it establishes a durable subsystem, runtime, deployment, storage, or data-ownership boundary; becomes a shared contract across modules or teams; commits the project to a long-lived production dependency or framework; or would be costly to reverse after adoption. Do not escalate local signatures or easily replaceable abstractions merely because they are called architecture.
+Use one short paragraph of context, not a bullet list, before the question. Do not announce interview phases, mode transitions, or a future sequence of questions. Do not front-load a design baseline, list downstream decisions, or turn the recommendation into a mini-spec followed by a confirmation request. The user's answer selects the next branch. If no material user-owned boundary remains, stop grilling and proceed with the requested summary or delivery.
 
-For each material decision:
+Treat every earlier recommendation, proposal, working assumption, or draft as unresolved until the user clearly accepts it. A request such as “先设计” authorizes the interview, not a full design written on the user's behalf.
 
-1. State the question and its consequence.
-2. Present credible choices symmetrically, including a smaller or no-build choice when credible.
-3. Give a recommendation and evidence.
-4. Give the strongest credible argument against that recommendation.
-5. Ask the user to choose, combine, or correct the choices.
+If the previous turn made an unconfirmed recommendation, keep the next question on that recommendation. Do not advance to its downstream consequences until the user accepts, rejects, or changes it.
 
-Object clearly when evidence shows contradiction, excessive complexity, poor value for cost, or ignored risk. If the user first insists without addressing the objection, state the unresolved consequence once more. After the user shows understanding, accept ordinary product tradeoffs. Still stop for safety, law, permission, factual impossibility, unverifiable completion, or missing irreversible authorization. Do not invent objections for balance.
+In a grill turn, do not output a design draft, acceptance criteria, a multi-bullet decision list, or numbered alternatives. State one recommendation for the one current question. If the user rejects it or asks for alternatives, explore the next credible path in the following turn.
 
-Do not treat a generic reply such as “可以”, “确认”, or “应用” as approval of several bundled material decisions. Ask which boundary was accepted. A short reply is sufficient for one clearly restated, low-cost decision.
+## Inspect Before Asking
 
-## Deep Grill
+Inspect project guidance, relevant code and tests, user-visible behavior, public API/schema/config documentation, and directly related Issue or PR history before asking questions they can answer.
 
-Enter `DEEP` when the user requests it, or after explaining why a dependent or high-risk decision tree warrants it and the user agrees. Continue in the current context; do not call or depend on `grill-me`.
+Stop the initial investigation once there is enough evidence to explain the current problem, distinguish facts from assumptions, and identify the unresolved material boundaries. Do not precompute a blueprint, fixed file list, private interface design, or test matrix before alignment.
 
-Ask one question at a time. Resolve upstream choices before dependent branches. Revisit a branch when new evidence invalidates it. Stop when no material user-owned branch remains; do not grill implementation detail for its own sake.
+## Grill The Missing Boundaries
 
-## Persist Only Decisions Worth Keeping
+The user owns observable outcomes, scope and non-goals, public contracts, material cost and risk, irreversible choices, and authorization. The agent owns local, cheap-to-reverse implementation details such as files, private helpers and interfaces, algorithms, work order, and test technique.
 
-- Use an Issue for material decisions, high risk, long or cross-session work, or collaboration.
-- A normal PR-sized task may keep rationale and evidence in the PR.
-- A tiny local change may rely on its commit.
-- Do not create repository decision Markdown unless the document itself is requested as a deliverable.
+Treat an internal architecture choice as material only when it creates a durable subsystem, runtime, deployment, storage, or data-ownership boundary; establishes a shared contract across modules or teams; adopts a long-lived production dependency; or would be costly to reverse after adoption. Do not escalate a local signature or replaceable abstraction merely because it is called architecture.
 
-When an Issue is needed, read [references/issue-persistence.md](references/issue-persistence.md) in full before creating or updating hosted state.
+Maintain a working understanding of the current problem, desired observable behavior, scope/non-goals, relevant public contracts, material risks and costs, authorization, validation expectations, and stop conditions. Cover only what matters to this task; do not turn these topics into a checklist.
 
-When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. Do not force this record onto tiny commit-only work.
+After each answer, update the working understanding, inspect newly named evidence when useful, and choose the next highest-leverage unresolved branch. Keep the turn centered on that branch; do not settle downstream material decisions in advance or hide several decisions inside one recommendation. Resolve observable product and state semantics before interface syntax or compatibility mechanics unless the interface itself is the unresolved product contract.
 
-Keep an Issue body as the current `Decision Record` with only: `Decision status`, `Decision revision`, outcome, scope/non-goals, confirmed material decisions with short rationale, an optional closest alternative not chosen when it explains a non-obvious boundary or avoids repeated debate, accepted cost/risk, and stop/reopen conditions. Do not invent an alternative merely to fill the record. Exclude blueprints, file lists, local interface signatures, test matrices, agent assignments, and full transcripts.
+Walk dependent decisions one branch at a time until reaching shared understanding. Be relentless about unresolved boundaries, not about filling fields. Revisit an earlier branch when new evidence invalidates it, and stop when no material user-owned question remains.
 
-Increment `Decision revision` only after the user confirms a changed material decision and the body is updated. Use short `Decision Note` comments for the change, evidence, objection, final choice, rationale, and confirmation source. Comments alone never add current obligations. Normal delivery reads the Issue body; read relevant comments only for re-alignment, decision conflict, revision change, or check provenance.
+Lead with the current judgment and evidence. Do not manufacture alternatives, force symmetry, use a routine A/B/C template, or append a ritual counterargument.
 
-For historical context, start from the user-provided Issue/PR or affected code, then follow code to commit, commit to PR/MR, PR/MR to Decision Issue, and any `supersedes` link. Use narrow keyword search only when no code or link provides an entry point; do not scan every closed Issue for a small task.
+Prefer a turn shaped like: “The unresolved boundary is X. I recommend Y because Z. Should it behave that way?”
 
-The delivery PR/MR for a material Decision Issue must link it explicitly. Close the Issue after delivery, necessary validation, and a linked PR/MR or commit. Later material change gets a new Issue linked with `supersedes`; reopen the old Issue only when its original delivery was incomplete or its evidence was wrong.
+Object when evidence shows a real contradiction, excessive complexity, poor value for cost, or ignored risk. State the consequence where it matters. If the user understands and accepts an ordinary product tradeoff, proceed; still stop for safety, law, permission, factual impossibility, unverifiable completion, or missing irreversible authorization.
+
+Do not ask the user to choose reversible implementation mechanics. Treat a boundary as resolved by an explicit decision, a clearly stated repository-derived assumption the user has not disputed, or an explicit not-applicable conclusion. Accept concise confirmation when the immediately preceding question makes its scope unambiguous; clarify only when multiple reasonable interpretations remain.
+
+## Persist Decisions Worth Keeping
+
+Use the smallest durable record justified by repository conventions and coordination needs. Prefer an Issue for high-risk, long-running, cross-session, or collaborative work whose decisions need a canonical home; a normal PR may carry ordinary delivery rationale and evidence; a tiny local change may rely on its commit. Materiality alone does not authorize hosted mutation or force creation of an Issue.
+
+Do not create repository decision Markdown unless the document itself is requested as a deliverable. Before creating or updating hosted state, require explicit authorization for that mutation and read [references/issue-persistence.md](references/issue-persistence.md) in full.
+
+Keep a persisted `Decision Record` concise and current: observable outcome, scope/non-goals, confirmed material decisions with short rationale, accepted material cost/risk, and relevant stop or reopen conditions. Include an unchosen alternative only when it explains a non-obvious boundary or prevents repeated debate. Exclude blueprints, fixed file lists, local interfaces, test matrices, agent assignments, and full transcripts.
+
+If the repository uses decision revisions, increment one only after a confirmed material decision changes. Treat comments as history and evidence, not as a way to add current obligations without updating the canonical record. Follow repository conventions for Issue linkage and lifecycle rather than mutating hosted state by formula.
+
+When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. For historical context, start from the user-provided Issue/PR or affected code, then follow code to commit, commit to PR/MR, PR/MR to Decision Issue, and any `supersedes` link. Use narrow search only when no direct entry point exists.
 
 ## Deliver Adaptively
 
-After read-only inspection and material alignment, make execution legible before the first source write. Stop pre-write investigation once there is enough evidence to state the smallest credible approach and its boundaries; do not derive a full design or validation matrix. Align any unresolved architecture-significant choice before presenting it as the current approach. For a plainly local, reversible, low-risk task, state the implementation intent and validation direction briefly, then proceed. For any other delivery, present one concise `Autonomous Execution Boundary`: completion basis and non-goals, hard constraints, the current smallest credible approach, validation goals, and stop conditions. Wait once for explicit launch authorization.
+Before the first source write, briefly make the completion basis, hard constraints, smallest credible approach, validation direction, and real stop conditions legible. For a small local task, a sentence is enough. Do not derive or seek approval for a detailed blueprint.
 
-Launch authorization permits long-running autonomous work inside that boundary. It does not approve or freeze a blueprint, file list, local interface signature, test matrix, or every implementation detail. The agent has default execution authority over reversible details; the user keeps visibility and may constrain, redirect, or stop the work.
+Treat the user's direct implementation request as launch authorization when the stated boundary still matches it. Wait only when implementation would introduce an unresolved material commitment, the user explicitly asked to approve the design before coding, or required external or irreversible authorization is missing.
 
-In `DELIVER`, keep a short Working Strategy in the current session and change it freely while the authorized boundary holds. Do not persist it as a contract. Continue without waiting through changes to files, local private interfaces, algorithms, work order, and test technique. Report meaningful replans as non-blocking progress and state clearly that no reply is needed. When a decision is required, state clearly that execution is paused.
+Within the authorized boundary, change files, private interfaces, algorithms, work order, and test technique without asking for approval. Report a meaningful replan only when it helps the user; mark it as non-blocking when no reply is needed.
 
-Pause and re-align only when continuing would contradict the completion basis or a hard constraint, cross a material boundary, expand the affected system or cost beyond the authorized boundary, require missing irreversible or external authorization, or make the promised validation evidence unattainable. Show the delta and discuss at least shrinking, splitting, or continuing. Cost is materially larger when it exceeds an explicit budget/timeline or makes the earlier size, risk, or delivery description dishonest; line counts alone do not decide this. Do not pause merely because the Working Strategy changed.
+Pause when continuing would change the observable outcome, violate a hard constraint, create a new material boundary, exceed an accepted cost or risk, require missing authorization, or make promised validation unattainable. Explain the delta, recommend the smallest credible response, and mention alternatives only when they are genuinely viable. Do not reopen already settled decisions or grill the full history again.
 
-Validate against the current decisions, final diff, actual risks, and relevant regressions. Earlier plans, rejected options, and speculative tests add no obligation.
+Validate against the current decisions, final diff, actual risks, and relevant regressions. Earlier working ideas, rejected options, and speculative tests add no obligation.
 
-An independent `$power-check` is required when the user requests it; the change involves security, privacy, permission, persistent state, migration, compatibility, concurrency, or irreversible behavior; it is an important merge/release/handoff; material drift occurred; or the Decision Record requires it. The current main agent announces and selects `$power-check`; this skill does not call another skill. If a fresh non-implementation context is required but unavailable, return `CHECK_REQUIRED` with the exact decision source and final implementation entry point.
+Require an independent `$power-check` when the user asks for it, when the implementation materially affects security, privacy, permissions, persistent state, migration, compatibility, concurrency, or irreversible behavior, when preparing an important merge/release/handoff, when material drift occurred, or when the current Decision Record requires it. Use a fresh non-implementation context when independence matters; if that cannot be provided, return `CHECK_REQUIRED` with the decision source and final implementation entry point.
 
-Finish `ALIGN_ONLY` with the decisions, unresolved material questions, and persistence recommendation. Finish `DELIVER` with the delivered outcome, material deviations, validation evidence, and any required next check.
+Finish naturally: for discussion-only work, summarize the decisions and unresolved material questions; for delivery, report the outcome, material deviations, validation evidence, and any required independent check.

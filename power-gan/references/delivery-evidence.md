@@ -9,7 +9,7 @@ Use this compact shape:
 ```markdown
 ## Delivery Evidence
 
-Decision source: <Issue URL and Decision revision, direct user decision, or none>
+Decision source: <Issue URL and revision when used, direct user decision, or none>
 
 Delivered outcome: <observable result now implemented>
 
@@ -23,6 +23,6 @@ Independent check: Not required — <reason> | <power-check result and final imp
 Remaining risks or follow-up: None | <risk or linked follow-up>
 ```
 
-Link a material Decision Issue explicitly. Use closing syntax only when merge should complete that Issue.
+When a material Decision Issue is the decision source, link it explicitly. Use closing syntax only when merge should complete that Issue.
 
 Do not add Working Strategy, rejected implementation options, speculative tests, fixed file lists, agent assignments, model routing, reviewer topology, or unsupported guarantees. The final diff remains the source of truth for changed files.

@@ -6,28 +6,27 @@ Codex skills for decision alignment, adaptive delivery, independent checking, li
 
 `$power-gan` is the main coding entry point. It separates user-owned material decisions from reversible implementation details that the agent executes by default while the user retains visibility and stop authority.
 
-- `ALIGN_ONLY`: align decisions and stop before implementation.
-- `DELIVER`: align what is necessary, implement adaptively, and self-validate.
-- `FAST`: ask only about blockers and material boundaries.
-- `DEEP`: Deep Grill one material question at a time in the same context.
+It infers whether the user wants discussion only or delivery and whether the task needs a focused pass or a Deep Grill. `ALIGN_ONLY`, `DELIVER`, `FAST`, and `DEEP` remain optional shorthand when the user supplies them; they are not a menu the agent should recite.
 
-Deep Grill is built into `$power-gan`; it does not call or depend on third-party `$grill-me`.
+Deep Grill follows the actual decision tree one question at a time. The agent inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives its recommended answer, and lets each response determine the next branch until both sides share the same understanding.
 
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
 “Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
-Before the first source write, a small local task states its intent and proceeds. A non-trivial delivery presents one concise autonomous execution boundary—completion basis, hard constraints, current smallest approach, validation goals, and stop conditions—and waits once for launch authorization. After launch, internal replanning and progress updates do not block; only a boundary breach pauses for the user.
+Before the first source write, the agent briefly states the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement already authorizes reversible work inside the stated scope; another confirmation is needed only when the boundary introduces a new material commitment, the user requested design approval first, or external or irreversible authorization is missing.
 
 When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
 ## Persistence
 
-Use the smallest durable record that fits the task:
+Use the smallest durable record justified by repository conventions and coordination needs:
 
-- Issue: material decisions, high risk, long or cross-session work, or collaboration.
+- Issue: high-risk, long or cross-session work, or collaboration that needs a canonical decision home.
 - PR: normal PR-sized delivery rationale and evidence.
 - Commit: tiny local changes.
+
+Materiality alone does not authorize hosted mutation or force creation of an Issue.
 
 An Issue body contains the current `Decision Record`: status, revision, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, and stop/reopen conditions. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
@@ -51,7 +50,7 @@ The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier`
 
 Every `$power-gan` delivery performs proportional self-validation. Add `$power-check` when the user requests it or the change involves security, privacy, permissions, persistent state, migration, compatibility, concurrency, irreversible behavior, material drift, or an important merge, release, or handoff.
 
-The current main agent selects `$power-check`; `$power-gan` does not call another skill. If required fresh non-implementation context is unavailable, report `CHECK_REQUIRED` instead of claiming independence.
+Use a fresh non-implementation context when an independent check is required. If that independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
 
 ## Installation
 
@@ -70,7 +69,7 @@ Use $power-gan to implement this small bug fix.
 ```
 
 ```text
-Use $power-gan in ALIGN_ONLY and DEEP mode to redesign this permission workflow.
+Use $power-gan to grill this permission workflow until the decisions are clear; do not implement it.
 ```
 
 ```text

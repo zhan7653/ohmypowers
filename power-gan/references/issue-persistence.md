@@ -7,16 +7,16 @@ Read this reference only when `$power-gan` has decided that a task needs a hoste
 1. Read project guidance, Issue templates, and `git remote -v`. Identify the exact host and repository. If remotes or host rules conflict, ask before writing.
 2. Build the Issue body from confirmed material decisions only. Use a temporary file outside the repository, such as `/tmp/power-gan-decision-record.md`; do not create a project decision Markdown file or copy the grill transcript.
 3. Create or update hosted state only after the user has explicitly requested or confirmed that mutation. Confirmation of one material decision is not automatically permission for unrelated labels, assignees, milestones, or projects.
-4. Re-read the resulting Issue and verify the title, body, `Decision revision`, state, and URL. Report any mismatch instead of claiming persistence succeeded.
+4. Re-read the resulting Issue and verify the title, body, state, URL, and `Decision revision` when present. Report any mismatch instead of claiming persistence succeeded.
 5. Return the Issue URL. Keep optional labels non-normative.
 
-Use this compact body shape:
+Use this compact body shape when the repository does not provide a stronger convention:
 
 ```markdown
 # Decision Record
 
 Decision status: proposed | confirmed | delivering | delivered | superseded
-Decision revision: 1
+Decision revision: <increment only for confirmed material decision changes; omit when the repository does not use revisions>
 
 ## Outcome
 <observable result>
@@ -39,13 +39,13 @@ Decision revision: 1
 
 Do not invent alternatives to complete the template or preserve a full option history.
 
-Use this compact comment shape for a Decision Note:
+Use this compact comment shape when a material change needs a durable Decision Note:
 
 ```markdown
 ## Decision Note
 
 Change: <material change, authorization, split, pause, or completion event>
-New evidence or objection: <short evidence, objection, or none>
+Reason / evidence: <short reason or new evidence>
 Confirmed decision: <the user-confirmed result>
 Rationale: <why>
 Confirmed by: <source of confirmation>
@@ -90,4 +90,4 @@ glab issue note <id> -R <repository-or-full-url> -m "$(cat /tmp/power-gan-decisi
 
 ## Delivery Link
 
-The delivery PR/MR must explicitly mention the Decision Issue. Use closing syntax only when merging that PR/MR should complete the Issue; otherwise use a plain Issue URL or non-closing relationship. Re-read the PR/MR link before closing the Issue.
+When a Decision Issue is the canonical source for the delivery, mention it explicitly in the PR/MR. Use closing syntax only when merging that PR/MR should complete the Issue; otherwise use a plain Issue URL or non-closing relationship. Re-read the PR/MR link before closing the Issue.

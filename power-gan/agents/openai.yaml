@@ -1,4 +1,4 @@
 interface:
   display_name: "Power Gan"
-  short_description: "Align decisions and deliver adaptively"
-  default_prompt: "Use $power-gan to align this coding task and deliver it with proportional validation."
+  short_description: "Grill decisions deeply, then deliver adaptively"
+  default_prompt: "Use $power-gan to inspect this coding task, grill the unresolved decisions one by one, and deliver it adaptively."
