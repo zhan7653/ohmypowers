@@ -1,244 +1,76 @@
 # ohmypowers
 
-Codex ecosystem skills for Loop Engineering.
+Codex skills for decision alignment, adaptive delivery, independent checking, lifecycle curation, and work reporting.
 
-`ohmypowers` is a collection of Codex skills and supporting tools that turn agentic coding work into explicit loops: clarify the task, contract the work, execute within boundaries, verify the evidence, and keep reviewable artifacts.
+## Core Workflow
 
-The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex. It includes custom-agent templates for hosts that can select them, plus generic role-based delegation for hosts where subagents inherit the parent configuration.
+`$power-gan` is the main coding entry point. It separates user-owned material decisions from agent-owned reversible implementation details.
 
-## What It Does
+- `ALIGN_ONLY`: align decisions and stop before implementation.
+- `DELIVER`: align what is necessary, implement adaptively, and self-validate.
+- `FAST`: ask only about blockers and material boundaries.
+- `DEEP`: Deep Grill one material question at a time in the same context.
 
-`power-think` guides an agent through:
+Deep Grill is built into `$power-gan`; it does not call or depend on third-party `$grill-me`.
 
-- Project context gathering.
-- Requirement clarification.
-- Scope boundary definition.
-- Premise challenge.
-- Optional landscape research.
-- Alternative approaches.
-- Given/When/Then acceptance criteria.
-- A reviewed spec saved to `docs/specs/YYYY-MM-DD-<feature-name>-spec.md`.
+The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, private interfaces, implementation order, test matrices, agent assignments, or reviewer topology.
 
-It does not write implementation code or implementation plans.
+When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
-`power-grill` turns a clarified or half-clear coding task into a requirements-focused contract before implementation starts:
+## Persistence
 
-- Requirement-fact inspection before asking the user, without precomputing implementation files or commands.
-- A fast path that maps an existing reviewed `power-think` spec and asks only for missing contract fields.
-- Focused grill-style questions over behavior, scope, external contracts, risks, validation expectations, and stop conditions.
-- An issue draft for user review.
-- A hosted issue or local issue brief after user confirmation.
-- Reserved `Execution Blueprint` and `Agent Dispatch Plan` sections for later planning.
-- Requirements-ready handoff guidance for running `power-loop` on the persisted contract.
+Use the smallest durable record that fits the task:
 
-It does not require exact internal interfaces, files, task ownership, validation commands, or subagent assignments. Those repository-derived implementation decisions belong to `power-loop`. It also does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available.
+- Issue: material decisions, high risk, long or cross-session work, or collaboration.
+- PR: normal PR-sized delivery rationale and evidence.
+- Commit: tiny local changes.
 
-`power-loop` converts a requirements-ready persisted contract into a confirmed Codex implementation loop:
+An Issue body contains the current `Decision Record`: status, revision, outcome, scope/non-goals, confirmed material decisions, short rationale and rejected alternative, accepted cost/risk, and stop/reopen conditions. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
-- Low-cost inspection of the exposed subagent-spawn contract. Conclusive schema evidence avoids a probe spawn and produces one of `strict-selection-supported`, `inherited-model-only`, or `indeterminate`.
-- A reported capability conclusion, supporting evidence, uncertainty, recommended execution mode, and mandatory user confirmation before mode-specific planning.
-- Loop readiness check over a hosted issue, local brief, or pasted task contract after execution-mode confirmation.
-- Risk level and execution decision.
-- Repository inspection with source branch and commit baseline.
-- Fixed-shape Execution Blueprint for exact files, internal interfaces, dependencies, ownership, instruction/isolation boundaries with provenance, test seams, validation commands, and staleness rules.
-- Exactly one separate Agent Dispatch Plan template for the confirmed mode: `strict-model-routing` preserves selectable Luna/Sol/Terra profiles and their routing policy, while `inherited-model-routing` assigns roles, objectives, ownership, dependencies, deliverables, and parallelism without claiming per-agent model, reasoning, profile, sandbox, escalation, or model-cost control.
-- Exact Issue Patch display and explicit confirmation before updating only the execution-planning sections.
-- Exact contract identity: host revision metadata is provenance, while SHA-256 of the exact full persisted UTF-8 body is authoritative. The Task Contract digest covers exact bytes from document start to the byte before the Blueprint start marker.
-- Final Goal Prompt only after the confirmed patch is applied and verified. It is a thin launcher that pins the Issue identity, reads the confirmed sections, performs preflight/drift checks, and adds no budget, scope, validation, review, PR, lifecycle, permission, or other obligation; the user starts it manually.
-- One task-level branch/worktree rather than one worktree per subagent.
-- Contract-prescribed reviews or a minimum sufficient capability-based review plan, including an implementation-independent contract-conformance review.
-- Mode-accurate capability, dispatch, review, and PR/MR evidence. In inherited mode, fresh context can establish implementation independence, but an instruction-level no-write boundary is not described as host-enforced read-only isolation.
-- PR/MR evidence requirements and loop decision rules.
+Do not create repository decision Markdown by default. Code, tests, schema, types, and configuration remain the primary current implementation truth.
 
-Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not detect Ultra mode, clarify vague requirements deeply, implement code directly, mutate requirements, or automatically run `/goal`. Ultra is a recommended user-selected runtime. Execution-mode selection instead depends on visible spawn capabilities and explicit user confirmation. If capability evidence is incomplete or contradictory, or if inherited routing cannot satisfy an exact model, profile, provider, reasoning, sandbox, or isolation requirement, planning pauses for a human decision.
+## Skills
 
-For an end-to-end walkthrough, see [docs/loop-engineering-tutorial.md](docs/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate a lighter requirements contract, execution planning, patch confirmation, manual Goal execution, validation, dispatch reporting, and review.
+- `$power-gan`: align, Deep Grill, implement, and self-validate.
+- `$power-check`: independently and read-only check a completed implementation against current decisions and the final diff.
+- `$power-critic`: explicit-only fresh-context critique of requirements, specs, plans, or model replies; not code review.
+- `$power-curator`: manually reconcile Decision Issue and PR lifecycle state after explicit confirmation.
+- `$power-work-report`: create reviewed daily work reports and confirmed memory updates.
 
-`power-verifier` checks implementation evidence after a bounded loop has run:
+The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped.
 
-- The exact pinned Issue revision as the sole normative contract; the Goal, session, PR/MR text, comments, and runner summaries remain supplementary evidence.
-- Issue contract, implementation diff, validation output, and PR/MR evidence.
-- Acceptance-criteria coverage.
-- Scope and non-goal preservation.
-- Contract clause coverage and evidence freshness against a snapshot containing repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time.
-- Independent validation replay when safe, with reviewer provenance and capability/risk-based review selection.
-- Loop decision justification.
-- One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
+## Independent Checks
 
-It is read-only and does not edit files, create branches, mutate issues, approve work, merge, or close PRs/MRs.
-Repository installer, profile, and fixture checks described below validate this repository's distribution; they are not requirements imposed on target projects using the portable verifier.
+Every `$power-gan` delivery performs proportional self-validation. Add `$power-check` when the user requests it or the change involves security, privacy, permissions, persistent state, migration, compatibility, concurrency, irreversible behavior, material drift, or an important merge, release, or handoff.
 
-`power-curator` manually curates Loop Engineering issue and PR lifecycle state:
+The current main agent selects `$power-check`; `$power-gan` does not call another skill. If required fresh non-implementation context is unavailable, report `CHECK_REQUIRED` instead of claiming independence.
 
-- Reads issue bodies, PR/MR bodies, comments, labels, branches, and local git state.
-- Treats issue body `Curation status` as canonical lifecycle context and comments as supplementary evidence.
-- Produces a curation plan before any mutation.
-- Compares the verifier snapshot with the final PR/merge snapshot. Equal Git tree digests are reusable even across different commits; changed trees are classified as `reverified`, `human-waived`, `contract-changing`, or `unresolved` before closure.
-- Records changed paths, behavior impact, validation coverage, and any complete human waiver without presenting the old PASS as verifier coverage of the final tree. Contract-level changes return to `power-grill` and `power-loop`.
-- Applies issue body updates, comments, labels, closure, or follow-up issue creation only after explicit user confirmation.
-- Persists only `open`, `in-progress`, `pr-ready`, `merged`, `done`, `superseded`, or `follow-up-needed`. Runtime/verifier outcomes and freshness classifications are not persisted lifecycle states. Labels are optional, non-normative presentation aids.
+## Installation
 
-It does not run as a daemon, scheduler, webhook, database, persistent index, or auto-close service, and it does not replace `power-verifier` for implementation evidence review.
-
-`power-work-report` generates a manual Codex daily work report:
-
-- Reads local Codex session JSONL for a target local date, scanning a lookback window so cross-day Codex sessions can still be sliced by event timestamp.
-- Generates a draft Markdown/HTML/JSON report and `review.md` through the CLI bundled inside the installed skill.
-- Uses an isolated read-only Luna Medium Codex run by default, with explicit model/reasoning override flags and no automatic escalation.
-- Reads JSON memory during draft so historical open todos roll forward.
-- Proposes todo and idea memory updates, including explicitly confirmed todo status changes.
-- Supports re-rendering edited draft JSON/proposal files before final confirmation.
-- Requires explicit confirmation before finalizing reports or merging `memory.json`.
-- V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
-
-`power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
-
-For implementation evidence correctness, use `power_verifier`. It is a portable, read-only contract-conformance workflow: exact reviewers are honored when the contract requires them; otherwise the minimum sufficient independent review capabilities are selected from the contract, final diff, validation, and material risks. In strict mode, selectable Terra High, Sol Medium, and Sol High reviewer profiles provide risk tiers for those capabilities. In inherited mode, verification records fresh-context independence and only the configuration or isolation provenance actually exposed by the host. Neither mode imposes a universal reviewer identity or topology.
-
-Use them by phase:
-
-- `power-think`: vague idea -> reviewed spec.
-- `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: requirements-ready issue/local brief -> Blueprint and Dispatch Plan -> confirmed Issue Patch -> ready-to-run `/goal`.
-- `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
-- `power-curator`: issue/PR/comment/branch state -> curation plan -> confirmed lifecycle mutations.
-- `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop capability preflight -> user confirms execution mode -> Blueprint, mode-specific Dispatch Plan, and Issue Patch -> user confirms patch -> thin manual Codex /goal -> snapshot-bound verifier -> PR evidence -> power-curator final-tree reconciliation -> confirmed lifecycle mutation`.
-- `power-critic`: spec, plan, issue, or model reply -> critique findings.
-
-## Install
-
-Run the idempotent installer from the repository root:
+Run:
 
 ```bash
 ./scripts/install.sh
 ```
 
-The installer uses `${CODEX_HOME:-$HOME/.codex}`, synchronizes the seven managed skill directories without creating nested copies, updates the custom-agent files owned by this repository, and removes only explicitly retired owned profile names. It requires `rsync` and preserves unrelated personal agents.
+The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the optional `power_critic` agent profile, and removes retired ohmypowers skills and profiles. Restart Codex afterward.
 
-The skill installation makes `$power-think`, `$power-grill`, `$power-loop`, `$power-verifier`, `$power-curator`, `$power-work-report`, and `$power-critic` available.
-
-On a host classified `strict-selection-supported`, a supported model selector or custom-profile selector is enough to recommend `strict-model-routing`. Model, profile, reasoning, and sandbox selection are still independent capabilities: each field or guarantee requires its own evidence and must not be inferred from another selector. When the required selectors are demonstrably supported, the template preserves the full installed profile policy: Luna Max for simple through lower-medium implementation, Sol Medium for anything more complex, at most one direct Luna-to-Sol replacement, no Terra implementation, and Terra High/Sol Medium/Sol High reviewer tiers selected by contract and risk. If a strict plan requires a configuration the host cannot select, planning pauses instead of fabricating that guarantee.
-
-On a host classified `inherited-model-only`, the separate `inherited-model-routing` template records that subagent configuration is inherited. Installed TOML files do not prove they are selectable. The plan therefore makes no per-agent model, reasoning-effort, profile, sandbox, model-escalation, reviewer-tier, model-cost, or Initial Assignment Accuracy guarantee. It retains useful generic delegation, explicit ownership and dependencies, safe parallelism, and fresh-context independent review. Model selection and sandbox selection are evidenced independently in either mode.
-
-When checking implementation evidence, provide the complete canonical Issue identity and body plus the thin Goal as supplementary evidence. Capture repository/ref, commit, Git tree digest, dirty/generated boundary, and capture time; replay safe validation and record review provenance. A verifier PASS covers only that tree. A different final tree requires fresh verification, a complete explicit human waiver, contract-change routing, or an unresolved stop. Use contract-prescribed reviewers exactly; otherwise select the minimum sufficient independent capabilities and add code, security, compatibility, migration, test, or domain review only when justified by the implementation risk.
-
-Restart Codex after installing or updating skills or custom agents.
-
-## Usage
-
-Ask for requirement thinking or a spec:
+## Examples
 
 ```text
-Use power-think to help me clarify this feature and write a spec.
+Use $power-gan to implement this small bug fix.
 ```
-
-Ask for a task contract before implementation:
 
 ```text
-Use $power-grill to grill this feature and draft an issue contract.
+Use $power-gan in ALIGN_ONLY and DEEP mode to redesign this permission workflow.
 ```
-
-Ask for repository-aware execution planning from an existing persisted task contract:
 
 ```text
-Use $power-loop on this issue to generate the Blueprint, Dispatch Plan, and Issue Patch. Show the patch for confirmation before generating the Goal Prompt.
+Use $power-check to independently verify this final diff against Issue #42.
 ```
-
-Ask for independent critique:
 
 ```text
-Use $power-critic to challenge this spec.
+Use $power-critic to challenge this Decision Record before implementation.
 ```
 
-Ask for implementation verification:
-
-```text
-Use $power-verifier to check this issue contract, diff, validation output, and PR evidence.
-```
-
-Ask for issue and PR lifecycle curation:
-
-```text
-Use $power-curator to curate this issue, linked PRs, comments, and follow-up state.
-```
-
-Ask for a manual Codex work report draft:
-
-```text
-Use $power-work-report to generate a daily work report draft and review checklist for today.
-```
-
-## Repository Layout
-
-```text
-power-think/
-  SKILL.md
-  agents/
-    openai.yaml
-power-grill/
-  SKILL.md
-  agents/
-    openai.yaml
-  assets/
-    issue-body.md
-  references/
-    github-issue-creation.md
-    gitlab-issue-creation.md
-power-loop/
-  SKILL.md
-  agents/
-    openai.yaml
-    power-luna-worker.toml
-    power-sol-worker.toml
-    power-terra-reviewer.toml
-    power-sol-reviewer.toml
-    power-sol-high-reviewer.toml
-  assets/
-    execution-blueprint.md
-    agent-dispatch-plan.md
-    agent-dispatch-plan-strict.md
-    agent-dispatch-plan-inherited.md
-    issue-patch.md
-    codex-loop-goal.txt
-    loop-readiness-checklist.md
-    pr-evidence-template.md
-power-verifier/
-  SKILL.md
-  agents/
-    openai.yaml
-  assets/
-    implementation-verifier-checklist.md
-    verifier-result-template.md
-power-curator/
-  SKILL.md
-  agents/
-    openai.yaml
-power-work-report/
-  SKILL.md
-  agents/
-    openai.yaml
-  scripts/
-    power-work-report/
-      package.json
-      bin/
-      lib/
-      schemas/
-power-critic/
-  SKILL.md
-  agents/
-    openai.yaml
-    power-critic.toml
-docs/
-  loop-engineering-tutorial.md
-  specs/
-tests/
-  install.test.js
-  fixtures/power-loop/sample-contracts.md
-  power-work-report/
-```
-
-## License
-
-MIT
+The accepted design is documented in [the power-gan adaptive workflow spec](docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md).

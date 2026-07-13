@@ -15,14 +15,23 @@ fi
 mkdir -p "${skills_dir}" "${agents_dir}"
 
 skills=(
-  power-think
-  power-grill
-  power-loop
-  power-verifier
+  power-gan
+  power-check
   power-curator
   power-work-report
   power-critic
 )
+
+retired_skills=(
+  power-think
+  power-grill
+  power-loop
+  power-verifier
+)
+
+for skill in "${retired_skills[@]}"; do
+  rm -rf "${skills_dir}/${skill}"
+done
 
 for skill in "${skills[@]}"; do
   mkdir -p "${skills_dir}/${skill}"
@@ -30,15 +39,15 @@ for skill in "${skills[@]}"; do
 done
 
 agent_sources=(
-  power-loop/agents/power-luna-worker.toml
-  power-loop/agents/power-sol-worker.toml
-  power-loop/agents/power-terra-reviewer.toml
-  power-loop/agents/power-sol-reviewer.toml
-  power-loop/agents/power-sol-high-reviewer.toml
   power-critic/agents/power-critic.toml
 )
 
 retired_agent_profiles=(
+  power-luna-worker.toml
+  power-sol-worker.toml
+  power-terra-reviewer.toml
+  power-sol-reviewer.toml
+  power-sol-high-reviewer.toml
   power-terra-worker.toml
   power-terra-complex-worker.toml
   power-sol-escalation.toml
