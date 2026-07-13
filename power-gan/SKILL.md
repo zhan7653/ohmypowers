@@ -53,6 +53,8 @@ Ask one question at a time. Resolve upstream choices before dependent branches. 
 
 When an Issue is needed, read [references/issue-persistence.md](references/issue-persistence.md) in full before creating or updating hosted state.
 
+When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. Do not force this record onto tiny commit-only work.
+
 Keep an Issue body as the current `Decision Record` with only: `Decision status`, `Decision revision`, outcome, scope/non-goals, confirmed material decisions with short rationale and main rejected alternative, accepted cost/risk, and stop/reopen conditions. Exclude blueprints, file lists, internal interfaces, test matrices, agent assignments, and full transcripts.
 
 Increment `Decision revision` only after the user confirms a changed material decision and the body is updated. Use short `Decision Note` comments for the change, evidence, objection, final choice, rationale, and confirmation source. Comments alone never add current obligations. Normal delivery reads the Issue body; read relevant comments only for re-alignment, decision conflict, revision change, or check provenance.

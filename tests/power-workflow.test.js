@@ -28,6 +28,7 @@ test('power-gan keeps decisions firm and implementation adaptive', async () => {
   assert.match(skill, /code to commit, commit to PR\/MR, PR\/MR to Decision Issue/i)
   assert.match(skill, /delivery PR\/MR for a material Decision Issue must link it explicitly/i)
   assert.match(skill, /references\/issue-persistence\.md/)
+  assert.match(skill, /references\/delivery-evidence\.md/)
   assert.match(skill, /CHECK_REQUIRED/)
   assert.doesNotMatch(skill, /Task Contract|Execution Blueprint|Agent Dispatch Plan/)
 })
@@ -45,6 +46,15 @@ test('power-check is read-only and checks only current decisions and final evide
   assert.match(skill, /`NEEDS_HUMAN`/)
   assert.match(skill, /`CHECK_REQUIRED`/)
   assert.match(skill, /If the tree or diff changes afterward, the old result covers only the earlier content/i)
+  for (const field of [
+    'Decision source',
+    'Final implementation identity',
+    'Validation evidence',
+    'Residual risk',
+    'Smallest next action',
+  ]) {
+    assert.match(skill, new RegExp(field, 'i'))
+  }
 })
 
 test('issue persistence supports verified GitHub and GitLab mutations without repo Markdown', async () => {
@@ -60,6 +70,27 @@ test('issue persistence supports verified GitHub and GitLab mutations without re
   assert.match(reference, /glab issue view/i)
   assert.match(reference, /full repository URL when required/i)
   assert.match(reference, /delivery PR\/MR must explicitly mention the Decision Issue/i)
+  for (const field of ['Change', 'New evidence or objection', 'Confirmed decision', 'Rationale', 'Confirmed by']) {
+    assert.match(reference, new RegExp(field, 'i'))
+  }
+})
+
+test('delivery evidence records final facts without recreating an implementation plan', async () => {
+  const reference = await read('power-gan/references/delivery-evidence.md')
+
+  for (const field of [
+    'Decision source',
+    'Delivered outcome',
+    'Material deviations',
+    'Validation',
+    'Independent check',
+    'Remaining risks or follow-up',
+  ]) {
+    assert.match(reference, new RegExp(field, 'i'))
+  }
+  assert.match(reference, /Record observed delivery facts, not the implementation plan/i)
+  assert.match(reference, /Do not add Working Strategy/i)
+  assert.doesNotMatch(reference, /Execution Blueprint|Agent Dispatch Plan|reviewer topology table/i)
 })
 
 test('critic and curator route material changes back to power-gan', async () => {

@@ -29,6 +29,8 @@ An Issue body contains the current `Decision Record`: status, revision, outcome,
 
 When persistence is needed, `$power-gan` loads a compact GitHub/GitLab reference for repository discovery, authenticated creation or update, read-back verification, Decision Notes, and PR/MR linkage.
 
+Delivery PRs/MRs and external handoffs use a compact evidence format containing only the decision source, delivered outcome, material deviations, validation, independent-check status, and remaining risks.
+
 Do not create repository decision Markdown by default. Code, tests, schema, types, and configuration remain the primary current implementation truth.
 
 ## Skills

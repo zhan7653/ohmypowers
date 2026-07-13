@@ -40,3 +40,18 @@ Return one result:
 - `CHECK_REQUIRED`: required independent context was unavailable.
 
 For non-pass results, give the smallest next action. Cite the decision and implementation evidence used.
+
+Use this compact output shape, with findings before the conclusion:
+
+```markdown
+## Findings
+- <finding with decision and implementation evidence, or "None">
+
+## Check Result
+Result: <PASS | PASS_WITH_NOTES | BLOCKED | NEEDS_HUMAN | CHECK_REQUIRED>
+Decision source: <current decision or Decision Record>
+Final implementation identity: <tree, diff, commit, or equivalent stable identity>
+Validation evidence: <checks run or evidence inspected>
+Residual risk: <none or remaining risk>
+Smallest next action: <none or required action>
+```

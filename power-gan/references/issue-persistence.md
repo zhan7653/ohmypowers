@@ -35,6 +35,20 @@ Decision revision: 1
 - <condition>
 ```
 
+Use this compact comment shape for a Decision Note:
+
+```markdown
+## Decision Note
+
+Change: <material change, authorization, split, pause, or completion event>
+New evidence or objection: <short evidence, objection, or none>
+Confirmed decision: <the user-confirmed result>
+Rationale: <why>
+Confirmed by: <source of confirmation>
+```
+
+Do not post a Decision Note for ordinary implementation detail or copy the conversation transcript.
+
 ## GitHub CLI
 
 1. Check `gh auth status` when authentication is not already established.
