@@ -13,7 +13,9 @@ Codex skills for decision alignment, adaptive delivery, independent checking, li
 
 Deep Grill is built into `$power-gan`; it does not call or depend on third-party `$grill-me`.
 
-The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, private interfaces, implementation order, test matrices, agent assignments, or reviewer topology.
+The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
+
+“Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
 Before the first source write, a small local task states its intent and proceeds. A non-trivial delivery presents one concise autonomous execution boundary—completion basis, hard constraints, current smallest approach, validation goals, and stop conditions—and waits once for launch authorization. After launch, internal replanning and progress updates do not block; only a boundary breach pauses for the user.
 

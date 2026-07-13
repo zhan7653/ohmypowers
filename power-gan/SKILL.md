@@ -22,9 +22,11 @@ Inspect repository, Git, Issue, and PR facts instead of asking the user for disc
 
 ## Align Material Decisions
 
-The user owns observable outcomes, scope, public contracts, material cost and risk, irreversible choices, and authorization. The agent owns reversible implementation details such as files, private interfaces, algorithms, work order, and test technique.
+The user owns observable outcomes, scope, public contracts, material cost and risk, irreversible choices, and authorization. The agent has default authority over local, cheap-to-reverse details such as files, private helpers and interfaces, algorithms, work order, and test technique.
 
 A decision is material when it changes observable behavior, scope or non-goals, public API/data/config/compatibility, security/privacy/permission/migration/concurrency/persistent state, an independently deliverable feature, or a cost or operational burden the user must accept.
+
+Treat an architecture or interface choice as material even when internal if it establishes a durable subsystem, runtime, deployment, storage, or data-ownership boundary; becomes a shared contract across modules or teams; commits the project to a long-lived production dependency or framework; or would be costly to reverse after adoption. Do not escalate local signatures or easily replaceable abstractions merely because they are called architecture.
 
 For each material decision:
 
@@ -55,7 +57,7 @@ When an Issue is needed, read [references/issue-persistence.md](references/issue
 
 When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. Do not force this record onto tiny commit-only work.
 
-Keep an Issue body as the current `Decision Record` with only: `Decision status`, `Decision revision`, outcome, scope/non-goals, confirmed material decisions with short rationale, an optional closest alternative not chosen when it explains a non-obvious boundary or avoids repeated debate, accepted cost/risk, and stop/reopen conditions. Do not invent an alternative merely to fill the record. Exclude blueprints, file lists, internal interfaces, test matrices, agent assignments, and full transcripts.
+Keep an Issue body as the current `Decision Record` with only: `Decision status`, `Decision revision`, outcome, scope/non-goals, confirmed material decisions with short rationale, an optional closest alternative not chosen when it explains a non-obvious boundary or avoids repeated debate, accepted cost/risk, and stop/reopen conditions. Do not invent an alternative merely to fill the record. Exclude blueprints, file lists, local interface signatures, test matrices, agent assignments, and full transcripts.
 
 Increment `Decision revision` only after the user confirms a changed material decision and the body is updated. Use short `Decision Note` comments for the change, evidence, objection, final choice, rationale, and confirmation source. Comments alone never add current obligations. Normal delivery reads the Issue body; read relevant comments only for re-alignment, decision conflict, revision change, or check provenance.
 
@@ -65,11 +67,11 @@ The delivery PR/MR for a material Decision Issue must link it explicitly. Close 
 
 ## Deliver Adaptively
 
-After read-only inspection and material alignment, make execution legible before the first source write. Stop pre-write investigation once there is enough evidence to state the smallest credible approach and its boundaries; do not derive a full design or validation matrix. For a plainly local, reversible, low-risk task, state the implementation intent and validation direction briefly, then proceed. For any other delivery, present one concise `Autonomous Execution Boundary`: completion basis and non-goals, hard constraints, the current smallest credible approach, validation goals, and stop conditions. Wait once for explicit launch authorization.
+After read-only inspection and material alignment, make execution legible before the first source write. Stop pre-write investigation once there is enough evidence to state the smallest credible approach and its boundaries; do not derive a full design or validation matrix. Align any unresolved architecture-significant choice before presenting it as the current approach. For a plainly local, reversible, low-risk task, state the implementation intent and validation direction briefly, then proceed. For any other delivery, present one concise `Autonomous Execution Boundary`: completion basis and non-goals, hard constraints, the current smallest credible approach, validation goals, and stop conditions. Wait once for explicit launch authorization.
 
-Launch authorization permits long-running autonomous work inside that boundary. It does not approve or freeze a blueprint, file list, internal interface, test matrix, or every implementation detail. The agent has default execution authority over reversible details; the user keeps visibility and may constrain, redirect, or stop the work.
+Launch authorization permits long-running autonomous work inside that boundary. It does not approve or freeze a blueprint, file list, local interface signature, test matrix, or every implementation detail. The agent has default execution authority over reversible details; the user keeps visibility and may constrain, redirect, or stop the work.
 
-In `DELIVER`, keep a short Working Strategy in the current session and change it freely while the authorized boundary holds. Do not persist it as a contract. Continue without waiting through changes to files, private interfaces, algorithms, work order, and test technique. Report meaningful replans as non-blocking progress and state clearly that no reply is needed. When a decision is required, state clearly that execution is paused.
+In `DELIVER`, keep a short Working Strategy in the current session and change it freely while the authorized boundary holds. Do not persist it as a contract. Continue without waiting through changes to files, local private interfaces, algorithms, work order, and test technique. Report meaningful replans as non-blocking progress and state clearly that no reply is needed. When a decision is required, state clearly that execution is paused.
 
 Pause and re-align only when continuing would contradict the completion basis or a hard constraint, cross a material boundary, expand the affected system or cost beyond the authorized boundary, require missing irreversible or external authorization, or make the promised validation evidence unattainable. Show the delta and discuss at least shrinking, splitting, or continuing. Cost is materially larger when it exceeds an explicit budget/timeline or makes the earlier size, risk, or delivery description dishonest; line counts alone do not decide this. Do not pause merely because the Working Strategy changed.
 
