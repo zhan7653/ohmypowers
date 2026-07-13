@@ -4,7 +4,7 @@ Codex skills for decision alignment, adaptive delivery, independent checking, li
 
 ## Core Workflow
 
-`$power-gan` is the main coding entry point. It separates user-owned material decisions from agent-owned reversible implementation details.
+`$power-gan` is the main coding entry point. It separates user-owned material decisions from reversible implementation details that the agent executes by default while the user retains visibility and stop authority.
 
 - `ALIGN_ONLY`: align decisions and stop before implementation.
 - `DELIVER`: align what is necessary, implement adaptively, and self-validate.
@@ -14,6 +14,8 @@ Codex skills for decision alignment, adaptive delivery, independent checking, li
 Deep Grill is built into `$power-gan`; it does not call or depend on third-party `$grill-me`.
 
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, private interfaces, implementation order, test matrices, agent assignments, or reviewer topology.
+
+Before the first source write, a small local task states its intent and proceeds. A non-trivial delivery presents one concise autonomous execution boundary—completion basis, hard constraints, current smallest approach, validation goals, and stop conditions—and waits once for launch authorization. After launch, internal replanning and progress updates do not block; only a boundary breach pauses for the user.
 
 When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 

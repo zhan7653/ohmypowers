@@ -65,9 +65,13 @@ The delivery PR/MR for a material Decision Issue must link it explicitly. Close 
 
 ## Deliver Adaptively
 
-In `DELIVER`, keep a short Working Strategy in the current session. Do not ask the user to confirm it or persist it as a contract. Change it freely while outcomes, material cost, and risk stay within the confirmed boundary.
+After read-only inspection and material alignment, make execution legible before the first source write. Stop pre-write investigation once there is enough evidence to state the smallest credible approach and its boundaries; do not derive a full design or validation matrix. For a plainly local, reversible, low-risk task, state the implementation intent and validation direction briefly, then proceed. For any other delivery, present one concise `Autonomous Execution Boundary`: completion basis and non-goals, hard constraints, the current smallest credible approach, validation goals, and stop conditions. Wait once for explicit launch authorization.
 
-Pause and re-align only when implementation exposes a new material boundary or contradicts the current decision. Show the delta and discuss at least shrinking, splitting, or continuing. Cost is materially larger when it exceeds an explicit budget/timeline or makes the earlier size, risk, or delivery description dishonest; line counts alone do not decide this.
+Launch authorization permits long-running autonomous work inside that boundary. It does not approve or freeze a blueprint, file list, internal interface, test matrix, or every implementation detail. The agent has default execution authority over reversible details; the user keeps visibility and may constrain, redirect, or stop the work.
+
+In `DELIVER`, keep a short Working Strategy in the current session and change it freely while the authorized boundary holds. Do not persist it as a contract. Continue without waiting through changes to files, private interfaces, algorithms, work order, and test technique. Report meaningful replans as non-blocking progress and state clearly that no reply is needed. When a decision is required, state clearly that execution is paused.
+
+Pause and re-align only when continuing would contradict the completion basis or a hard constraint, cross a material boundary, expand the affected system or cost beyond the authorized boundary, require missing irreversible or external authorization, or make the promised validation evidence unattainable. Show the delta and discuss at least shrinking, splitting, or continuing. Cost is materially larger when it exceeds an explicit budget/timeline or makes the earlier size, risk, or delivery description dishonest; line counts alone do not decide this. Do not pause merely because the Working Strategy changed.
 
 Validate against the current decisions, final diff, actual risks, and relevant regressions. Earlier plans, rejected options, and speculative tests add no obligation.
 
