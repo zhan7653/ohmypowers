@@ -27,7 +27,9 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /Use one short paragraph of context, not a bullet list/i)
   assert.match(skill, /Do not announce interview phases, mode transitions, or a future sequence of questions/i)
   assert.match(skill, /Do not front-load a design baseline, list downstream decisions/i)
-  assert.match(skill, /Treat every earlier recommendation, proposal, working assumption, or draft as unresolved/i)
+  assert.match(skill, /assumption about a material user-owned boundary as unresolved/i)
+  assert.match(skill, /Treat verified repository facts as facts/i)
+  assert.match(skill, /keep agent-owned reversible implementation assumptions outside the user confirmation loop/i)
   assert.match(skill, /“先设计” authorizes the interview, not a full design written on the user's behalf/i)
   assert.match(skill, /If the previous turn made an unconfirmed recommendation, keep the next question on that recommendation/i)
   assert.match(skill, /do not output a design draft, acceptance criteria, a multi-bullet decision list, or numbered alternatives/i)
@@ -38,6 +40,10 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /Accept concise confirmation when the immediately preceding question makes its scope unambiguous/i)
   assert.match(skill, /Do not manufacture alternatives, force symmetry, use a routine A\/B\/C template/i)
   assert.match(skill, /do not ask the user to choose reversible implementation mechanics/i)
+  assert.match(skill, /repository-derived assumption may guide non-material, reversible implementation as a visible working default/i)
+  assert.match(skill, /does not resolve a material user-owned boundary/i)
+  assert.match(skill, /material boundary as resolved only by an explicit user decision or an explicit not-applicable conclusion/i)
+  assert.doesNotMatch(skill, /repository-derived assumption the user has not disputed/i)
   assert.doesNotMatch(skill, /do not call or depend on `grill-me`/i)
   assert.doesNotMatch(skill, /generic reply such as “可以”, “确认”, or “应用”/i)
   assert.doesNotMatch(skill, /strongest credible argument against/i)
@@ -64,6 +70,14 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {
   const skill = await read('power-check/SKILL.md')
 
+  assert.match(skill, /materially affects or creates credible production risk/i)
+  assert.match(skill, /production persistent state/i)
+  assert.match(skill, /external or cross-version compatibility commitments/i)
+  assert.match(skill, /concurrency correctness/i)
+  assert.match(skill, /Merely touching related code, configuration, tests, caches, fixtures, or compatibility logic is insufficient/i)
+  assert.match(skill, /A small diff can still be material/i)
+  assert.match(skill, /backward-compatible optional configuration field/i)
+  assert.doesNotMatch(skill, /when delivery risk involves security, privacy, permissions, persistent state/i)
   assert.match(skill, /without editing source, Git state, Issues, PRs, or comments/i)
   assert.match(skill, /current confirmed user decisions/i)
   assert.match(skill, /final implementation tree and diff/i)
@@ -83,6 +97,25 @@ test('power-check is read-only and checks only current decisions and final evide
   ]) {
     assert.match(skill, new RegExp(field, 'i'))
   }
+})
+
+test('power-check materiality trigger stays consistent across workflow guidance', async () => {
+  const [check, gan, readme, spec] = await Promise.all([
+    read('power-check/SKILL.md'),
+    read('power-gan/SKILL.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  for (const text of [check, gan, readme]) {
+    assert.match(text, /materially affects or creates credible production risk/i)
+    assert.match(text, /production persistent state/i)
+    assert.match(text, /external or cross-version compatibility/i)
+    assert.match(text, /concurrency correctness/i)
+  }
+  assert.match(spec, /材料影响或可信生产风险/)
+  assert.match(spec, /外部或跨版本兼容/)
+  assert.match(spec, /仅触碰相关代码、配置、测试、缓存、fixture 或兼容逻辑不足以触发独立检查/)
 })
 
 test('issue persistence supports verified GitHub and GitLab mutations without repo Markdown', async () => {

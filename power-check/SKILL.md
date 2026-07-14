@@ -1,6 +1,6 @@
 ---
 name: power-check
-description: Independently and read-only verify a completed implementation against current confirmed decisions and the final diff. Use when the user explicitly requests $power-check or when delivery risk involves security, privacy, permissions, persistent state, migration, compatibility, concurrency, irreversible behavior, material drift, or an important merge, release, or handoff.
+description: Independently and read-only verify a completed implementation against current confirmed decisions and the final diff. Use when the user explicitly requests $power-check; when a completed change materially affects or creates credible production risk in security, privacy, permissions, production persistent state, data migration, external or cross-version compatibility, concurrency correctness, or irreversible behavior; or for material drift or an important merge, release, or handoff.
 ---
 
 # Power Check
@@ -8,6 +8,14 @@ description: Independently and read-only verify a completed implementation again
 Work in Simplified Chinese by default.
 
 Verify the completed implementation without editing source, Git state, Issues, PRs, or comments. Prefer a fresh context that did not implement the change. If that independence is required but unavailable, return `CHECK_REQUIRED` instead of pretending independence.
+
+## Applicability
+
+Trigger from a risk category only when the completed change materially affects that boundary or creates credible production risk. Merely touching related code, configuration, tests, caches, fixtures, or compatibility logic is insufficient.
+
+Materiality includes high-severity security, privacy, or permission exposure; production durable data, schema, or state-semantic risk; migration or rollback risk; external or cross-version compatibility commitments; concurrency correctness; and effects that are difficult to reverse. A small diff can still be material.
+
+Do not require an independent check solely for a backward-compatible optional configuration field, an ephemeral or internal cache change, a test fixture adjustment, or a narrow low-risk compatibility fix when proportionate self-validation covers the risk.
 
 ## Evidence Boundary
 

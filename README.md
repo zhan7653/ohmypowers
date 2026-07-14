@@ -48,7 +48,7 @@ The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier`
 
 ## Independent Checks
 
-Every `$power-gan` delivery performs proportional self-validation. Add `$power-check` when the user requests it or the change involves security, privacy, permissions, persistent state, migration, compatibility, concurrency, irreversible behavior, material drift, or an important merge, release, or handoff.
+Every `$power-gan` delivery performs proportional self-validation. Add `$power-check` when the user requests it; when the completed change materially affects or creates credible production risk in security, privacy, permissions, production persistent state, data migration, external or cross-version compatibility, concurrency correctness, or irreversible behavior; or for material drift or an important merge, release, or handoff. Merely touching one of these categories is not enough.
 
 Use a fresh non-implementation context when an independent check is required. If that independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
 

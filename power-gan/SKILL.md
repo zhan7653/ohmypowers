@@ -26,7 +26,7 @@ Whenever a material user-owned boundary remains unresolved, make the first and e
 
 Use one short paragraph of context, not a bullet list, before the question. Do not announce interview phases, mode transitions, or a future sequence of questions. Do not front-load a design baseline, list downstream decisions, or turn the recommendation into a mini-spec followed by a confirmation request. The user's answer selects the next branch. If no material user-owned boundary remains, stop grilling and proceed with the requested summary or delivery.
 
-Treat every earlier recommendation, proposal, working assumption, or draft as unresolved until the user clearly accepts it. A request such as “先设计” authorizes the interview, not a full design written on the user's behalf.
+Treat every earlier recommendation, proposal, draft, or assumption about a material user-owned boundary as unresolved until the user clearly accepts it. Treat verified repository facts as facts, and keep agent-owned reversible implementation assumptions outside the user confirmation loop. A request such as “先设计” authorizes the interview, not a full design written on the user's behalf.
 
 If the previous turn made an unconfirmed recommendation, keep the next question on that recommendation. Do not advance to its downstream consequences until the user accepts, rejects, or changes it.
 
@@ -56,7 +56,7 @@ Prefer a turn shaped like: “The unresolved boundary is X. I recommend Y becaus
 
 Object when evidence shows a real contradiction, excessive complexity, poor value for cost, or ignored risk. State the consequence where it matters. If the user understands and accepts an ordinary product tradeoff, proceed; still stop for safety, law, permission, factual impossibility, unverifiable completion, or missing irreversible authorization.
 
-Do not ask the user to choose reversible implementation mechanics. Treat a boundary as resolved by an explicit decision, a clearly stated repository-derived assumption the user has not disputed, or an explicit not-applicable conclusion. Accept concise confirmation when the immediately preceding question makes its scope unambiguous; clarify only when multiple reasonable interpretations remain.
+Do not ask the user to choose reversible implementation mechanics. Resolve factual questions with verified repository evidence. A repository-derived assumption may guide non-material, reversible implementation as a visible working default, but it does not resolve a material user-owned boundary. Treat a material boundary as resolved only by an explicit user decision or an explicit not-applicable conclusion. Accept concise confirmation when the immediately preceding question makes its scope unambiguous; clarify only when multiple reasonable interpretations remain.
 
 ## Persist Decisions Worth Keeping
 
@@ -82,6 +82,6 @@ Pause when continuing would change the observable outcome, violate a hard constr
 
 Validate against the current decisions, final diff, actual risks, and relevant regressions. Earlier working ideas, rejected options, and speculative tests add no obligation.
 
-Require an independent `$power-check` when the user asks for it, when the implementation materially affects security, privacy, permissions, persistent state, migration, compatibility, concurrency, or irreversible behavior, when preparing an important merge/release/handoff, when material drift occurred, or when the current Decision Record requires it. Use a fresh non-implementation context when independence matters; if that cannot be provided, return `CHECK_REQUIRED` with the decision source and final implementation entry point.
+Require an independent `$power-check` when the user asks for it, when the implementation materially affects or creates credible production risk in security, privacy, permissions, production persistent state, data migration, external or cross-version compatibility, concurrency correctness, or irreversible behavior, when preparing an important merge/release/handoff, when material drift occurred, or when the current Decision Record requires it. Use a fresh non-implementation context when independence matters; if that cannot be provided, return `CHECK_REQUIRED` with the decision source and final implementation entry point.
 
 Finish naturally: for discussion-only work, summarize the decisions and unresolved material questions; for delivery, report the outcome, material deviations, validation evidence, and any required independent check.
