@@ -20,9 +20,17 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /Keep any required skill announcement to one brief clause/i)
   assert.match(skill, /direct request to implement authorizes reversible source changes/i)
   assert.match(skill, /ask only whether the user wants implementation/i)
-  assert.match(skill, /Run The Grill Loop First/i)
-  assert.match(skill, /make the first and every later grill turn do exactly this/i)
-  assert.match(skill, /Ask exactly one highest-leverage unresolved question/i)
+  const mainHeadings = ['Goal', 'Success', 'Constraints', 'Decision Rules', 'Validation', 'Stop Rules']
+  for (const heading of mainHeadings) {
+    assert.match(skill, new RegExp(`^## ${heading}$`, 'm'))
+  }
+  assert.deepEqual(skill.match(/^## .+$/gm), mainHeadings.map(heading => `## ${heading}`))
+  assert.match(skill, /Run The Grill Loop/i)
+  assert.match(skill, /make each grill turn do this/i)
+  assert.match(skill, /Ask one to three highest-leverage unresolved questions/i)
+  assert.match(skill, /Ask one question when later questions depend on its answer/i)
+  assert.match(skill, /Ask two or three only when they belong to the same decision layer/i)
+  assert.match(skill, /If the user answers only part of a batch, keep the unanswered questions unresolved/i)
   assert.match(skill, /Stop and wait for the user's answer/i)
   assert.match(skill, /Use one short paragraph of context, not a bullet list/i)
   assert.match(skill, /Do not announce interview phases, mode transitions, or a future sequence of questions/i)
@@ -31,9 +39,9 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /Treat verified repository facts as facts/i)
   assert.match(skill, /keep agent-owned reversible implementation assumptions outside the user confirmation loop/i)
   assert.match(skill, /“先设计” authorizes the interview, not a full design written on the user's behalf/i)
-  assert.match(skill, /If the previous turn made an unconfirmed recommendation, keep the next question on that recommendation/i)
+  assert.match(skill, /If the previous turn made an unconfirmed recommendation, keep it in the next question batch/i)
   assert.match(skill, /do not output a design draft, acceptance criteria, a multi-bullet decision list, or numbered alternatives/i)
-  assert.match(skill, /State one recommendation for the one current question/i)
+  assert.match(skill, /State one recommendation for each current question/i)
   assert.match(skill, /Inspect Before Asking/i)
   assert.match(skill, /Resolve observable product and state semantics before interface syntax or compatibility mechanics/i)
   assert.match(skill, /Be relentless about unresolved boundaries, not about filling fields/i)
@@ -65,6 +73,21 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.doesNotMatch(skill, /current main agent announces and selects/i)
   assert.doesNotMatch(skill, /this skill does not call another skill/i)
   assert.doesNotMatch(skill, /Task Contract|Execution Blueprint|Agent Dispatch Plan/)
+  assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
+})
+
+test('power-gan question batching stays consistent across workflow guidance', async () => {
+  const [skill, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(skill, /one to three highest-leverage unresolved questions/i)
+  assert.match(readme, /focused rounds of one to three questions/i)
+  assert.match(spec, /每轮必须提出一至三个最高杠杆问题/)
+  assert.match(spec, /同一决策层的独立问题/)
+  assert.doesNotMatch(spec, /Deep Grill 必须一次只问一个问题/)
 })
 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {

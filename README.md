@@ -8,7 +8,7 @@ Codex skills for decision alignment, adaptive delivery, independent checking, li
 
 It infers whether the user wants discussion only or delivery and whether the task needs a focused pass or a Deep Grill. `ALIGN_ONLY`, `DELIVER`, `FAST`, and `DEEP` remain optional shorthand when the user supplies them; they are not a menu the agent should recite.
 
-Deep Grill follows the actual decision tree one question at a time. The agent inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives its recommended answer, and lets each response determine the next branch until both sides share the same understanding.
+Deep Grill follows the actual decision tree in focused rounds of one to three questions. The agent asks one when later questions depend on that answer, and batches two or three only when they are independent questions from the same decision layer. It inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives a recommendation for each question, and lets the answers determine the next branch until both sides share the same understanding.
 
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
