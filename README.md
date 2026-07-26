@@ -10,6 +10,8 @@ It infers whether the user wants discussion only or delivery and whether the tas
 
 Deep Grill follows the actual decision tree in focused rounds of one to three questions. The agent asks one when later questions depend on that answer, and batches two or three only when they are independent questions from the same decision layer. It inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives a recommendation for each question, and lets the answers determine the next branch until both sides share the same understanding.
 
+Throughout alignment, `$power-gan` maintains a compact Decision Ledger with confirmed decisions, pending material boundaries, visible reversible defaults, and explicitly delegated boundaries. Unanswered recommendations remain pending, and the ledger—not conversational memory—seeds any later Decision Record.
+
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
 The agent keeps independent judgment throughout alignment and delivery. It does not flatter, appease, or mirror the user's framing, and it does not treat user preference or confidence as evidence. Credible contradictory evidence is stated plainly, without manufacturing disagreement for its own sake.
@@ -52,9 +54,9 @@ The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier`
 
 ## Proportional Subagents
 
-Small tasks stay in the main context. When the current spawn contract supports explicit model and effort overrides, `$power-gan` routes clear implementation and tests to a Terra/high worker, multi-hypothesis exploration to a Sol/medium explorer, and genuinely ambiguous planning or cross-agent synthesis to a Sol/xhigh default agent. Completed implementation review and required `$power-check` use the uniquely named, behaviorally read-only `power_reviewer`, whose profile owns its Sol/high configuration and no-write/no-delegation instructions. The workflow does not rely on the host sandbox being downgraded for that child.
+Small tasks stay in the main context. For delegation, `$power-gan` routes clear implementation and tests to the managed Terra/high `power_worker`, multi-hypothesis exploration to the behaviorally read-only Sol/medium `power_explorer`, and genuinely ambiguous planning or cross-agent synthesis to the behaviorally read-only Sol/xhigh `power_planner`. Completed implementation review and required `$power-check` use the uniquely named, behaviorally read-only Sol/high `power_reviewer`. Each profile owns its model, reasoning effort, and behavioral constraints; the workflow does not rely on the host sandbox being downgraded for a child.
 
-Routing and task packets remain reversible implementation details: they are not persisted as an Agent Dispatch Plan or put through a user confirmation loop. The main context keeps material decisions, final arbitration, and user communication. If the host cannot honor an intended override, the workflow uses generic delegation or the main context only when that is still adequate; it does not claim an exact model or independent context that was not provided.
+Routing and task packets remain reversible implementation details: they are not persisted as an Agent Dispatch Plan or put through a user confirmation loop. The main context keeps material decisions, final arbitration, and user communication. If a managed profile is unavailable or its configuration cannot be honored, the workflow uses generic delegation or the main context only when that is still adequate; it does not claim an exact model or independent context that was not provided.
 
 ## Independent Checks
 
@@ -72,7 +74,7 @@ Run:
 ./scripts/install.sh
 ```
 
-The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_reviewer` and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. `reviewer.toml` is repository-managed and replaces an existing file with that basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these overrides. Restart Codex afterward.
+The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_worker`, `power_explorer`, `power_planner`, `power_reviewer`, and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. Managed profiles replace existing files with the same basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these profiles. Restart Codex afterward.
 
 ## Examples
 

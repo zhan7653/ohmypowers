@@ -33,84 +33,70 @@ async function availablePowerShell(t) {
 }
 
 test('power-gan grills unresolved decisions naturally and delivers adaptively', async () => {
-  const skill = await read('power-gan/SKILL.md')
+  const [skill, orchestration] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-gan/references/orchestration.md'),
+  ])
 
   assert.match(skill, /`ALIGN_ONLY`/)
   assert.match(skill, /`DELIVER`/)
   assert.match(skill, /`FAST`/)
   assert.match(skill, /`DEEP`/)
   assert.match(skill, /Keep any required skill announcement to one brief clause/i)
-  assert.match(skill, /direct request to implement authorizes reversible source changes/i)
-  assert.match(skill, /ask only whether the user wants implementation/i)
-  const mainHeadings = ['Goal', 'Success', 'Constraints', 'Decision Rules', 'Validation', 'Stop Rules']
+  assert.match(skill, /direct request to implement authorizes reversible work within the confirmed scope/i)
+  assert.match(skill, /If implementation intent is unclear, ask only that/i)
+  const mainHeadings = [
+    'Core Contract',
+    'Ownership And The Materiality Test',
+    'Decision Ledger',
+    'Alignment: The Grill Loop',
+    'Delivery',
+    'Validation And Independent Check',
+    'Persistence',
+    'Orchestration',
+  ]
   for (const heading of mainHeadings) {
     assert.match(skill, new RegExp(`^## ${heading}$`, 'm'))
   }
   assert.deepEqual(skill.match(/^## .+$/gm), mainHeadings.map(heading => `## ${heading}`))
-  assert.match(skill, /Run The Grill Loop/i)
-  assert.match(skill, /make each grill turn do this/i)
-  assert.match(skill, /Ask one to three highest-leverage unresolved questions/i)
-  assert.match(skill, /Ask one question when later questions depend on its answer/i)
-  assert.match(skill, /Ask two or three only when they belong to the same decision layer/i)
-  assert.match(skill, /If the user answers only part of a batch, keep the unanswered questions unresolved/i)
-  assert.match(skill, /Stop and wait for the user's answer/i)
-  assert.match(skill, /Use one short paragraph of context, not a bullet list/i)
-  assert.match(skill, /Do not announce interview phases, mode transitions, or a future sequence of questions/i)
-  assert.match(skill, /Do not front-load a design baseline, list downstream decisions/i)
-  assert.match(skill, /assumption about a material user-owned boundary as unresolved/i)
-  assert.match(skill, /Treat verified repository facts as facts/i)
-  assert.match(skill, /keep agent-owned reversible implementation assumptions outside the user confirmation loop/i)
-  assert.match(skill, /“先设计” authorizes the interview, not a full design written on the user's behalf/i)
-  assert.match(skill, /If the previous turn made an unconfirmed recommendation, keep it in the next question batch/i)
-  assert.match(skill, /do not output a design draft, acceptance criteria, a multi-bullet decision list, or numbered alternatives/i)
-  assert.match(skill, /State one recommendation for each current question/i)
-  assert.match(skill, /Inspect Before Asking/i)
-  assert.match(skill, /Resolve observable product and state semantics before interface syntax or compatibility mechanics/i)
-  assert.match(skill, /Be relentless about unresolved boundaries, not about filling fields/i)
-  assert.match(skill, /Accept concise confirmation when the immediately preceding question makes its scope unambiguous/i)
-  assert.match(skill, /Do not manufacture alternatives, force symmetry, use a routine A\/B\/C template/i)
-  assert.match(skill, /do not ask the user to choose reversible implementation mechanics/i)
-  assert.match(skill, /repository-derived assumption may guide non-material, reversible implementation as a visible working default/i)
-  assert.match(skill, /does not resolve a material user-owned boundary/i)
-  assert.match(skill, /material boundary as resolved only by an explicit user decision or an explicit not-applicable conclusion/i)
-  assert.doesNotMatch(skill, /repository-derived assumption the user has not disputed/i)
-  assert.doesNotMatch(skill, /do not call or depend on `grill-me`/i)
-  assert.doesNotMatch(skill, /generic reply such as “可以”, “确认”, or “应用”/i)
-  assert.doesNotMatch(skill, /strongest credible argument against/i)
-  assert.match(skill, /durable subsystem, runtime, deployment, storage, or data-ownership boundary/i)
-  assert.match(skill, /shared contract across modules or teams/i)
-  assert.match(skill, /Do not escalate a local signature or replaceable abstraction/i)
-  assert.match(skill, /Materiality alone does not authorize hosted mutation or force creation of an Issue/i)
-  assert.match(skill, /Treat the user's direct implementation request as launch authorization/i)
-  assert.match(skill, /Wait only when implementation would introduce an unresolved material commitment/i)
-  assert.match(skill, /mention alternatives only when they are genuinely viable/i)
-  assert.doesNotMatch(skill, /Wait once for explicit launch authorization/i)
-  assert.doesNotMatch(skill, /discuss at least shrinking, splitting, or continuing/i)
-  assert.match(skill, /Treat comments as history and evidence/i)
-  assert.match(skill, /code to commit, commit to PR\/MR, PR\/MR to Decision Issue/i)
+  for (const marker of ['▸ 已确认:', '▸ 待定:', '▸ 默认(可改):', '▸ 已委托:']) assert.match(skill, new RegExp(marker.replace(/[()]/g, '\\$&')))
+  assert.match(skill, /ledger — not conversational memory/i)
+  assert.match(skill, /An unconfirmed recommendation lives in 待定/i)
+  assert.match(skill, /If the user answers only part of a batch, the unanswered items stay in 待定/i)
+  assert.match(skill, /blanket delegation never covers safety, legality, irreversible actions/i)
+  assert.match(skill, /M1 — Observable behavior/i)
+  assert.match(skill, /M2 — Public contract/i)
+  assert.match(skill, /M3 — Durable cost or risk/i)
+  assert.match(skill, /M4 — Costly to reverse/i)
+  assert.match(skill, /one to three highest-leverage unresolved questions/i)
+  assert.match(skill, /Each question carries exactly one recommendation with its reason/i)
+  assert.match(skill, /Stop and wait for the answer/i)
+  assert.match(skill, /Do not precompute a blueprint, file list, private interface design, or test matrix/i)
+  assert.match(skill, /Do not manufacture alternatives, force symmetry/i)
+  assert.match(skill, /Never ask the user to choose reversible mechanics/i)
+  assert.match(skill, /only an explicit user decision.*resolves a material boundary/i)
+  assert.match(skill, /Do not flatter, appease, or mirror/i)
+  assert.match(skill, /A direct implementation request covers reversible work/i)
+  assert.match(skill, /Every material element of the launch basis must already sit in 已确认 or 已委托/i)
+  assert.match(skill, /Do not reopen settled decisions or re-grill history/i)
+  assert.match(skill, /Materiality alone neither forces an Issue nor authorizes hosted mutation/i)
+  assert.match(skill, /follow code → commit → PR\/MR → Decision Issue/i)
   assert.match(skill, /references\/issue-persistence\.md/)
   assert.match(skill, /references\/delivery-evidence\.md/)
-  assert.match(skill, /Use a fresh non-implementation context when independence matters/i)
+  assert.match(skill, /references\/orchestration\.md/)
   assert.match(skill, /CHECK_REQUIRED/)
-  assert.match(skill, /always select the smallest adequate persistence carrier/i)
-  assert.match(skill, /proactively.*Decision Record draft/i)
-  assert.match(skill, /independent judgment/i)
-  assert.match(skill, /do not flatter|no flattery/i)
-  assert.match(skill, /do not (?:flatter.*)?mirror|no mirroring/i)
-  assert.match(skill, /route by task shape/i)
-  assert.match(skill, /worker.*gpt-5\.6-terra.*high/i)
-  assert.match(skill, /explorer.*gpt-5\.6-sol.*medium/i)
-  assert.match(skill, /default.*gpt-5\.6-sol.*xhigh/i)
-  assert.match(skill, /custom `power_reviewer`/i)
-  assert.match(skill, /final arbitration.*main context/i)
-  assert.match(skill, /fork_turns: none.*smallest supported positive history slice/i)
-  assert.match(skill, /task packet/i)
-  assert.match(skill, /If the host cannot honor the intended routing/i)
+  assert.match(skill, /At alignment completion, always state the smallest adequate carrier/i)
+  assert.match(skill, /proactively show the Decision Record draft/i)
   assert.match(skill, /stable final candidate/i)
-  assert.match(skill, /same independent reviewer.*only the delta and affected evidence/i)
-  assert.doesNotMatch(skill, /current main agent announces and selects/i)
-  assert.doesNotMatch(skill, /this skill does not call another skill/i)
-  assert.match(skill, /Do not persist that packet as a Blueprint or Agent Dispatch Plan/i)
+  assert.match(skill, /wake the same reviewer for the delta only/i)
+  assert.match(orchestration, /Route by task shape/i)
+  assert.match(orchestration, /`power_worker`/)
+  assert.match(orchestration, /`power_explorer`/)
+  assert.match(orchestration, /`power_planner`/)
+  assert.match(orchestration, /`power_reviewer`/)
+  assert.match(orchestration, /fork_turns: none.*smallest supported positive history slice/i)
+  assert.match(orchestration, /Do not persist it as a Blueprint or Agent Dispatch Plan/i)
+  assert.match(orchestration, /If a profile is unavailable/i)
   assert.doesNotMatch(skill, /^# (?:Task Contract|Execution Blueprint|Agent Dispatch Plan)$/m)
   assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
 })
@@ -185,22 +171,51 @@ test('power-check is read-only and checks only current decisions and final evide
 })
 
 test('managed reviewer routing stays uniquely named and behaviorally read-only', async () => {
-  const [gan, check, readme, spec, profile] = await Promise.all([
+  const [gan, orchestration, check, readme, spec, profile] = await Promise.all([
     read('power-gan/SKILL.md'),
+    read('power-gan/references/orchestration.md'),
     read('power-check/SKILL.md'),
     read('README.md'),
     read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
     read('power-check/agents/reviewer.toml'),
   ])
 
-  for (const text of [gan, check, readme, spec, profile]) assert.match(text, /power_reviewer/)
+  for (const text of [gan, orchestration, check, readme, spec, profile]) assert.match(text, /power_reviewer/)
   assert.match(readme, /Codex CLI 0\.145\.0 multi-agent V2/i)
   assert.match(spec, /Codex CLI 0\.145\.0 multi-agent V2/i)
   assert.match(readme, /does not rely on the host sandbox being downgraded/i)
   assert.match(spec, /不要求宿主强制降级 reviewer sandbox/)
   assert.match(check, /tree and diff again after the response/i)
-  assert.match(gan, /final tree and diff are unchanged after the reviewer returns/i)
+  assert.match(orchestration, /verify the working tree is unchanged after it returns/i)
   assert.doesNotMatch(profile, /sandbox_mode/)
+})
+
+test('power-gan custom agent profiles own their routing configuration', async () => {
+  const [orchestration, worker, explorer, planner] = await Promise.all([
+    read('power-gan/references/orchestration.md'),
+    read('power-gan/agents/power-worker.toml'),
+    read('power-gan/agents/power-explorer.toml'),
+    read('power-gan/agents/power-planner.toml'),
+  ])
+
+  assert.match(orchestration, /Each profile owns its model and reasoning-effort configuration/i)
+  assert.match(orchestration, /do not restate or override them at spawn time/i)
+  assert.match(worker, /name = "power_worker"/)
+  assert.match(worker, /model = "gpt-5\.6-terra"/)
+  assert.match(worker, /model_reasoning_effort = "high"/)
+  assert.match(worker, /Write only within the allowed-writes boundary/i)
+  assert.match(explorer, /name = "power_explorer"/)
+  assert.match(explorer, /model = "gpt-5\.6-sol"/)
+  assert.match(explorer, /model_reasoning_effort = "medium"/)
+  assert.match(explorer, /behaviorally read-only/i)
+  assert.match(planner, /name = "power_planner"/)
+  assert.match(planner, /model = "gpt-5\.6-sol"/)
+  assert.match(planner, /model_reasoning_effort = "xhigh"/)
+  assert.match(planner, /behaviorally read-only/i)
+  for (const profile of [worker, explorer, planner]) {
+    assert.match(profile, /Do not delegate to another agent/i)
+    assert.doesNotMatch(profile, /sandbox_mode/)
+  }
 })
 
 test('independent review waits for the final candidate and retries only affected delta', async () => {
@@ -211,12 +226,15 @@ test('independent review waits for the final candidate and retries only affected
     read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
   ])
 
-  for (const text of [gan, check, readme]) {
+  for (const text of [check, readme]) {
     assert.match(text, /stable final candidate|final candidate is stable/i)
     assert.match(text, /complete final diff/i)
     assert.match(text, /same independent .*reviewer/i)
     assert.match(text, /only the delta/i)
   }
+  assert.match(gan, /stable final candidate/i)
+  assert.match(gan, /complete final diff/i)
+  assert.match(gan, /wake the same reviewer for the delta only/i)
   assert.match(check, /Do not remap the complete unchanged Decision Record/i)
   assert.match(check, /Do not run a command on an incompatible platform/i)
   assert.match(spec, /最终 tree\/diff 身份稳定后启动/)
@@ -396,7 +414,7 @@ test('decision revisions remain optional and repository-defined', async () => {
     read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
   ])
 
-  assert.match(skill, /If the repository uses decision revisions/i)
+  assert.match(skill, /before drafting or touching hosted state, read \[references\/issue-persistence\.md\]/i)
   assert.match(reference, /omit when the repository does not use revisions/i)
   assert.match(readme, /a revision only when the repository uses one/i)
   assert.match(spec, /仅在仓库采用 revision 时记录 revision/)

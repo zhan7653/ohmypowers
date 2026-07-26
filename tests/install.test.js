@@ -21,6 +21,9 @@ const retiredSkills = ['power-think', 'power-grill', 'power-loop', 'power-verifi
 const managedProfiles = [
   ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
   ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-5.6-sol', 'high', undefined],
+  ['power-gan/agents/power-worker.toml', 'power_worker', 'gpt-5.6-terra', 'high', undefined],
+  ['power-gan/agents/power-explorer.toml', 'power_explorer', 'gpt-5.6-sol', 'medium', undefined],
+  ['power-gan/agents/power-planner.toml', 'power_planner', 'gpt-5.6-sol', 'xhigh', undefined],
 ]
 const retiredProfiles = [
   'power-luna-worker.toml',
@@ -196,6 +199,14 @@ function assertProfile(profile, expectedName, model, effort, sandbox) {
   assert.equal(typeof profile.developer_instructions, 'string')
   if (expectedName === 'power_reviewer') {
     assert.match(profile.developer_instructions, /Do not edit files, Git state, Issues, PRs, comments, or any external state/i)
+    assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
+  }
+  if (expectedName === 'power_worker') {
+    assert.match(profile.developer_instructions, /Write only within the allowed-writes boundary/i)
+    assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
+  }
+  if (expectedName === 'power_explorer' || expectedName === 'power_planner') {
+    assert.match(profile.developer_instructions, /behaviorally read-only/i)
     assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
   }
 }

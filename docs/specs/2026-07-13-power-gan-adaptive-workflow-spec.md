@@ -104,6 +104,8 @@ Deep Grill 必须：
 - 允许新证据推翻旧前提并回到相关分支；
 - 在没有未解决材料分支时结束，而不是穷举所有可能的实施细节。
 
+每轮对齐都维护一个紧凑的 Decision Ledger，固定使用“已确认”“待定”“默认（可改）”“已委托”四类，仅记录材料项。未确认的推荐在用户接受、拒绝或修改前始终留在“待定”；部分回答不能让未回答项自动确认。“剩下的你定”等明确委托只覆盖当前已命名的待定项，不覆盖安全、合法性、不可逆操作、外部支出或缺失授权。Ledger 是会话运行状态，不作为 Blueprint 或问题清单持久化；需要 Decision Record 时，由“已确认”和“已委托”内容生成。
+
 #### FR-4：推荐与有据异议协议
 
 对于材料决定，Agent 必须：
@@ -126,17 +128,12 @@ Agent 必须保持独立判断，不得奉承、迎合或镜像用户立场，�
 
 #### FR-5：材料决定与有效确认
 
-材料决定包括会改变以下任一项的选择：
+材料决定按以下四项测试：
 
-- 用户或集成方可观察的行为；
-- 明确范围或非目标；
-- 公共 API、数据、配置或兼容性承诺；
-- 建立长期子系统、运行、部署、存储或数据所有权边界；
-- 建立被多个模块或团队依赖的共享内部契约，或落地后代价高昂的架构选择；
-- 引入形成长期维护约束的生产依赖或框架；
-- 权限、安全、隐私、迁移、并发、持久状态或不可逆行为；
-- 是否增加一个可以独立交付的功能；
-- 用户需要接受的显著成本、周期或运维负担。
+- M1（可观察行为）：改变用户或外部系统依赖的行为或数据；
+- M2（公共契约）：创建或改变 API、schema、存储格式、配置面、CLI、wire protocol，或跨模块、跨团队共享的契约；
+- M3（长期成本或风险）：采用长期生产依赖，建立运行、部署、存储或数据所有权边界，或承诺支出、配额、安全和权限边界；
+- M4（反转代价高）：涉及数据迁移、已发布版本、外部承诺或落地后昂贵的撤销操作。
 
 公共或私有不是唯一划分依据。局部函数签名、私有 helper 和容易替换的抽象仍由 Agent 自主决定，不能仅因为被称为“架构”就升级为材料决定。
 
@@ -323,16 +320,16 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 
 #### FR-18：轻量、按比例的 subagent 编排
 
-小任务由主上下文直接完成。宿主 spawn 合同支持显式 model 和 reasoning effort 覆盖时，按任务形态路由：
+小任务由主上下文直接完成。需要委派时，通过受管理的具名 profile 按任务形态路由；model 和 reasoning effort 由各 profile 自己持有，spawn 时不重复覆盖：
 
-- 清晰、有界的实现、测试、修复、文档和确定性验证使用 `worker`、`gpt-5.6-terra`、`high`；
-- 多假设探索、仓库调查、根因分析和跨模块追踪使用 `explorer`、`gpt-5.6-sol`、`medium`；
-- 真正模糊的规划、拆分、跨 agent 结果综合和冲突分析使用 `default`、`gpt-5.6-sol`、`xhigh`；
+- 清晰、有界的实现、测试、修复、文档和确定性验证使用 `power_worker`、`gpt-5.6-terra`、`high`；
+- 多假设探索、仓库调查、根因分析和跨模块追踪使用行为只读的 `power_explorer`、`gpt-5.6-sol`、`medium`；
+- 真正模糊的规划、拆分、跨 agent 结果综合和冲突分析使用行为只读的 `power_planner`、`gpt-5.6-sol`、`xhigh`；
 - 完成态实现审查和必须执行的 `$power-check` 使用唯一命名的受管理自定义 `power_reviewer`，避免与宿主内建 `reviewer` 冲突；其 profile 单独拥有 `gpt-5.6-sol`、`high` 和禁止写入、禁止递归委派的 developer instructions。reviewer 的 sandbox 继承宿主，不作为本工作流的通过条件。
 
 模型路由、任务包和 agent 分配是可逆执行策略，不要求用户确认，也不作为 Blueprint 或 Agent Dispatch Plan 持久化。主上下文保留对齐、材料决定、路由、最终仲裁和用户沟通；subagent 的计划、综合、实现或审查结果只能作为主上下文的输入。
 
-显式覆盖使用 `fork_turns: none` 或宿主允许的最小正数历史片段。只并行稳定输入上的只读调查或写入所有权不重叠的任务，并禁止生成的 subagent 继续递归委派。Terra worker 遇到材料歧义或任务包外工作时返回证据，由 Sol Medium 或 Sol xhigh 处理不确定性后再发出明确实现任务。主上下文在独立审查前后复核最终 tree/diff 身份；任何变化都会使旧检查对变化内容失效。
+任务包使用 `fork_turns: none` 或宿主允许的最小正数历史片段。只并行稳定输入上的只读调查或写入所有权不重叠的任务，并禁止生成的 subagent 继续递归委派。`power_worker` 遇到材料歧义或任务包外工作时返回证据，由 `power_explorer` 或 `power_planner` 处理不确定性后再发出明确实现任务。行为只读的 agent 与未提交工作并行且结果用于检查、合并或交接判断时，主上下文在其返回后复核工作树不变；任何变化都会使旧检查对变化内容失效。
 
 当前自定义 agent 覆盖的验证基线为 Codex CLI 0.145.0 multi-agent V2；0.144.1 不作为支持基线。
 
@@ -547,13 +544,19 @@ Then Agent 主动指出它们属于不同价值和风险边界，提供拆分与
 
 Given Codex 加载 `$power-gan` 的操作性指令
 When 执行需求对齐、交付或验证
-Then `Goal`、`Success`、`Constraints`、`Decision Rules`、`Validation` 和 `Stop Rules` 构成六个主结构，Grill Me 仍是材料对齐的核心行为，原有授权、持久化和独立检查边界保持不变。
+Then `Core Contract`、`Ownership And The Materiality Test`、`Decision Ledger`、`Alignment: The Grill Loop`、`Delivery`、`Validation And Independent Check`、`Persistence` 和 `Orchestration` 构成主结构，Grill Me 仍是材料对齐的核心行为，原有授权、持久化和独立检查边界保持不变。
 
 ### AC-22：模型路由轻量且可验证
 
-Given 当前 Codex spawn 合同支持显式 model 和 reasoning effort
+Given 当前 Codex 支持受管理的自定义 agent profile
 When `$power-gan` 将边界清晰的实现、复杂探索、模糊规划或完成态审查交给 subagent
-Then 分别使用 Terra/high worker、Sol/medium explorer、Sol/xhigh default 或受管理的 Sol/high `power_reviewer`；reviewer 通过自然语言约束保持行为只读且审查前后 tree/diff 身份一致，主上下文保留最终仲裁，任务包不持久化，宿主不能兑现覆盖时不声明精确保证。
+Then 分别使用 Terra/high `power_worker`、Sol/medium `power_explorer`、Sol/xhigh `power_planner` 或 Sol/high `power_reviewer`；每个 profile 自己持有模型和 effort，explorer、planner 和 reviewer 通过自然语言约束保持行为只读，主上下文保留最终仲裁，任务包不持久化，宿主不能兑现 profile 配置时不声明精确保证。
+
+### AC-23：Decision Ledger 不丢失材料决定
+
+Given Grill 已跨越多个回合且用户只回答了部分问题或明确委托了部分边界
+When 进入下一轮、结束对齐或生成 Decision Record
+Then 未回答推荐仍位于“待定”，明确委托位于“已委托”，可逆工作默认值与材料决定分开，Decision Record 覆盖全部“已确认”和“已委托”的材料项。
 
 ## 已解决问题
 

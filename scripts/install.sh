@@ -41,6 +41,9 @@ done
 agent_sources=(
   power-critic/agents/power-critic.toml
   power-check/agents/reviewer.toml
+  power-gan/agents/power-worker.toml
+  power-gan/agents/power-explorer.toml
+  power-gan/agents/power-planner.toml
 )
 
 retired_agent_profiles=(
