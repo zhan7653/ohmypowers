@@ -265,7 +265,7 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 
 #### FR-14：独立检查
 
-以下情况需要追加独立 `$power-check`：
+`$power-check` 的 Applicability 是运行时唯一触发规则来源。以下情况需要追加独立 `$power-check`：
 
 - 用户明确要求；
 - 对安全、隐私、权限、生产持久状态、数据迁移、外部或跨版本兼容、并发正确性或不可逆行为产生材料影响或可信生产风险；
@@ -277,15 +277,17 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 
 仅触碰相关代码、配置、测试、缓存、fixture 或兼容逻辑不足以触发独立检查。高严重度安全、隐私或权限暴露即使 diff 很小仍属于材料风险；向后兼容的可选字段、临时或内部缓存、测试 fixture 及范围狭窄且低风险的兼容修复，在相称自验证充分时不强制独立检查。
 
-需要独立性时使用新鲜、非实施上下文，并向检查提供最小充分材料。无法提供足够独立的上下文时，不得自称完成独立检查，必须返回 `CHECK_REQUIRED` 和明确的检查入口。
+需要独立性时使用新鲜、非实施上下文。caller 必须先准备并校验 Check Packet，其中包含模式、决策来源、明确范围外、最终实现身份、自验证证据和外部证据；delta 模式还包含前次身份、结果、findings 及处置。普通缺字段由 caller 补齐；reviewer 仍收到不完整包时返回 `BLOCKED` 并指出 caller 操作。只有缺少 caller 无法提供的用户决定、解释或授权时才返回 `NEEDS_HUMAN`。
 
-独立检查只在计划内实施修改与相称自验证完成、当前 Decision Record 或已验证本地快照可用、最终 tree/diff 身份稳定后启动。首次检查完整最终 diff。检查发现问题并完成修复后，应继续使用仍然独立的同一 reviewer 上下文，只检查相对已检查身份的 delta、受影响决定映射和回归证据；未受影响的 Decision Record 映射、源码检查、验证证据和外部快照必须复用。只有材料范围、决定、决策来源或证据边界变化，或原 reviewer 上下文不可用时，才重新执行完整独立检查。
+独立检查只在计划内实施修改与相称自验证完成、当前 Decision Record 或已验证本地快照可用、最终实现身份稳定后启动。已 commit 候选只有在 index、工作树、全部 untracked 和 submodule 状态前后均为空时才能只用 commit SHA 绑定，reviewer 检查该 commit tree；否则绑定 `HEAD`、`git diff --binary --full-index --no-textconv HEAD --` 原始字节的 SHA-256，以及使用 NUL-safe 枚举得到的逐文件 untracked manifest（相对路径、类型、文件字节或符号链接目标）。前后必须按完整配方重算，不能只比较 `HEAD`。
+
+首次检查完整最终 diff。检查发现问题并完成修复后，优先继续使用仍然独立的同一 reviewer 上下文；不可恢复时可以创建新的独立 reviewer，但 delta packet 必须包含前次身份、结果、findings 和处置并披露上下文替换。delta 检查只覆盖相对已检查身份的变化、受影响决定映射和回归证据；未受影响的 Decision Record 映射、源码检查、验证证据和外部快照必须复用。只有材料范围、决定、决策来源或证据边界变化时才重新执行完整独立检查。
 
 已经提供来源身份与哈希的本地 Decision Record 快照时，不得为重复取证重新联网。不得仅为复制已有支持平台证据而在不兼容平台运行命令。
 
 #### FR-15：power-check 边界
 
-`$power-check` 是独立、只读的实现检查 skill。它只依据：
+`$power-check` 是独立、只读的实现检查 skill，并明确区分 caller 与 reviewer。Check Packet 是两者之间的唯一接口；caller 决定适用性、绑定实现身份、提供证据、委派并在返回后复核，reviewer 在新鲜非实施上下文中按包执行检查。它只依据：
 
 - 当前确认的用户决定或 Decision Record；
 - 明确范围外；
@@ -514,7 +516,7 @@ Then 根据用户决定、最终 diff 和实际风险进行自验证，早期 Wo
 
 Given 用户要求独立验证，或任务涉及材料风险、重要交付或显著偏移
 When 自验证完成
-Then 在计划内实施修改与自验证完成、最终 tree/diff 稳定后，使用新鲜、非实施上下文执行一次完整 `$power-check`；主上下文或实施上下文主动委派给受管理的 `power_reviewer`，其 developer instructions 禁止写入和递归委派，已经处于新鲜 `power_reviewer` 上下文时直接检查。主上下文在委派前后验证最终 tree/diff 身份不变；不要求宿主强制降级 reviewer sandbox。仅触碰风险类别的普通可逆任务不强制独立检查，高严重度的小型安全、隐私或权限改动仍按材料风险处理。发现修复后继续使用同一 reviewer，只复查 delta 与受影响证据；材料范围、决定、来源或证据边界变化时才重新完整检查。
+Then 在计划内实施修改与自验证完成后，caller 构造并校验 Check Packet，按完整配方绑定最终实现身份，再委派给新鲜、非实施的 `power_reviewer`。commit SHA 模式要求前后工作树完全干净；非 commit 模式绑定 binary full-index diff 和逐文件 untracked manifest。reviewer 的 developer instructions 禁止写入和递归委派，不要求宿主强制降级 sandbox。仅触碰风险类别的普通可逆任务不强制独立检查。修复后优先恢复同一 reviewer；不可恢复时允许新 reviewer 使用含前次结果和处置的 delta packet，只复查 delta 与受影响证据；材料范围、决定、来源或证据边界变化时才重新完整检查。
 
 ### AC-17：不能伪造独立性
 

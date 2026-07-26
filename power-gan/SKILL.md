@@ -104,9 +104,9 @@ Do not reopen settled decisions or re-grill history; internal reversible surpris
 
 Validate against the current decisions, the final diff, actual risks, and relevant regressions. Earlier working ideas, rejected options, and speculative tests add no obligation.
 
-Require an independent `$power-check` when the user asks for it; when the completed change materially affects or creates credible production risk in security, privacy, permissions, production persistent state, data migration, external or cross-version compatibility, concurrency correctness, or irreversible behavior; when material drift occurred; when preparing an important merge, release, or handoff; or when the current Decision Record requires it. Example pair: a migration rewriting the events table requires it; a test-fixture change or a backward-compatible optional config field with proportionate self-validation does not.
+Whether an independent `$power-check` is required is defined once, in power-check's Applicability section — apply that contract instead of a restated list. In shorthand: user request, a material effect (not a mere touch) on a protected risk category, material drift, an important merge/release/handoff, or a Decision Record that demands it. Example pair: a migration rewriting the events table requires it; a test-fixture change or a backward-compatible optional config field with proportionate self-validation does not.
 
-Start the check only after the delivery is a stable final candidate: planned edits finished, proportional self-validation done, final tree and diff recorded. The first check covers the complete final diff; when findings lead to fixes, wake the same reviewer for the delta only. Delegate per [references/orchestration.md](references/orchestration.md); if adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
+Run required checks through power-check's Caller Protocol: build the Check Packet, record the implementation identity, delegate to `power_reviewer`, verify the identity after it returns, and re-check fixes as a delta. If adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
 
 ## Persistence
 
