@@ -40,6 +40,7 @@ done
 
 agent_sources=(
   power-critic/agents/power-critic.toml
+  power-check/agents/reviewer.toml
 )
 
 retired_agent_profiles=(

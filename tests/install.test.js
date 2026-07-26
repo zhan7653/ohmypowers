@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promises as fs } from 'node:fs'
@@ -19,6 +20,7 @@ const managedSkills = [
 const retiredSkills = ['power-think', 'power-grill', 'power-loop', 'power-verifier']
 const managedProfiles = [
   ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
+  ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-5.6-sol', 'high', undefined],
 ]
 const retiredProfiles = [
   'power-luna-worker.toml',
@@ -34,7 +36,7 @@ const retiredProfiles = [
 ]
 
 test('installer replaces the retired core workflow and preserves unrelated agents', async t => {
-  const tmp = await fs.mkdtemp('/tmp/ohmypowers-install-')
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'ohmypowers-install-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
   const agentsDir = path.join(tmp, 'agents')
   const skillsDir = path.join(tmp, 'skills')
@@ -44,6 +46,7 @@ test('installer replaces the retired core workflow and preserves unrelated agent
   await fs.mkdir(agentsDir, { recursive: true })
   await fs.mkdir(skillsDir, { recursive: true })
   await fs.writeFile(personalAgent, personalAgentContents, 'utf8')
+  await fs.writeFile(path.join(agentsDir, 'reviewer.toml'), 'name = "personal_reviewer"\n', 'utf8')
   for (const retired of retiredProfiles) await fs.writeFile(path.join(agentsDir, retired), 'stale = true\n', 'utf8')
   for (const retired of retiredSkills) {
     await fs.mkdir(path.join(skillsDir, retired), { recursive: true })
@@ -77,7 +80,7 @@ test('installer replaces the retired core workflow and preserves unrelated agent
 })
 
 test('installed power-work-report runs without the source repository as cwd', async t => {
-  const tmp = await fs.mkdtemp('/tmp/ohmypowers-installed-report-')
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'ohmypowers-installed-report-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
   await install(tmp)
   const installedBin = path.join(
@@ -191,4 +194,8 @@ function assertProfile(profile, expectedName, model, effort, sandbox) {
   assert.equal(profile.model_reasoning_effort, effort)
   assert.equal(profile.sandbox_mode, sandbox)
   assert.equal(typeof profile.developer_instructions, 'string')
+  if (expectedName === 'power_reviewer') {
+    assert.match(profile.developer_instructions, /Do not edit files, Git state, Issues, PRs, comments, or any external state/i)
+    assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
+  }
 }

@@ -9,6 +9,14 @@ Work in Simplified Chinese by default.
 
 Verify the completed implementation without editing source, Git state, Issues, PRs, or comments. Prefer a fresh context that did not implement the change. If that independence is required but unavailable, return `CHECK_REQUIRED` instead of pretending independence.
 
+## Independent Execution
+
+When a fresh subagent context is available and this skill is invoked from the main or implementation context, delegate the check to the uniquely named custom `power_reviewer` agent and explicitly tell it to use `$power-check`. Let that agent configuration own its model, reasoning effort, and no-write/no-delegation instructions; do not duplicate those settings in this skill. Record the final implementation identity immediately before delegation and verify the tree and diff again after the response. Any change invalidates the earlier result for changed content. If already running in a fresh `power_reviewer` context, execute the check directly and do not spawn another reviewer. If the configured reviewer is unavailable and independence is required, use another fresh behaviorally read-only context only when it is adequate for the task; otherwise return `CHECK_REQUIRED`.
+
+Start the independent check only after the delivery has reached a stable final candidate: planned implementation edits are complete, required self-validation has finished, and the current decision source, final implementation identity, and validation evidence are available. Do not start an early or speculative check merely because a PR, merge, release, or handoff is planned.
+
+When a non-pass result leads to fixes, wake the same independent `power_reviewer` context when it remains available. Keep that context independent from implementation, but do not spawn a replacement reviewer solely to inspect the fixes.
+
 ## Applicability
 
 Trigger from a risk category only when the completed change materially affects that boundary or creates credible production risk. Merely touching related code, configuration, tests, caches, fixtures, or compatibility logic is insufficient.
@@ -27,6 +35,8 @@ Use only:
 - self-validation and necessary external evidence;
 - relevant regression risks visible in the final implementation.
 
+When the caller supplies a verified local Decision Record snapshot with its source identity and hash, use that snapshot instead of fetching the network again. Replay validation only when it is necessary and proportionate to challenge the supplied evidence. Do not run a command on an incompatible platform merely to duplicate evidence already produced on the supported platform.
+
 Do not turn a Working Strategy, Blueprint, rejected option, historical proposal, or comment that never entered the current Decision Record into an obligation.
 
 ## Check
@@ -37,7 +47,7 @@ Do not turn a Working Strategy, Blueprint, rejected option, historical proposal,
 4. Replay safe, proportionate validation when it will not mutate the canonical source or external state. Otherwise state what evidence was used and what could not be replayed.
 5. Report findings before the conclusion. Do not add preferences or imagined requirements.
 
-Bind the result to the inspected final implementation identity. If the tree or diff changes afterward, the old result covers only the earlier content; inspect the delta and repeat affected checks before reporting the final implementation as passed. Equivalent content may reuse still-relevant evidence.
+Bind the result to the inspected final implementation identity. The first check inspects the complete final diff. If a non-pass result leads to fixes, compare the new identity with the checked identity and inspect only the delta, affected decision mappings, and affected regression evidence. Reuse unchanged Decision Record mappings, source inspection, and validation evidence. Do not remap the complete unchanged Decision Record, re-read unrelated files, rerun unrelated full suites, or reacquire unchanged external evidence unless the delta invalidates that evidence. Require a new full independent check only when material scope, decisions, the decision source, or the evidence boundary changed, or when the earlier independent context is unavailable.
 
 Return one result:
 

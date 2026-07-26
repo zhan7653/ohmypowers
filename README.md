@@ -12,6 +12,8 @@ Deep Grill follows the actual decision tree in focused rounds of one to three qu
 
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
+The agent keeps independent judgment throughout alignment and delivery. It does not flatter, appease, or mirror the user's framing, and it does not treat user preference or confidence as evidence. Credible contradictory evidence is stated plainly, without manufacturing disagreement for its own sake.
+
 “Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
 Before the first source write, the agent briefly states the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement already authorizes reversible work inside the stated scope; another confirmation is needed only when the boundary introduces a new material commitment, the user requested design approval first, or external or irreversible authorization is missing.
@@ -27,6 +29,8 @@ Use the smallest durable record justified by repository conventions and coordina
 - Commit: tiny local changes.
 
 Materiality alone does not authorize hosted mutation or force creation of an Issue.
+
+At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
 
 An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
@@ -46,11 +50,19 @@ Do not create repository decision Markdown by default. Code, tests, schema, type
 
 The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped.
 
+## Proportional Subagents
+
+Small tasks stay in the main context. When the current spawn contract supports explicit model and effort overrides, `$power-gan` routes clear implementation and tests to a Terra/high worker, multi-hypothesis exploration to a Sol/medium explorer, and genuinely ambiguous planning or cross-agent synthesis to a Sol/xhigh default agent. Completed implementation review and required `$power-check` use the uniquely named, behaviorally read-only `power_reviewer`, whose profile owns its Sol/high configuration and no-write/no-delegation instructions. The workflow does not rely on the host sandbox being downgraded for that child.
+
+Routing and task packets remain reversible implementation details: they are not persisted as an Agent Dispatch Plan or put through a user confirmation loop. The main context keeps material decisions, final arbitration, and user communication. If the host cannot honor an intended override, the workflow uses generic delegation or the main context only when that is still adequate; it does not claim an exact model or independent context that was not provided.
+
 ## Independent Checks
 
 Every `$power-gan` delivery performs proportional self-validation. Add `$power-check` when the user requests it; when the completed change materially affects or creates credible production risk in security, privacy, permissions, production persistent state, data migration, external or cross-version compatibility, concurrency correctness, or irreversible behavior; or for material drift or an important merge, release, or handoff. Merely touching one of these categories is not enough.
 
-Use a fresh non-implementation context when an independent check is required. If that independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
+Use a fresh non-implementation context when an independent check is required. From the main or implementation context, `$power-check` delegates to the managed `power_reviewer`; a reviewer already in a fresh context checks directly without spawning recursively. The main context binds the check to the final tree and diff immediately before delegation and verifies that identity again afterward. If adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
+
+Start that check only after planned implementation edits and proportional self-validation are complete and the final candidate is stable. The first check covers the complete final diff. When findings lead to fixes, reuse the same independent reviewer and inspect only the delta plus affected decisions and evidence; unchanged mappings, source inspection, validation, and verified local Decision Record snapshots are reused rather than reacquired. A material scope or decision change still requires a new full check.
 
 ## Installation
 
@@ -60,7 +72,7 @@ Run:
 ./scripts/install.sh
 ```
 
-The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the optional `power_critic` agent profile, and removes retired ohmypowers skills and profiles. Restart Codex afterward.
+The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_reviewer` and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. `reviewer.toml` is repository-managed and replaces an existing file with that basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these overrides. Restart Codex afterward.
 
 ## Examples
 

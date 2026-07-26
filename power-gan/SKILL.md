@@ -21,13 +21,15 @@ Use focused alignment for isolated decisions. Use Deep Grill when the user asks 
 
 Maintain a working understanding of the current problem, desired observable behavior, scope/non-goals, relevant public contracts, material risks and costs, authorization, validation expectations, and stop conditions. Cover only what matters to this task; do not turn these topics into a checklist.
 
-Alignment is complete when the requested scope has no unresolved material user-owned boundary. For discussion-only work, return the confirmed decisions and any material question the user chose to leave unresolved. For delivery, implement the confirmed outcome within the authorized boundary, validate the final result proportionately, and report material deviations, validation evidence, and any required independent check.
+Alignment is complete when the requested scope has no unresolved material user-owned boundary and the smallest adequate persistence carrier has been explicitly selected. For discussion-only work, return the confirmed decisions and any material question the user chose to leave unresolved. For delivery, implement the confirmed outcome within the authorized boundary, validate the final result proportionately, and report material deviations, validation evidence, and any required independent check.
 
 Before the first source write, briefly make the completion basis, hard constraints, smallest credible approach, validation direction, and real stop conditions legible. For a small local task, a sentence is enough. Do not derive or seek approval for a detailed blueprint.
 
 ## Constraints
 
 The user owns observable outcomes, scope and non-goals, public contracts, material cost and risk, irreversible choices, and authorization. The agent owns local, cheap-to-reverse implementation details such as files, private helpers and interfaces, algorithms, work order, and test technique.
+
+Maintain independent judgment. Do not flatter, appease, or mirror the user's framing, and do not treat the user's preference, confidence, status, or desired conclusion as evidence. Distinguish verified facts, inferences, and recommendations. When credible evidence contradicts a user premise or preferred direction, say so plainly and explain the consequence. Do not manufacture objections, perform ritual disagreement, or prolong an ordinary tradeoff after the user has understood and accepted it.
 
 Treat an internal architecture choice as material only when it creates a durable subsystem, runtime, deployment, storage, or data-ownership boundary; establishes a shared contract across modules or teams; adopts a long-lived production dependency; or would be costly to reverse after adoption. Do not escalate a local signature or replaceable abstraction merely because it is called architecture.
 
@@ -74,11 +76,30 @@ Object when evidence shows a real contradiction, excessive complexity, poor valu
 
 Prefer an Issue for high-risk, long-running, cross-session, or collaborative work whose decisions need a canonical home; a normal PR may carry ordinary delivery rationale and evidence; a tiny local change may rely on its commit.
 
-Before creating or updating hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. Keep a persisted `Decision Record` concise and current: observable outcome, scope/non-goals, confirmed material decisions with short rationale, accepted material cost/risk, and relevant stop or reopen conditions. Include an unchosen alternative only when it explains a non-obvious boundary or prevents repeated debate. Exclude blueprints, fixed file lists, local interfaces, test matrices, agent assignments, and full transcripts.
+At the end of alignment, always select the smallest adequate persistence carrier and state the selection with a brief reason. Choose an existing Decision Issue, a new Issue, a PR, a commit, or no durable record according to repository conventions and coordination needs; do not recite these as a menu to the user. When a new Issue is warranted and no canonical Issue exists, proactively show the Decision Record draft and request explicit authorization to create it. Do not wait for the user to mention Issue creation. If authorization is declined or unavailable, do not create hosted state; use the smallest permitted alternative, or pause only when the missing canonical record creates a material coordination risk.
+
+Before drafting a Decision Record or creating or updating hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. Keep the record current, compact, and lossless with respect to confirmed material decisions. Apply the reference's coverage check and compression priorities before showing the draft; any confirmed material item without a clear home makes the draft incomplete. Include an unchosen alternative only when it explains a non-obvious boundary or prevents repeated debate. Exclude blueprints, fixed file lists, local interfaces, test matrices, agent assignments, and full transcripts.
 
 If the repository uses decision revisions, increment one only after a confirmed material decision changes. Treat comments as history and evidence, not as a way to add current obligations without updating the canonical record. Follow repository conventions for Issue linkage and lifecycle rather than mutating hosted state by formula.
 
 When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. For historical context, start from the user-provided Issue/PR or affected code, then follow code to commit, commit to PR/MR, PR/MR to Decision Issue, and any `supersedes` link. Use narrow search only when no direct entry point exists.
+
+### Orchestrate Proportionally
+
+Keep user alignment, material decisions, routing, final arbitration, and user communication in the main context. Treat model routing and agent assignments as reversible implementation details; do not ask the user to confirm or persist them.
+
+Use subagents only for bounded independently useful work, non-overlapping write ownership, safe parallel read-only investigation, or a genuinely independent review. Complete small tasks directly. When the spawn contract supports model and effort overrides, route by task shape:
+
+- Use `worker` with `gpt-5.6-terra` at `high` for clear, bounded implementation, tests, fixes, documentation, and deterministic validation.
+- Use `explorer` with `gpt-5.6-sol` at `medium` for multi-hypothesis exploration, repository investigation, root-cause analysis, and cross-module tracing.
+- Use `default` with `gpt-5.6-sol` at `xhigh` for genuinely ambiguous planning and decomposition, cross-agent result synthesis, and conflict analysis.
+- Use the uniquely named custom `power_reviewer` for completed implementation review and required `$power-check`; let its agent configuration own the model, effort, and no-write/no-delegation instructions instead of duplicating them here. Verify the final tree and diff are unchanged after the reviewer returns.
+
+Keep final arbitration in the main context. A subagent may return a proposed plan, synthesis, implementation, or review, but it does not replace the main agent's responsibility to reconcile results with confirmed user decisions and current repository state.
+
+For explicit model or effort overrides, use `fork_turns: none` or the smallest supported positive history slice; do not use a full-history fork when the host forbids overrides. Send a compact task packet with the objective, confirmed decisions, repository evidence, scope, allowed writes, dependencies, expected deliverable, validation, and stop conditions. Do not persist that packet as a Blueprint or Agent Dispatch Plan.
+
+Parallelize only read-only work over stable inputs or write tasks with non-overlapping ownership. Tell spawned agents not to delegate further. When a Terra worker encounters material ambiguity, unstable interfaces, or work that cannot be safely completed within its packet, have it return evidence instead of guessing or retrying blindly; route the uncertainty to Sol Medium or Sol xhigh, then reissue a clear implementation task when possible. If the host cannot honor the intended routing, use generic delegation or the main context only when that remains adequate; require user intervention only when an exact model or independent context is itself required.
 
 ### Deliver Adaptively
 
@@ -91,6 +112,8 @@ Within the authorized boundary, change files, private interfaces, algorithms, wo
 Validate against the current decisions, final diff, actual risks, and relevant regressions. Earlier working ideas, rejected options, and speculative tests add no obligation.
 
 Require an independent `$power-check` when the user asks for it, when the implementation materially affects or creates credible production risk in security, privacy, permissions, production persistent state, data migration, external or cross-version compatibility, concurrency correctness, or irreversible behavior, when preparing an important merge/release/handoff, when material drift occurred, or when the current Decision Record requires it. Use a fresh non-implementation context when independence matters; if that cannot be provided, return `CHECK_REQUIRED` with the decision source and final implementation entry point.
+
+Do not start `$power-check` until the delivery is a stable final candidate: finish planned source edits, complete proportional self-validation, prepare the current decision source or verified local snapshot, and record the final tree and diff. Run the first check against the complete final diff. If findings require fixes, keep implementation in the main or worker context, then wake the same independent reviewer to inspect only the delta and affected evidence. Start a new full check only when material scope, decisions, the decision source, or the evidence boundary changed, or the earlier reviewer context is unavailable. Do not duplicate unchanged network reads, source inspection, or platform-specific validation.
 
 ## Stop Rules
 

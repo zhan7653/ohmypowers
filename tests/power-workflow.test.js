@@ -1,13 +1,35 @@
 import assert from 'node:assert/strict'
-import { access, readFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
+import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
+const execFileAsync = promisify(execFile)
 
 async function read(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8')
+}
+
+function extractPowerShellBlock(reference, marker) {
+  const blocks = [...reference.matchAll(/^```powershell\r?\n([\s\S]*?)^```\s*$/gm)].map(match => match[1])
+  const block = blocks.find(candidate => candidate.includes(marker))
+  assert.ok(block, `missing PowerShell block containing ${marker}`)
+  return block
+}
+
+async function availablePowerShell(t) {
+  const executable = process.platform === 'win32' ? 'pwsh.exe' : 'pwsh'
+  try {
+    await execFileAsync(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', '$PSVersionTable.PSVersion.ToString()'])
+    return executable
+  } catch {
+    t.skip('PowerShell 7 is not available in this environment')
+    return undefined
+  }
 }
 
 test('power-gan grills unresolved decisions naturally and delivers adaptively', async () => {
@@ -70,9 +92,26 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /references\/delivery-evidence\.md/)
   assert.match(skill, /Use a fresh non-implementation context when independence matters/i)
   assert.match(skill, /CHECK_REQUIRED/)
+  assert.match(skill, /always select the smallest adequate persistence carrier/i)
+  assert.match(skill, /proactively.*Decision Record draft/i)
+  assert.match(skill, /independent judgment/i)
+  assert.match(skill, /do not flatter|no flattery/i)
+  assert.match(skill, /do not (?:flatter.*)?mirror|no mirroring/i)
+  assert.match(skill, /route by task shape/i)
+  assert.match(skill, /worker.*gpt-5\.6-terra.*high/i)
+  assert.match(skill, /explorer.*gpt-5\.6-sol.*medium/i)
+  assert.match(skill, /default.*gpt-5\.6-sol.*xhigh/i)
+  assert.match(skill, /custom `power_reviewer`/i)
+  assert.match(skill, /final arbitration.*main context/i)
+  assert.match(skill, /fork_turns: none.*smallest supported positive history slice/i)
+  assert.match(skill, /task packet/i)
+  assert.match(skill, /If the host cannot honor the intended routing/i)
+  assert.match(skill, /stable final candidate/i)
+  assert.match(skill, /same independent reviewer.*only the delta and affected evidence/i)
   assert.doesNotMatch(skill, /current main agent announces and selects/i)
   assert.doesNotMatch(skill, /this skill does not call another skill/i)
-  assert.doesNotMatch(skill, /Task Contract|Execution Blueprint|Agent Dispatch Plan/)
+  assert.match(skill, /Do not persist that packet as a Blueprint or Agent Dispatch Plan/i)
+  assert.doesNotMatch(skill, /^# (?:Task Contract|Execution Blueprint|Agent Dispatch Plan)$/m)
   assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
 })
 
@@ -91,7 +130,10 @@ test('power-gan question batching stays consistent across workflow guidance', as
 })
 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {
-  const skill = await read('power-check/SKILL.md')
+  const [skill, profile] = await Promise.all([
+    read('power-check/SKILL.md'),
+    read('power-check/agents/reviewer.toml'),
+  ])
 
   assert.match(skill, /materially affects or creates credible production risk/i)
   assert.match(skill, /production persistent state/i)
@@ -110,7 +152,27 @@ test('power-check is read-only and checks only current decisions and final evide
   assert.match(skill, /`BLOCKED`/)
   assert.match(skill, /`NEEDS_HUMAN`/)
   assert.match(skill, /`CHECK_REQUIRED`/)
-  assert.match(skill, /If the tree or diff changes afterward, the old result covers only the earlier content/i)
+  assert.match(skill, /compare the new identity with the checked identity and inspect only the delta/i)
+  assert.match(skill, /main or implementation context[\s\S]*custom `power_reviewer`/i)
+  assert.match(skill, /explicitly (?:tell|instruct).*`\$power-check`/i)
+  assert.match(skill, /fresh `power_reviewer` context.*do not spawn another reviewer/i)
+  assert.match(skill, /agent configuration.*model.*reasoning.*no-write\/no-delegation/i)
+  assert.match(skill, /implementation identity immediately before delegation.*tree and diff again after/i)
+  assert.match(skill, /Start the independent check only after the delivery has reached a stable final candidate/i)
+  assert.match(skill, /wake the same independent `power_reviewer` context/i)
+  assert.match(skill, /first check inspects the complete final diff/i)
+  assert.match(skill, /inspect only the delta, affected decision mappings, and affected regression evidence/i)
+  assert.match(skill, /Reuse unchanged Decision Record mappings, source inspection, and validation evidence/i)
+  assert.match(skill, /verified local Decision Record snapshot.*instead of fetching the network again/i)
+  assert.match(skill, /incompatible platform.*duplicate evidence/i)
+  assert.doesNotMatch(skill, /read-only sandbox|sandbox_mode/i)
+  assert.doesNotMatch(skill, /gpt-5\.6-(?:sol|terra)/i)
+  assert.match(profile, /name = "power_reviewer"/)
+  assert.match(profile, /model = "gpt-5\.6-sol"/)
+  assert.match(profile, /model_reasoning_effort = "high"/)
+  assert.match(profile, /Do not edit files, Git state, Issues, PRs, comments, or any external state/i)
+  assert.match(profile, /Do not delegate to another agent/i)
+  assert.doesNotMatch(profile, /sandbox_mode/)
   for (const field of [
     'Decision source',
     'Final implementation identity',
@@ -120,6 +182,46 @@ test('power-check is read-only and checks only current decisions and final evide
   ]) {
     assert.match(skill, new RegExp(field, 'i'))
   }
+})
+
+test('managed reviewer routing stays uniquely named and behaviorally read-only', async () => {
+  const [gan, check, readme, spec, profile] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-check/SKILL.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+    read('power-check/agents/reviewer.toml'),
+  ])
+
+  for (const text of [gan, check, readme, spec, profile]) assert.match(text, /power_reviewer/)
+  assert.match(readme, /Codex CLI 0\.145\.0 multi-agent V2/i)
+  assert.match(spec, /Codex CLI 0\.145\.0 multi-agent V2/i)
+  assert.match(readme, /does not rely on the host sandbox being downgraded/i)
+  assert.match(spec, /不要求宿主强制降级 reviewer sandbox/)
+  assert.match(check, /tree and diff again after the response/i)
+  assert.match(gan, /final tree and diff are unchanged after the reviewer returns/i)
+  assert.doesNotMatch(profile, /sandbox_mode/)
+})
+
+test('independent review waits for the final candidate and retries only affected delta', async () => {
+  const [gan, check, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-check/SKILL.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  for (const text of [gan, check, readme]) {
+    assert.match(text, /stable final candidate|final candidate is stable/i)
+    assert.match(text, /complete final diff/i)
+    assert.match(text, /same independent .*reviewer/i)
+    assert.match(text, /only the delta/i)
+  }
+  assert.match(check, /Do not remap the complete unchanged Decision Record/i)
+  assert.match(check, /Do not run a command on an incompatible platform/i)
+  assert.match(spec, /最终 tree\/diff 身份稳定后启动/)
+  assert.match(spec, /同一 reviewer 上下文，只检查.*delta/)
+  assert.match(spec, /不得为重复取证重新联网/)
 })
 
 test('power-check materiality trigger stays consistent across workflow guidance', async () => {
@@ -144,14 +246,25 @@ test('power-check materiality trigger stays consistent across workflow guidance'
 test('issue persistence supports verified GitHub and GitLab mutations without repo Markdown', async () => {
   const reference = await read('power-gan/references/issue-persistence.md')
 
-  assert.match(reference, /\/tmp\/power-gan-decision-record\.md/)
+  assert.match(reference, /(?:host )?operating system'?s temporary directory|OS temp(?:orary)? directory|os\.tmpdir\(\)/i)
+  assert.match(reference, /UTF-8 (?:without|no) (?:a )?BOM/i)
+  assert.match(reference, /raw.*read|read.*raw/i)
+  assert.match(reference, /SHA-256/i)
+  assert.match(reference, /body.*round-trip exactly|exact expected body/i)
+  assert.match(reference, /protected sections or markers.*UTF-8 hashes separately/i)
+  assert.match(reference, /mojibake/i)
+  assert.doesNotMatch(reference, /\/tmp\/power-gan-decision-record\.md/)
+  assert.match(reference, /session-unique/i)
+  assert.match(reference, /\[Guid\]::NewGuid\(\)/)
+  assert.match(reference, /\[IO\.FileMode\]::CreateNew/)
+  assert.doesNotMatch(reference, /Join-Path \$tempDir ['"]power-gan-decision-(?:record|note)\.md['"]/)
   assert.match(reference, /explicitly requested or confirmed that mutation/i)
-  assert.match(reference, /gh issue create .*--body-file/i)
-  assert.match(reference, /gh issue edit .*--body-file/i)
-  assert.match(reference, /gh issue view .*--json/i)
-  assert.match(reference, /glab issue create .*<repository-or-full-url>/i)
-  assert.match(reference, /glab issue update/i)
-  assert.match(reference, /glab issue view/i)
+  assert.match(reference, /gh issue create[\s\S]*--body-file/i)
+  assert.match(reference, /gh issue edit[\s\S]*--body-file/i)
+  assert.match(reference, /Invoke-Utf8JsonCli \$gh[\s\S]*'issue', 'view'[\s\S]*'--json'/i)
+  assert.match(reference, /glab issue create[\s\S]*-R \$repo/i)
+  assert.match(reference, /glab issue update[\s\S]*-R \$repo/i)
+  assert.match(reference, /Invoke-Utf8JsonCli \$glab[\s\S]*'issue', 'view'[\s\S]*'-R', \$repo/i)
   assert.match(reference, /full repository URL when required/i)
   assert.match(reference, /When a Decision Issue is the canonical source for the delivery/i)
   assert.match(reference, /Alternative not chosen: <include only when/i)
@@ -161,6 +274,118 @@ test('issue persistence supports verified GitHub and GitLab mutations without re
   for (const field of ['Change', 'Reason / evidence', 'Confirmed decision', 'Rationale', 'Confirmed by']) {
     assert.match(reference, new RegExp(field, 'i'))
   }
+})
+
+test('issue persistence fails closed before hosted mutation and verifies the full contract', async () => {
+  const reference = await read('power-gan/references/issue-persistence.md')
+
+  assert.match(reference, /failed command, empty output, invalid JSON, missing required field, or undecodable UTF-8 as a hard pre-write stop/i)
+  assert.match(reference, /StandardOutputEncoding = \$strictUtf8/)
+  assert.match(reference, /process\.ExitCode -ne 0/)
+  assert.match(reference, /IsNullOrWhiteSpace\(\$stdout\)/)
+  assert.match(reference, /ConvertFrom-Json -ErrorAction Stop/)
+  assert.match(reference, /GitHub Issue pre-write check/)
+  assert.match(reference, /GitLab Issue pre-write check/)
+  assert.match(reference, /GitHub Issue changed after the captured snapshot/i)
+  assert.match(reference, /GitLab Issue changed after the captured snapshot/i)
+  assert.match(reference, /Get-Utf8Sha256 \(\[string\]\$before\.body\)/)
+  assert.match(reference, /Get-Utf8Sha256 \(\[string\]\$before\.description\)/)
+  assert.match(reference, /identity, metadata, and body exactly/i)
+  assert.match(reference, /identity, metadata, and description exactly/i)
+  assert.match(reference, /Get-ProjectProtectedRangeHashes/)
+  assert.match(reference, /Assert-ProjectProtectedRangeHashes/)
+})
+
+test('PowerShell payload creation is collision-safe across concurrent sessions', async t => {
+  const pwsh = await availablePowerShell(t)
+  if (!pwsh) return
+
+  const reference = await read('power-gan/references/issue-persistence.md')
+  const payloadBlock = extractPowerShellBlock(reference, 'function New-UniqueUtf8PayloadFile')
+  const created = []
+
+  try {
+    const results = await Promise.all(
+      Array.from({ length: 8 }, async (_, index) => {
+        const script = [
+          `$recordBody = 'record-${index}'`,
+          `$noteBody = 'note-${index}'`,
+          payloadBlock,
+          '[ordered]@{ record = $recordFile; note = $noteFile } | ConvertTo-Json -Compress',
+        ].join('\n')
+        const { stdout } = await execFileAsync(
+          pwsh,
+          ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+          { encoding: 'utf8' },
+        )
+        return { index, ...JSON.parse(stdout.trim()) }
+      }),
+    )
+
+    for (const result of results) {
+      created.push(result.record, result.note)
+      const record = await readFile(result.record)
+      const note = await readFile(result.note)
+      assert.equal(record.toString('utf8'), `record-${result.index}`)
+      assert.equal(note.toString('utf8'), `note-${result.index}`)
+      assert.notDeepEqual([...record.subarray(0, 3)], [0xef, 0xbb, 0xbf])
+      assert.notDeepEqual([...note.subarray(0, 3)], [0xef, 0xbb, 0xbf])
+    }
+    assert.equal(new Set(created).size, created.length)
+  } finally {
+    await Promise.all(created.map(file => rm(file, { force: true })))
+  }
+})
+
+test('PowerShell JSON pre-read rejects command, output, encoding, and JSON failures', async t => {
+  const pwsh = await availablePowerShell(t)
+  if (!pwsh) return
+
+  const reference = await read('power-gan/references/issue-persistence.md')
+  const helperBlock = extractPowerShellBlock(reference, 'function Invoke-Utf8JsonCli')
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'ohmypowers-json-cli-'))
+  t.after(() => rm(tmp, { recursive: true, force: true }))
+
+  const scripts = {
+    failed: 'exit 7\n',
+    empty: '$null\n',
+    invalidJson: "[Console]::Out.Write('not-json')\n",
+    invalidUtf8: '$bytes = [byte[]](0xFF); [Console]::OpenStandardOutput().Write($bytes, 0, $bytes.Length)\n',
+    valid: "$value = [ordered]@{ body = '中文' }; [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false); [Console]::Out.Write(($value | ConvertTo-Json -Compress))\n",
+  }
+  const paths = {}
+  for (const [name, body] of Object.entries(scripts)) {
+    paths[name] = path.join(tmp, `${name}.ps1`)
+    await writeFile(paths[name], body, 'utf8')
+  }
+
+  const quote = value => `'${value.replaceAll("'", "''")}'`
+  const driver = [
+    helperBlock,
+    '$pwsh = (Get-Process -Id $PID).Path',
+    'function Assert-ReadFails {',
+    '    param([string]$Path, [string]$Expected)',
+    '    $failed = $false',
+    "    try { $null = Invoke-Utf8JsonCli $pwsh @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', $Path) 'probe' }",
+    '    catch {',
+    '        $failed = $true',
+    '        if ($Expected -and -not $_.Exception.Message.Contains($Expected)) { throw }',
+    '    }',
+    "    if (-not $failed) { throw 'Expected the JSON read to fail.' }",
+    '}',
+    `Assert-ReadFails ${quote(paths.failed)} 'probe failed:'`,
+    `Assert-ReadFails ${quote(paths.empty)} 'probe returned no JSON.'`,
+    `Assert-ReadFails ${quote(paths.invalidJson)} 'probe returned invalid JSON:'`,
+    `Assert-ReadFails ${quote(paths.invalidUtf8)} ''`,
+    `$valid = Invoke-Utf8JsonCli $pwsh @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', ${quote(paths.valid)}) 'valid probe'`,
+    "if ([string]$valid.body -cne '中文') { throw 'Valid UTF-8 JSON did not round-trip.' }",
+  ].join('\n')
+  const driverPath = path.join(tmp, 'driver.ps1')
+  await writeFile(driverPath, driver, 'utf8')
+
+  await execFileAsync(pwsh, ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', driverPath], {
+    encoding: 'utf8',
+  })
 })
 
 test('decision revisions remain optional and repository-defined', async () => {
