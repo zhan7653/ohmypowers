@@ -470,7 +470,24 @@ test('critic and curator route material changes back to power-gan', async () => 
   assert.match(curator, /Comments are history and evidence only/i)
   assert.match(curator, /Do not keep a closed Issue synchronized/i)
   assert.match(curator, /Never collapse or supersede Issues from title similarity alone/i)
-  assert.match(curator, /later tree or diff change invalidates the old result/i)
+  assert.match(curator, /later identity change invalidates the old result/i)
+})
+
+test('curator requires explicit evidence-safe lifecycle mutations', async () => {
+  const curator = await read('power-curator/SKILL.md')
+
+  assert.match(curator, /This skill is explicit-only/i)
+  assert.match(curator, /Never start an assessment proactively/i)
+  assert.match(curator, /all required self-validation completed successfully/i)
+  assert.match(curator, /`PASS` or `PASS_WITH_NOTES` result bound to its implementation identity/i)
+  assert.match(curator, /`BLOCKED`, `NEEDS_HUMAN`, and `CHECK_REQUIRED` never satisfy this state/i)
+  assert.match(curator, /\[I<n>-M1\]/i)
+  assert.match(curator, /globally unique across the entire proposal/i)
+  assert.match(curator, /never reset or reuse the same full ID/i)
+  assert.match(curator, /Before the first hosted write in a curation run/i)
+  assert.match(curator, /For every confirmed mutation, separately perform/i)
+  assert.match(curator, /verified read-back after each successful mutation becomes.*expected rolling baseline/i)
+  assert.match(curator, /If external drift appears, stop the remaining mutations/i)
 })
 
 test('retired core skill directories are absent', async () => {
