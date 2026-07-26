@@ -1,0 +1,4 @@
+interface:
+  display_name: "Power Gan"
+  short_description: "Grill decisions deeply, then deliver adaptively"
+  default_prompt: "Use $power-gan to inspect this coding task, grill the unresolved decisions one by one, and deliver it adaptively."

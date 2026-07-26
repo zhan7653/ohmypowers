@@ -1,0 +1,4 @@
+interface:
+  display_name: "Power Check"
+  short_description: "Independently verify a completed change"
+  default_prompt: "Use $power-check to independently verify this completed implementation against the current decisions."

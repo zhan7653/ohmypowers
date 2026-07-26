@@ -1,4 +1,0 @@
-interface:
-  display_name: "Power Grill"
-  short_description: "Grill coding tasks before issue contract creation"
-  default_prompt: "Use $power-grill to grill this coding task and draft an issue contract."

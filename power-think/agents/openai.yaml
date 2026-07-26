@@ -1,4 +1,0 @@
-interface:
-  display_name: "Power Think"
-  short_description: "Turn vague ideas into reviewed specs"
-  default_prompt: "Use $power-think to clarify this feature idea and write a spec."

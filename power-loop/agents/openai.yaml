@@ -1,4 +1,0 @@
-interface:
-  display_name: "Power Loop"
-  short_description: "Turn task contracts into bounded Codex implementation loops"
-  default_prompt: "Use $power-loop to turn this issue or task contract into a bounded Codex /goal."

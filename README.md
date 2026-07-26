@@ -1,206 +1,96 @@
 # ohmypowers
 
-Codex ecosystem skills for Loop Engineering.
+Codex skills for decision alignment, adaptive delivery, independent checking, lifecycle curation, and work reporting.
 
-`ohmypowers` is a collection of Codex skills and supporting tools that turn agentic coding work into explicit loops: clarify the task, contract the work, execute within boundaries, verify the evidence, and keep reviewable artifacts.
+## Core Workflow
 
-The repository is Codex-first. Skills are plain `SKILL.md` directories designed to be installed into Codex, with optional Codex custom-agent templates for read-only verifier and critic passes.
+`$power-gan` is the main coding entry point. It separates user-owned material decisions from reversible implementation details that the agent executes by default while the user retains visibility and stop authority.
 
-## What It Does
+It infers whether the user wants discussion only or delivery and whether the task needs a focused pass or a Deep Grill. `ALIGN_ONLY`, `DELIVER`, `FAST`, and `DEEP` remain optional shorthand when the user supplies them; they are not a menu the agent should recite.
 
-`power-think` guides an agent through:
+Deep Grill follows the actual decision tree in focused rounds of one to three questions. The agent asks one when later questions depend on that answer, and batches two or three only when they are independent questions from the same decision layer. It inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives a recommendation for each question, and lets the answers determine the next branch until both sides share the same understanding.
 
-- Project context gathering.
-- Requirement clarification.
-- Scope boundary definition.
-- Premise challenge.
-- Optional landscape research.
-- Alternative approaches.
-- Given/When/Then acceptance criteria.
-- A reviewed spec saved to `docs/specs/YYYY-MM-DD-<feature-name>-spec.md`.
+Throughout alignment, `$power-gan` maintains a compact Decision Ledger with confirmed decisions, pending material boundaries, visible reversible defaults, and explicitly delegated boundaries. Unanswered recommendations remain pending, and the ledger—not conversational memory—seeds any later Decision Record.
 
-It does not write implementation code or implementation plans.
+The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
-`power-grill` turns a clarified or half-clear coding task into an execution contract before implementation starts:
+The agent keeps independent judgment throughout alignment and delivery. It does not flatter, appease, or mirror the user's framing, and it does not treat user preference or confidence as evidence. Credible contradictory evidence is stated plainly, without manufacturing disagreement for its own sake.
 
-- Repository inspection before asking the user.
-- Focused grill-style questions with recommended defaults.
-- An issue draft for user review.
-- A hosted issue or local issue brief after user confirmation.
-- Agent-ready handoff guidance for running `power-loop` on the issue contract.
+“Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
-It does not implement code, generate bounded `/goal`, automatically execute `/goal`, or create hosted issues, PRs, or MRs by default. After the user reviews the generated issue body, it can create a hosted issue if the user explicitly confirms and a supported CLI such as `gh` or `glab` is available. Bounded `/goal` generation belongs to `power-loop`.
+Before the first source write, the agent briefly states the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement already authorizes reversible work inside the stated scope; another confirmation is needed only when the boundary introduces a new material commitment, the user requested design approval first, or external or irreversible authorization is missing.
 
-`power-loop` converts an agent-ready task contract into a bounded Codex implementation loop:
+When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
-- Loop readiness check over a hosted issue, local brief, or pasted task contract.
-- Risk level and execution decision.
-- Dedicated branch/worktree isolation rules.
-- Checkpoints, validation loop, iteration budget, and stop conditions.
-- Read-only verifier gate, with `power-verifier` as the recommended execution tool.
-- PR/MR evidence requirements and loop decision rules.
+## Persistence
 
-Loop Engineering here means wrapping a coding task so it is executable, verifiable, stoppable, reviewable, and handoff-ready within explicit boundaries. `power-loop` does not clarify vague requirements deeply or implement code directly. If a contract is incomplete, it sends the task back to `power-grill`; if risk is high, it requires human handling instead of generating an implementation `/goal`.
+Use the smallest durable record justified by repository conventions and coordination needs:
 
-For an end-to-end walkthrough, see [power-loop/assets/loop-engineering-tutorial.md](power-loop/assets/loop-engineering-tutorial.md). It uses a small linear regression gradient descent optimizer task to demonstrate issue contracts, bounded `/goal` generation, validation loops, verifier evidence, and PR review.
+- Issue: high-risk, long or cross-session work, or collaboration that needs a canonical decision home.
+- PR: normal PR-sized delivery rationale and evidence.
+- Commit: tiny local changes.
 
-`power-verifier` checks implementation evidence after a bounded loop has run:
+Materiality alone does not authorize hosted mutation or force creation of an Issue.
 
-- Issue contract, implementation diff, validation output, and PR/MR evidence.
-- Acceptance-criteria coverage.
-- Scope and non-goal preservation.
-- Independent evidence audit with fresh-context verifier support when available.
-- Conditional code-review integration through Codex `/review` or an equivalent read-only code-review subagent when the diff includes code, behavior, tests, dependencies, or config.
-- Loop decision justification.
-- One verifier result: `PASS`, `PASS_WITH_NOTES`, `BLOCKED`, or `NEEDS_HUMAN`.
+At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
 
-It is read-only and does not edit files, create branches, mutate issues, approve work, merge, or close PRs/MRs.
+An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
-`power-work-report` generates a manual Codex daily work report:
+When persistence is needed, `$power-gan` loads a compact GitHub/GitLab reference for repository discovery, authenticated creation or update, read-back verification, Decision Notes, and PR/MR linkage.
 
-- Reads local Codex session JSONL for a target day.
-- Generates a draft Markdown/HTML/JSON report through `tools/power-work-report`.
-- Proposes todo and idea memory updates.
-- Requires explicit confirmation before finalizing reports or merging `memory.json`.
-- V1 is Codex-only and does not include scheduler, systemd, cron, web UI, database, vector store, or generic agent-log support.
+Delivery PRs/MRs and external handoffs use a compact evidence format containing only the decision source, delivered outcome, material deviations, validation, independent-check status, and remaining risks.
 
-`power-critic` provides a read-only "找茬" pass over requirements, CLI interaction, specs, plans, or model replies. It builds a Critique Packet, uses a fresh critic subagent when available, and returns a prioritized batch report. It is not for code diff correctness review.
+Do not create repository decision Markdown by default. Code, tests, schema, types, and configuration remain the primary current implementation truth.
 
-For implementation diff correctness, use `power-verifier`, Codex `/review`, or the repository's code review workflow.
+## Skills
 
-Use them by phase:
+- `$power-gan`: align, Deep Grill, implement, and self-validate.
+- `$power-check`: independently and read-only check a completed implementation against current decisions and the final diff.
+- `$power-critic`: explicit-only fresh-context critique of requirements, specs, plans, or model replies; not code review.
+- `$power-curator`: explicitly requested, evidence-based reconciliation of Decision Issue and PR lifecycle state, with exact confirmed mutations only.
 
-- `power-think`: vague idea -> reviewed spec.
-- `power-grill`: coding task -> issue draft -> confirmed issue/local brief.
-- `power-loop`: agent-ready issue/local brief -> bounded implementation `/goal`.
-- `power-verifier`: issue contract + diff + validation + PR evidence -> verifier result.
-- `power-work-report`: Codex session history -> draft daily report -> confirmed memory update.
-- Recommended Loop Engineering flow: `power-grill -> power-loop -> Codex /goal -> power-verifier -> PR evidence -> human review`.
-- `power-critic`: spec, plan, issue, or model reply -> critique findings.
+The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped. `$power-work-report` V1 (archaeology-based daily reports) is retired as well; its successor ships from the standalone `worklog` repository, which installs the event-capture daily report system and the V2 skill.
 
-## Install
+## Proportional Subagents
 
-Copy or symlink the skill directories into Codex skills:
+Small tasks stay in the main context. For delegation, `$power-gan` routes clear implementation and tests to the managed Terra/high `power_worker`, multi-hypothesis exploration to the behaviorally read-only Sol/medium `power_explorer`, and genuinely ambiguous planning or cross-agent synthesis to the behaviorally read-only Sol/xhigh `power_planner`. Completed implementation review and required `$power-check` use the uniquely named, behaviorally read-only Sol/high `power_reviewer`. Each profile owns its model, reasoning effort, and behavioral constraints; the workflow does not rely on the host sandbox being downgraded for a child.
+
+Routing and task packets remain reversible implementation details: they are not persisted as an Agent Dispatch Plan or put through a user confirmation loop. The main context keeps material decisions, final arbitration, and user communication. If a managed profile is unavailable or its configuration cannot be honored, the workflow uses generic delegation or the main context only when that is still adequate; it does not claim an exact model or independent context that was not provided.
+
+## Independent Checks
+
+Every `$power-gan` delivery performs proportional self-validation. `$power-check` owns the single runtime Applicability contract: require it for an explicit user request, a material effect or credible production risk in a protected category, material drift, an important merge/release/handoff, or a Decision Record that requires independent evidence. Merely touching one of these categories is not enough.
+
+Use a fresh non-implementation context when an independent check is required. The caller builds and validates a Check Packet, then delegates it to the managed `power_reviewer`; a reviewer already in a fresh context checks directly without spawning recursively. Prefer a committed candidate only when the index, working tree, untracked set, and submodule state are clean before and after review. Otherwise bind the result to `HEAD`, a SHA-256 of the binary full-index diff, and a NUL-safe manifest that hashes every untracked path, entry type, and content. If adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
+
+Start that check only after planned implementation edits and proportional self-validation are complete and the final candidate is stable. The first check covers the complete final diff. When findings lead to fixes, resume the same reviewer when possible; otherwise a new independent reviewer may consume a delta packet containing the prior identity, result, findings, and dispositions. Inspect only the delta plus affected decisions and evidence unless material scope, decisions, the decision source, or the evidence boundary changed. Ordinary packet omissions are repaired by the caller or returned as `BLOCKED`; `NEEDS_HUMAN` is reserved for genuinely missing decisions, interpretations, or authorization.
+
+## Installation
+
+Run:
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R power-think ~/.codex/skills/power-think
-cp -R power-grill ~/.codex/skills/power-grill
-cp -R power-loop ~/.codex/skills/power-loop
-cp -R power-verifier ~/.codex/skills/power-verifier
-cp -R power-work-report ~/.codex/skills/power-work-report
-cp -R power-critic ~/.codex/skills/power-critic
+./scripts/install.sh
 ```
 
-If `CODEX_HOME` is set, use `$CODEX_HOME/skills` instead of `~/.codex/skills`.
+The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_worker`, `power_explorer`, `power_planner`, `power_reviewer`, and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. Managed profiles replace existing files with the same basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these profiles. Restart Codex afterward.
 
-For Codex read-only custom-agent hardening, also install the bundled verifier and critic agents into Codex's custom-agent path:
-
-```bash
-mkdir -p ~/.codex/agents
-cp power-verifier/agents/power-verifier.toml ~/.codex/agents/power-verifier.toml
-cp power-critic/agents/power-critic.toml ~/.codex/agents/power-critic.toml
-```
-
-The skill installation makes `$power-verifier` and `$power-critic` available.
-
-The verifier custom-agent installation makes the named `power_verifier` read-only agent discoverable by Codex. The critic custom-agent installation does the same for `power_critic`. These agents are recommended, not required.
-
-When a fresh-context implementation verifier is unavailable, `power-verifier` output should disclose degraded self-review mode.
-
-Restart Codex after installing or updating skills or custom agents.
-
-## Usage
-
-Ask for requirement thinking or a spec:
+## Examples
 
 ```text
-Use power-think to help me clarify this feature and write a spec.
+Use $power-gan to implement this small bug fix.
 ```
-
-Ask for a task contract before implementation:
 
 ```text
-Use $power-grill to grill this feature and draft an issue contract.
+Use $power-gan to grill this permission workflow until the decisions are clear; do not implement it.
 ```
-
-Ask for a bounded implementation loop from an existing task contract:
 
 ```text
-Use $power-loop on this issue to generate a bounded Codex /goal.
+Use $power-check to independently verify this final diff against Issue #42.
 ```
-
-Ask for independent critique:
 
 ```text
-Use $power-critic to challenge this spec.
+Use $power-critic to challenge this Decision Record before implementation.
 ```
 
-Ask for implementation verification:
-
-```text
-Use $power-verifier to check this issue contract, diff, validation output, and PR evidence.
-```
-
-Ask for a manual Codex work report draft:
-
-```text
-Use $power-work-report to generate a daily work report draft for today.
-```
-
-## Repository Layout
-
-```text
-power-think/
-  SKILL.md
-  agents/
-    openai.yaml
-power-grill/
-  SKILL.md
-  agents/
-    openai.yaml
-  assets/
-    issue-body.md
-    pr-body.md
-  references/
-    github-issue-creation.md
-    gitlab-issue-creation.md
-power-loop/
-  SKILL.md
-  agents/
-    openai.yaml
-  assets/
-    codex-loop-goal.txt
-    loop-readiness-checklist.md
-    verifier-gate.md
-    pr-evidence-template.md
-    status-transitions.md
-    sample-contracts.md
-    loop-engineering-tutorial.md
-power-verifier/
-  SKILL.md
-  agents/
-    openai.yaml
-    power-verifier.toml
-  assets/
-    implementation-verifier-checklist.md
-    verifier-result-template.md
-power-work-report/
-  SKILL.md
-  agents/
-    openai.yaml
-tools/power-work-report/
-  package.json
-  bin/
-  lib/
-  test/
-power-critic/
-  SKILL.md
-  agents/
-    openai.yaml
-    power-critic.toml
-```
-
-## License
-
-MIT
+The accepted design is documented in [the power-gan adaptive workflow spec](docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md).

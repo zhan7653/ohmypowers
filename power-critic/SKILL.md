@@ -9,7 +9,7 @@ description: Use only when the user explicitly invokes $power-critic or explicit
 
 Produce a read-only batch critique of requirements, conversations, specs, plans, or model replies. The goal is to reduce agreement bias by using a fresh critic context when the host supports subagents.
 
-This is not code review. If the primary object is a code diff, branch, PR, commit, implementation bug, security issue in code, or merge decision, stop and redirect to `power-verifier`, `/review`, or the repository's code review workflow.
+This is not code review. If the primary object is a code diff, branch, PR, commit, implementation bug, security issue in code, or merge decision, stop and redirect to `$power-check`, `/review`, or the repository's code review workflow.
 
 This skill is explicit-only. If host invocation policy is unavailable or unverified, still treat `$power-critic` or an explicit request to use the power-critic skill as required authorization.
 
@@ -83,6 +83,8 @@ When Codex custom agents are available, use the installed `power_critic` custom 
 For other hosts, use the equivalent fresh-context subagent mechanism when available.
 
 Wait for the critic result, then return only the consolidated batch report to the user. If a fresh subagent is available but read-only sandboxing is not verified, still use the fresh subagent and disclose that runtime read-only hardening is unverified.
+
+If a finding would change a material decision, return it to `$power-gan` for user alignment. The critic does not update a Decision Record itself.
 
 If subagents are unavailable, disclose degraded mode before the report:
 
