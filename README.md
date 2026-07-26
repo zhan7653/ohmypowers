@@ -48,9 +48,8 @@ Do not create repository decision Markdown by default. Code, tests, schema, type
 - `$power-check`: independently and read-only check a completed implementation against current decisions and the final diff.
 - `$power-critic`: explicit-only fresh-context critique of requirements, specs, plans, or model replies; not code review.
 - `$power-curator`: explicitly requested, evidence-based reconciliation of Decision Issue and PR lifecycle state, with exact confirmed mutations only.
-- `$power-work-report`: create reviewed daily work reports and confirmed memory updates.
 
-The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped.
+The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped. `$power-work-report` V1 (archaeology-based daily reports) is retired as well; its successor ships from the standalone `worklog` repository, which installs the event-capture daily report system and the V2 skill.
 
 ## Proportional Subagents
 

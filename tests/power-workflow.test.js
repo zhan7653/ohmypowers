@@ -491,7 +491,7 @@ test('curator requires explicit evidence-safe lifecycle mutations', async () => 
 })
 
 test('retired core skill directories are absent', async () => {
-  for (const skill of ['power-think', 'power-grill', 'power-loop', 'power-verifier']) {
+  for (const skill of ['power-think', 'power-grill', 'power-loop', 'power-verifier', 'power-work-report']) {
     await assert.rejects(access(path.join(root, skill, 'SKILL.md')))
   }
 })

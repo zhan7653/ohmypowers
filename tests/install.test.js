@@ -14,10 +14,9 @@ const managedSkills = [
   'power-gan',
   'power-check',
   'power-curator',
-  'power-work-report',
   'power-critic',
 ]
-const retiredSkills = ['power-think', 'power-grill', 'power-loop', 'power-verifier']
+const retiredSkills = ['power-think', 'power-grill', 'power-loop', 'power-verifier', 'power-work-report']
 const managedProfiles = [
   ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
   ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-5.6-sol', 'high', undefined],
@@ -80,45 +79,6 @@ test('installer replaces the retired core workflow and preserves unrelated agent
     assert.deepEqual(await fs.readFile(installed), await fs.readFile(path.join(root, source)))
     assertProfile(await parseToml(installed), expectedName, model, effort, sandbox)
   }
-})
-
-test('installed power-work-report runs without the source repository as cwd', async t => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'ohmypowers-installed-report-'))
-  t.after(() => fs.rm(tmp, { recursive: true, force: true }))
-  await install(tmp)
-  const installedBin = path.join(
-    tmp,
-    'skills',
-    'power-work-report',
-    'scripts',
-    'power-work-report',
-    'bin',
-    'power-work-report.js',
-  )
-  const outDir = path.join(tmp, 'reports')
-  const fixtureCodexHome = path.join(root, 'tests', 'power-work-report', 'fixtures', 'codex-home')
-  const mockCodex = path.join(root, 'tests', 'power-work-report', 'fixtures', 'bin', 'mock-codex-success.cjs')
-
-  await execFileAsync(
-    process.execPath,
-    [
-      installedBin,
-      'run',
-      '--date',
-      '2026-07-01',
-      '--codex-home',
-      fixtureCodexHome,
-      '--out-dir',
-      outDir,
-      '--timezone',
-      'Asia/Shanghai',
-      '--codex-bin',
-      mockCodex,
-    ],
-    { cwd: tmp },
-  )
-
-  assert.ok(await exists(path.join(outDir, '2026-07-01', 'draft', 'report.json')))
 })
 
 async function install(codexHome) {

@@ -20,9 +20,7 @@ jobs:
         with:
           node-version: 22
       - name: Run repository tests
-        run: node --test tests/*.test.js tests/power-work-report/*.test.js
-      - name: Check bundled work-report JavaScript
-        run: npm --prefix power-work-report/scripts/power-work-report run check
+        run: node --test tests/*.test.js
       - name: Check installer syntax and patch whitespace
         run: |
           bash -n scripts/install.sh

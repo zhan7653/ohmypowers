@@ -18,7 +18,6 @@ skills=(
   power-gan
   power-check
   power-curator
-  power-work-report
   power-critic
 )
 
@@ -27,6 +26,7 @@ retired_skills=(
   power-grill
   power-loop
   power-verifier
+  power-work-report
 )
 
 for skill in "${retired_skills[@]}"; do

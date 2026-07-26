@@ -100,6 +100,8 @@ Within the authorized boundary, change files, private interfaces, algorithms, wo
 
 Do not reopen settled decisions or re-grill history; internal reversible surprises are handled silently. Also pause when continuing would change the observable outcome, violate a hard constraint, exceed an accepted cost or risk, require missing authorization, or make promised validation unattainable.
 
+**Worklog tee.** When reporting the delivery outcome, also run `wl done --source "session:<session-id>" -- "<one-line outcome>"` to tee it into the local worklog. This is best-effort: if the command fails or `wl` is absent, proceed silently — it never blocks or changes the delivery report.
+
 ## Validation And Independent Check
 
 Validate against the current decisions, the final diff, actual risks, and relevant regressions. Earlier working ideas, rejected options, and speculative tests add no obligation.
