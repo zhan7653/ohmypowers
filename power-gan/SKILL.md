@@ -15,7 +15,7 @@ If everything else fades in a long session, keep these five rules:
 2. While a material boundary is unresolved, run grill turns: one to three highest-leverage questions, each with exactly one recommendation and reason, then stop and wait for the answer.
 3. Maintain the Decision Ledger every turn. The ledger — not conversational memory — is the record of what is confirmed, pending, and delegated.
 4. A direct request to implement authorizes reversible work within the confirmed scope. Before the first source write, state the launch basis. Pause mid-delivery only for a new material delta.
-5. At alignment completion, select and state the smallest adequate persistence carrier. Hosted state is created or updated only with explicit authorization.
+5. At alignment completion, select and state the smallest adequate persistence carrier. Every source-writing delivery first creates a session-temporary Decision Snapshot, then transfers its durable evidence into the selected Issue, PR, or commit before deleting the snapshot. Hosted state is created or updated only with explicit authorization.
 
 ## Ownership And The Materiality Test
 
@@ -51,7 +51,7 @@ Ledger rules:
 - If the user answers only part of a batch, the unanswered items stay in 待定 and reappear in the next batch. Do not advance to questions whose meaning depends on an unaccepted recommendation.
 - "剩下的你定" or an equivalent blanket delegation is itself an explicit decision: move the currently named 待定 items to 已委托, choose sensible defaults, and surface them in the launch basis and the delivery report. Blanket delegation never covers safety, legality, irreversible actions, external spend, or missing external authorization — those still stop the work.
 - At alignment completion, 已确认 (plus 已委托 defaults) seeds the Decision Record. The ledger itself is runtime state: do not persist it as a blueprint, paste it into Issues, or turn it into a menu of questions.
-- In long sessions, mirror the ledger into a session-temporary working file when the host provides one; never commit it to the repository.
+- For a delivery that will write repository-tracked source, tests, configuration, schema, or documentation, materialize the ledger into the required session-temporary Decision Snapshot described below; never commit the snapshot itself.
 
 ## Alignment: The Grill Loop
 
@@ -92,6 +92,8 @@ After each answer, update the ledger, inspect newly named evidence when useful, 
 
 Every material element of the launch basis must already sit in 已确认 or 已委托. If one does not, ask about that element — stating it in the basis does not confirm it. Wait for fresh confirmation only when the boundary now includes a new material commitment, the user explicitly asked to approve the design first, or required external or irreversible authorization is missing.
 
+After alignment completes and before the first source write, select the final carrier and follow [references/decision-snapshot.md](references/decision-snapshot.md) in full. Create the session-unique Markdown snapshot outside the repository, prevent access by other unprivileged users, record the ledger, launch basis, stop conditions, and selected carrier, and report its exact path in the launch update. If no safe temporary location is available, pause before writing source.
+
 Within the authorized boundary, change files, private interfaces, algorithms, work order, and test technique without asking. Report a meaningful replan as non-blocking information when it helps the user.
 
 **Mid-delivery pause** — only for a material delta, explained as the delta, with the smallest credible response:
@@ -112,9 +114,11 @@ Run required checks through power-check's Caller Protocol: build the Check Packe
 
 ## Persistence
 
-At alignment completion, always state the smallest adequate carrier with one brief reason: an existing Decision Issue, a new Issue, a PR, a commit, or no durable record. An Issue fits high-risk, long-running, cross-session, or collaborative decisions that need a canonical home; a PR carries ordinary delivery rationale; a commit suffices for tiny local changes. Materiality alone neither forces an Issue nor authorizes hosted mutation.
+At alignment completion, always state the smallest adequate carrier with one brief reason: an existing Decision Issue, a new Issue, a PR, a commit, or — for discussion-only work — no durable record. An Issue fits high-risk, long-running, cross-session, or collaborative decisions that need a canonical home; a PR carries ordinary delivery rationale; a commit suffices for tiny local changes. A source-writing delivery must select Issue, PR, or commit; materiality alone neither forces an Issue nor authorizes hosted mutation. A commit carrier also requires explicit user or project authorization to mutate local Git state; source-write authorization alone does not provide it.
 
 When a new Issue is warranted and none exists, proactively show the Decision Record draft and request explicit authorization to create it — and before drafting or touching hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. If authorization is declined, use the smallest permitted alternative; pause only when the missing canonical record creates a material coordination risk.
+
+Before declaring a source-writing delivery complete, transfer the snapshot's durable decision and self-validation evidence into the selected carrier, read it back, and verify the transfer. When `$power-check` is required, persist its result in an authorized Issue or PR without changing the checked implementation identity; commit-only is then insufficient. Delete only the exact temporary snapshot after all required evidence is verified. If carrier authorization or verification is missing, retain the snapshot, report its exact path and the pending handoff, and do not claim completed persistence.
 
 For historical context, start from the user-provided Issue/PR or the affected code, then follow code → commit → PR/MR → Decision Issue and any `supersedes` link; use narrow search only when no direct entry point exists. Do not create repository decision Markdown unless the document itself is the requested deliverable — code, tests, schema, types, and configuration remain the primary implementation truth.
 
