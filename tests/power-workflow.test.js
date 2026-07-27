@@ -33,10 +33,10 @@ async function availablePowerShell(t) {
 }
 
 test('power-gan grills unresolved decisions naturally and delivers adaptively', async () => {
-  const [skill, orchestration, decisionSnapshot] = await Promise.all([
+  const [skill, orchestration, snapshotTemplate] = await Promise.all([
     read('power-gan/SKILL.md'),
     read('power-gan/references/orchestration.md'),
-    read('power-gan/references/decision-snapshot.md'),
+    read('power-gan/assets/decision-snapshot.md'),
   ])
 
   assert.match(skill, /`ALIGN_ONLY`/)
@@ -84,13 +84,13 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /follow code → commit → PR\/MR → Decision Issue/i)
   assert.match(skill, /references\/issue-persistence\.md/)
   assert.match(skill, /references\/delivery-evidence\.md/)
-  assert.match(skill, /references\/decision-snapshot\.md/)
+  assert.match(skill, /assets\/decision-snapshot\.md/)
   assert.match(skill, /references\/orchestration\.md/)
   assert.match(skill, /CHECK_REQUIRED/)
   assert.match(skill, /At alignment completion, always state the smallest adequate carrier/i)
   assert.match(skill, /proactively show the Decision Record draft/i)
   assert.match(skill, /A source-writing delivery must select Issue, PR, or commit/i)
-  assert.match(skill, /Delete only the exact temporary snapshot after all required evidence is verified/i)
+  assert.match(skill, /Keep it current[\s\S]*Whenever delivery stops before verified handoff[\s\S]*retain the snapshot/i)
   assert.match(skill, /power-check's Applicability section/i)
   assert.match(skill, /power-check's Caller Protocol/i)
   assert.match(skill, /build the Check Packet/i)
@@ -102,22 +102,9 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(orchestration, /fork_turns: none.*smallest supported positive history slice/i)
   assert.match(orchestration, /Do not persist it as a Blueprint or Agent Dispatch Plan/i)
   assert.match(orchestration, /If a profile is unavailable/i)
-  assert.match(decisionSnapshot, /operating system temporary directory/i)
-  assert.match(decisionSnapshot, /before the first source write/i)
-  assert.match(decisionSnapshot, /Prevent access by other unprivileged users/i)
-  assert.match(decisionSnapshot, /report the exact path in the launch update/i)
-  assert.match(decisionSnapshot, /Do not trust an environment-provided temporary directory blindly/i)
-  assert.match(decisionSnapshot, /reject any candidate or file equal to or nested under the repository/i)
-  assert.match(decisionSnapshot, /Preserve the necessary context in the commit message/i)
-  assert.match(decisionSnapshot, /explicit user or project authorization for local Git mutation/i)
-  assert.match(decisionSnapshot, /include only task-owned paths/i)
-  assert.match(decisionSnapshot, /bind verification to its SHA, full message, and included path set/i)
-  assert.match(decisionSnapshot, /Never amend or replace a checked commit/i)
-  assert.match(decisionSnapshot, /A commit-only carrier is sufficient only when no independent check is required/i)
-  assert.match(decisionSnapshot, /persist the result in an authorized Issue or PR that names the checked identity/i)
-  assert.match(decisionSnapshot, /Read back the exact carrier and verify/i)
-  assert.match(decisionSnapshot, /delete only its exact session-unique path/i)
-  assert.match(decisionSnapshot, /keep the snapshot, report its exact path and the pending handoff/i)
+  assert.match(snapshotTemplate, /^# Decision Snapshot$/m)
+  assert.match(snapshotTemplate, /Confirmed \/ delegated decisions:/i)
+  assert.match(snapshotTemplate, /Handoff status: pending/i)
   assert.doesNotMatch(skill, /^# (?:Task Contract|Execution Blueprint|Agent Dispatch Plan)$/m)
   assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
 })

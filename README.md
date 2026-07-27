@@ -20,8 +20,6 @@ The agent keeps independent judgment throughout alignment and delivery. It does 
 
 Before the first source write, the agent briefly states the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement already authorizes reversible work inside the stated scope; another confirmation is needed only when the boundary introduces a new material commitment, the user requested design approval first, or external or irreversible authorization is missing.
 
-Every source-writing delivery also creates a session-unique Decision Snapshot in a canonical operating system temporary directory outside the repository before that first write, prevents access by other unprivileged users, and reports its exact path. It records the confirmed boundary, launch basis, stop conditions, and selected final carrier without freezing reversible implementation details.
-
 When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
 ## Persistence
@@ -36,9 +34,7 @@ Materiality alone does not authorize hosted mutation or force creation of an Iss
 
 At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
 
-Discussion-only work may explicitly choose no durable record. Source-writing delivery must use an Issue, PR, or commit: before completion it transfers the snapshot's durable decision and self-validation evidence into that carrier, verifies the read-back, and only then deletes the exact temporary snapshot. If `$power-check` is required, its result goes into an authorized Issue or PR that names the unchanged checked identity; a commit-only carrier is insufficient. If the handoff cannot be authorized or verified, the snapshot is retained and persistence is reported as pending.
-
-Using a commit as the carrier requires explicit user or project authorization for local Git mutation. Source-write authorization alone is insufficient; staging is limited to task-owned paths and read-back verification covers the commit SHA, full message, and included paths.
+Source-writing delivery keeps a temporary Decision Snapshot from before the first write until its durable decisions reach the selected carrier; successful handoff deletes it, while failed handoff retains and reports it.
 
 An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
