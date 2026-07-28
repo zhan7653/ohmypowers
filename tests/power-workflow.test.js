@@ -44,7 +44,7 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /`FAST`/)
   assert.match(skill, /`DEEP`/)
   assert.match(skill, /Keep any required skill announcement to one brief clause/i)
-  assert.match(skill, /direct request to implement authorizes reversible work within the confirmed scope/i)
+  assert.match(skill, /direct request to implement establishes delivery intent, not launch authorization/i)
   assert.match(skill, /If implementation intent is unclear, ask only that/i)
   const mainHeadings = [
     'Core Contract',
@@ -77,8 +77,12 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /Never ask the user to choose reversible mechanics/i)
   assert.match(skill, /only an explicit user decision.*resolves a material boundary/i)
   assert.match(skill, /Do not flatter, appease, or mirror/i)
-  assert.match(skill, /A direct implementation request covers reversible work/i)
+  assert.match(skill, /direct implementation request establishes delivery intent only/i)
   assert.match(skill, /Every material element of the launch basis must already sit in 已确认 or 已委托/i)
+  assert.match(skill, /Do not write source until a reply made after the complete rendering explicitly confirms the whole Snapshot/i)
+  assert.match(skill, /Silence, partial answers, confirmation of individual decisions, blanket delegation, and any earlier implementation request do not pass this gate/i)
+  assert.match(skill, /invalidates the earlier confirmation[\s\S]*fresh whole-baseline confirmation/i)
+  assert.doesNotMatch(skill, /direct (?:implementation )?request[^.]*authorizes reversible work/i)
   assert.match(skill, /Do not reopen settled decisions or re-grill history/i)
   assert.match(skill, /Materiality alone neither forces an Issue nor authorizes hosted mutation/i)
   assert.match(skill, /follow code → commit → PR\/MR → Decision Issue/i)
@@ -90,7 +94,7 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /At alignment completion, always state the smallest adequate carrier/i)
   assert.match(skill, /proactively show the Decision Record draft/i)
   assert.match(skill, /A source-writing delivery must select Issue, PR, or commit/i)
-  assert.match(skill, /Keep it current[\s\S]*Whenever delivery stops before verified handoff[\s\S]*retain the snapshot/i)
+  assert.match(skill, /Keep the Snapshot current[\s\S]*Whenever delivery stops before verified handoff[\s\S]*retain the snapshot/i)
   assert.match(skill, /power-check's Applicability section/i)
   assert.match(skill, /power-check's Caller Protocol/i)
   assert.match(skill, /build the Check Packet/i)
@@ -104,12 +108,13 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(orchestration, /If a profile is unavailable/i)
   assert.match(snapshotTemplate, /^# Decision Snapshot$/m)
   assert.match(snapshotTemplate, /Confirmed \/ delegated decisions:/i)
+  assert.match(snapshotTemplate, /Overall launch confirmation: pending/i)
   assert.match(snapshotTemplate, /Handoff status: pending/i)
   assert.doesNotMatch(skill, /^# (?:Task Contract|Execution Blueprint|Agent Dispatch Plan)$/m)
   assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
 })
 
-test('power-gan question batching stays consistent across workflow guidance', async () => {
+test('power-gan workflow guidance stays consistent', async () => {
   const [skill, readme, spec] = await Promise.all([
     read('power-gan/SKILL.md'),
     read('README.md'),
@@ -121,6 +126,10 @@ test('power-gan question batching stays consistent across workflow guidance', as
   assert.match(spec, /每轮必须提出一至三个最高杠杆问题/)
   assert.match(spec, /同一决策层的独立问题/)
   assert.doesNotMatch(spec, /Deep Grill 必须一次只问一个问题/)
+  assert.match(readme, /source writing starts only after the user explicitly confirms that complete baseline as a whole/i)
+  assert.match(spec, /完整展示并得到用户整体确认后才能写入源码/)
+  assert.match(spec, /AC-2：简单任务快速交付[\s\S]*取得一次用户整体确认后直接完成/)
+  assert.doesNotMatch(spec, /不额外等待启动授权/)
 })
 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {

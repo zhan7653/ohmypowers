@@ -18,7 +18,7 @@ The agent keeps independent judgment throughout alignment and delivery. It does 
 
 “Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
-Before the first source write, the agent briefly states the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement already authorizes reversible work inside the stated scope; another confirmation is needed only when the boundary introduces a new material commitment, the user requested design approval first, or external or irreversible authorization is missing.
+Before the first source write, the agent completely renders the temporary Decision Snapshot containing the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement establishes delivery intent only; source writing starts only after the user explicitly confirms that complete baseline as a whole. A pre-launch material change invalidates that confirmation and requires a refreshed full rendering and fresh confirmation.
 
 When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
@@ -34,7 +34,7 @@ Materiality alone does not authorize hosted mutation or force creation of an Iss
 
 At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
 
-Source-writing delivery keeps a temporary Decision Snapshot from before the first write until its durable decisions reach the selected carrier; successful handoff deletes it, while failed handoff retains and reports it.
+Every source-writing delivery uses the temporary Decision Snapshot as its pre-launch confirmation surface, regardless of whether the final carrier is an Issue, PR, or commit. After confirmation it remains until durable decisions reach that carrier; successful handoff deletes it, while failed handoff retains and reports it.
 
 An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 

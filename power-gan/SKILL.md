@@ -14,7 +14,7 @@ If everything else fades in a long session, keep these five rules:
 1. The user owns material decisions; the agent owns reversible implementation details. Never ask the user to choose reversible mechanics; never resolve a material boundary by assumption.
 2. While a material boundary is unresolved, run grill turns: one to three highest-leverage questions, each with exactly one recommendation and reason, then stop and wait for the answer.
 3. Maintain the Decision Ledger every turn. The ledger — not conversational memory — is the record of what is confirmed, pending, and delegated.
-4. A direct request to implement authorizes reversible work within the confirmed scope. Before the first source write, state the launch basis. Pause mid-delivery only for a new material delta.
+4. A direct request to implement establishes delivery intent, not launch authorization. Before the first source write, render the complete Decision Snapshot and wait for the user's explicit confirmation of it as a whole.
 5. At alignment completion, select and state the smallest adequate persistence carrier. A source-writing delivery keeps a temporary Decision Snapshot until that carrier is verified. Hosted state is created or updated only with explicit authorization.
 
 ## Ownership And The Materiality Test
@@ -86,13 +86,13 @@ After each answer, update the ledger, inspect newly named evidence when useful, 
 
 ## Delivery
 
-**Launch authorization.** A direct implementation request covers reversible work within the scope as recorded in the ledger. Before the first source write, state the launch basis — for a small task one sentence is enough:
+**Launch authorization.** A direct implementation request establishes delivery intent only; it never authorizes the first source write. After alignment completes and the final carrier is selected, create a session-unique Markdown file outside the repository from [assets/decision-snapshot.md](assets/decision-snapshot.md), fill it, report its exact path, render its complete contents, and ask the user to confirm that complete launch baseline as a whole. The launch basis may be one sentence for a small task:
 
 > 基准:修复 X 使 Y 可观察成立;硬约束 Z;当前最小方案是先加回归测试再改实现;若发现触及公共 schema 即停。
 
-Every material element of the launch basis must already sit in 已确认 or 已委托. If one does not, ask about that element — stating it in the basis does not confirm it. Wait for fresh confirmation only when the boundary now includes a new material commitment, the user explicitly asked to approve the design first, or required external or irreversible authorization is missing.
+Every material element of the launch basis must already sit in 已确认 or 已委托. If one does not, ask about that element — stating it in the basis does not confirm it. Do not write source until a reply made after the complete rendering explicitly confirms the whole Snapshot. Silence, partial answers, confirmation of individual decisions, blanket delegation, and any earlier implementation request do not pass this gate. Record the confirmation in the Snapshot before the first source write.
 
-After alignment completes and before the first source write, create a session-unique Markdown file outside the repository from [assets/decision-snapshot.md](assets/decision-snapshot.md), fill it, and report its exact path. Keep it current when a confirmed material decision or final carrier changes; if it cannot be created, pause before writing source.
+Keep the Snapshot current. Any pre-launch change to a material decision or final carrier invalidates the earlier confirmation: update the Snapshot, render its complete contents again, and obtain fresh whole-baseline confirmation. If the Snapshot cannot be created or confirmation is absent, pause before writing source.
 
 Within the authorized boundary, change files, private interfaces, algorithms, work order, and test technique without asking. Report a meaningful replan as non-blocking information when it helps the user.
 
@@ -115,6 +115,8 @@ Run required checks through power-check's Caller Protocol: build the Check Packe
 ## Persistence
 
 At alignment completion, always state the smallest adequate carrier with one brief reason: an existing Decision Issue, a new Issue, a PR, a commit, or — for discussion-only work — no durable record. An Issue fits high-risk, long-running, cross-session, or collaborative decisions that need a canonical home; a PR carries ordinary delivery rationale; a commit suffices for tiny local changes. A source-writing delivery must select Issue, PR, or commit; materiality alone neither forces an Issue nor authorizes hosted mutation.
+
+The temporary Snapshot is the universal pre-launch confirmation surface regardless of whether the final carrier is an Issue, PR, or commit; it does not replace or alter the repository's Issue template.
 
 When a new Issue is warranted and none exists, proactively show the Decision Record draft and request explicit authorization to create it — and before drafting or touching hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. If authorization is declined, use the smallest permitted alternative; pause only when the missing canonical record creates a material coordination risk.
 
