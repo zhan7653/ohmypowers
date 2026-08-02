@@ -324,12 +324,15 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 
 小任务由主上下文直接完成。需要委派时，通过受管理的具名 profile 按任务形态路由；model 和 reasoning effort 由各 profile 自己持有，spawn 时不重复覆盖：
 
+读取型任务在准备进入第二个独立事实域时执行强制路由门槛：如果至少两个稳定、互不依赖的事实域各自需要多于一次直接读取，必须先划分不重叠通道并在同一批次派发当前就绪通道，不能先由主上下文串行完成一个再启动另一个。一至两次总读取、前后依赖查询、并发变化中的输入以及最终综合仍保留在主上下文；不得为填满并发槽而拆分任务。
+
 - 清晰、有界的实现、测试、修复、文档和确定性验证使用 `power_worker`、`gpt-5.6-terra`、`high`；
+- 清晰、有界的证据收集、清单、直接文档或历史查询以及日志或测试摘要使用行为只读的 `power_scout`、`gpt-5.6-terra`、`medium`；
 - 多假设探索、仓库调查、根因分析和跨模块追踪使用行为只读的 `power_explorer`、`gpt-5.6-sol`、`medium`；
 - 真正模糊的规划、拆分、跨 agent 结果综合和冲突分析使用行为只读的 `power_planner`、`gpt-5.6-sol`、`xhigh`；
 - 完成态实现审查和必须执行的 `$power-check` 使用唯一命名的受管理自定义 `power_reviewer`，避免与宿主内建 `reviewer` 冲突；其 profile 单独拥有 `gpt-5.6-sol`、`high` 和禁止写入、禁止递归委派的 developer instructions。reviewer 的 sandbox 继承宿主，不作为本工作流的通过条件。
 
-模型路由、任务包和 agent 分配是可逆执行策略，不要求用户确认，也不作为 Blueprint 或 Agent Dispatch Plan 持久化。主上下文保留对齐、材料决定、路由、最终仲裁和用户沟通；subagent 的计划、综合、实现或审查结果只能作为主上下文的输入。
+模型路由、任务包和 agent 分配是可逆执行策略，不要求用户确认，也不作为 Blueprint 或 Agent Dispatch Plan 持久化。主上下文保留对齐、材料决定、路由、最终仲裁和用户沟通；subagent 的计划、综合、实现或审查结果只能作为主上下文的输入。对于清晰的实现和测试，为材料判断保留主上下文并避免不必要的高阶模型工作可作为 `power_worker` 委派的次要收益，但成本本身不得成为 worker 委派或拆分实现、测试任务的理由，交付质量与协调安全优先。
 
 任务包使用 `fork_turns: none` 或宿主允许的最小正数历史片段。只并行稳定输入上的只读调查或写入所有权不重叠的任务，并禁止生成的 subagent 继续递归委派。`power_worker` 遇到材料歧义或任务包外工作时返回证据，由 `power_explorer` 或 `power_planner` 处理不确定性后再发出明确实现任务。行为只读的 agent 与未提交工作并行且结果用于检查、合并或交接判断时，主上下文在其返回后复核工作树不变；任何变化都会使旧检查对变化内容失效。
 
@@ -551,8 +554,8 @@ Then `Core Contract`、`Ownership And The Materiality Test`、`Decision Ledger`�
 ### AC-22：模型路由轻量且可验证
 
 Given 当前 Codex 支持受管理的自定义 agent profile
-When `$power-gan` 将边界清晰的实现、复杂探索、模糊规划或完成态审查交给 subagent
-Then 分别使用 Terra/high `power_worker`、Sol/medium `power_explorer`、Sol/xhigh `power_planner` 或 Sol/high `power_reviewer`；每个 profile 自己持有模型和 effort，explorer、planner 和 reviewer 通过自然语言约束保持行为只读，主上下文保留最终仲裁，任务包不持久化，宿主不能兑现 profile 配置时不声明精确保证。
+When `$power-gan` 将边界清晰的实现、轻量证据收集、复杂探索、模糊规划或完成态审查交给 subagent
+Then 分别使用 Terra/high `power_worker`、Terra/medium `power_scout`、Sol/medium `power_explorer`、Sol/xhigh `power_planner` 或 Sol/high `power_reviewer`；当至少两个稳定、互不依赖的事实域各自需要多于一次直接读取时，同批派发当前就绪通道，而一至两次总读取不强制委派；每个 profile 自己持有模型和 effort，scout、explorer、planner 和 reviewer 通过自然语言约束保持行为只读，主上下文保留最终仲裁，任务包不持久化，宿主不能兑现 profile 配置时不声明精确保证。
 
 ### AC-23：Decision Ledger 不丢失材料决定
 

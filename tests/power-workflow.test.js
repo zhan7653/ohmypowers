@@ -84,6 +84,8 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /references\/issue-persistence\.md/)
   assert.match(skill, /references\/delivery-evidence\.md/)
   assert.match(skill, /references\/orchestration\.md/)
+  assert.match(skill, /Judge inspection size by independent evidence questions/i)
+  assert.match(skill, /Never split work merely to increase the agent count/i)
   assert.match(skill, /CHECK_REQUIRED/)
   assert.match(skill, /At alignment completion, always state the smallest adequate carrier/i)
   assert.match(skill, /proactively show the Decision Record draft/i)
@@ -91,7 +93,12 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /power-check's Caller Protocol/i)
   assert.match(skill, /build the Check Packet/i)
   assert.match(orchestration, /Route by task shape/i)
+  assert.match(orchestration, /divide work by independent fact domains rather than file count/i)
+  assert.match(orchestration, /dispatch them in the same wave up to available capacity/i)
+  assert.match(orchestration, /must not rescan a delegated responsibility while that agent is running/i)
   assert.match(orchestration, /`power_worker`/)
+  assert.match(orchestration, /`power_scout`/)
+  assert.match(orchestration, /power_scout.*factual and bounded.*power_explorer.*competing hypotheses/is)
   assert.match(orchestration, /`power_explorer`/)
   assert.match(orchestration, /`power_planner`/)
   assert.match(orchestration, /`power_reviewer`/)
@@ -114,6 +121,43 @@ test('power-gan question batching stays consistent across workflow guidance', as
   assert.match(spec, /每轮必须提出一至三个最高杠杆问题/)
   assert.match(spec, /同一决策层的独立问题/)
   assert.doesNotMatch(spec, /Deep Grill 必须一次只问一个问题/)
+})
+
+test('power-gan enforces multi-domain read routing without agent-count fan-out', async () => {
+  const [skill, orchestration, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-gan/references/orchestration.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(skill, /Before starting a second independent fact domain, apply a routing gate/i)
+  assert.match(skill, /at least two stable, non-dependent domains each require more than one direct read/i)
+  assert.match(skill, /dispatch all currently ready qualifying lanes in the same wave before continuing cross-domain evidence collection/i)
+  assert.match(skill, /Do not serialize those lanes in the main context/i)
+  assert.match(orchestration, /At the first point where a second independent fact domain can be named/i)
+  assert.match(orchestration, /Do not serialize one lane in the main context and spawn the next later/i)
+  assert.match(orchestration, /one or two total direct reads/i)
+  assert.match(orchestration, /does not authorize fan-out/i)
+  assert.match(readme, /two stable, non-dependent domains that each need more than one direct read trigger same-wave delegation/i)
+  assert.match(spec, /至少两个稳定、互不依赖的事实域各自需要多于一次直接读取/)
+  assert.match(spec, /不得为填满并发槽而拆分任务/)
+})
+
+test('power-gan limits stronger-model savings to a secondary power-worker benefit', async () => {
+  const [skill, orchestration, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-gan/references/orchestration.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(skill, /For clear implementation and test work/i)
+  assert.match(skill, /never delegate or split implementation or test work for cost alone/i)
+  assert.match(orchestration, /For `power_worker` routing/i)
+  assert.match(orchestration, /when the decision is otherwise close/i)
+  assert.match(readme, /delivery quality and coordination safety remain primary/i)
+  assert.match(spec, /成本本身不得成为 worker 委派或拆分实现、测试任务的理由/)
 })
 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {
@@ -208,9 +252,10 @@ test('managed reviewer routing stays uniquely named and behaviorally read-only',
 })
 
 test('power-gan custom agent profiles own their routing configuration', async () => {
-  const [orchestration, worker, explorer, planner] = await Promise.all([
+  const [orchestration, worker, scout, explorer, planner] = await Promise.all([
     read('power-gan/references/orchestration.md'),
     read('power-gan/agents/power-worker.toml'),
+    read('power-gan/agents/power-scout.toml'),
     read('power-gan/agents/power-explorer.toml'),
     read('power-gan/agents/power-planner.toml'),
   ])
@@ -221,6 +266,11 @@ test('power-gan custom agent profiles own their routing configuration', async ()
   assert.match(worker, /model = "gpt-5\.6-terra"/)
   assert.match(worker, /model_reasoning_effort = "high"/)
   assert.match(worker, /Write only within the allowed-writes boundary/i)
+  assert.match(scout, /name = "power_scout"/)
+  assert.match(scout, /model = "gpt-5\.6-terra"/)
+  assert.match(scout, /model_reasoning_effort = "medium"/)
+  assert.match(scout, /behaviorally read-only/i)
+  assert.match(scout, /request escalation to power_explorer/i)
   assert.match(explorer, /name = "power_explorer"/)
   assert.match(explorer, /model = "gpt-5\.6-sol"/)
   assert.match(explorer, /model_reasoning_effort = "medium"/)
@@ -229,7 +279,7 @@ test('power-gan custom agent profiles own their routing configuration', async ()
   assert.match(planner, /model = "gpt-5\.6-sol"/)
   assert.match(planner, /model_reasoning_effort = "xhigh"/)
   assert.match(planner, /behaviorally read-only/i)
-  for (const profile of [worker, explorer, planner]) {
+  for (const profile of [worker, scout, explorer, planner]) {
     assert.match(profile, /Do not delegate to another agent/i)
     assert.doesNotMatch(profile, /sandbox_mode/)
   }
