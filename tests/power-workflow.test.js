@@ -128,8 +128,36 @@ test('power-gan workflow guidance stays consistent', async () => {
   assert.doesNotMatch(spec, /Deep Grill 必须一次只问一个问题/)
   assert.match(readme, /source writing starts only after the user explicitly confirms that complete baseline as a whole/i)
   assert.match(spec, /完整展示并得到用户整体确认后才能写入源码/)
-  assert.match(spec, /AC-2：简单任务快速交付[\s\S]*取得一次用户整体确认后直接完成/)
+  assert.match(spec, /AC-2：简单任务快速交付[\s\S]*通过 FR-6 的精简 Snapshot 启动门后直接完成/)
   assert.doesNotMatch(spec, /不额外等待启动授权/)
+})
+
+test('power-gan routes multi-domain reads without bypassing launch authorization', async () => {
+  const [skill, orchestration, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-gan/references/orchestration.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(skill, /at least two stable, non-dependent domains each require more than one direct read/i)
+  assert.match(skill, /no source-writing task packet may be dispatched until the complete Snapshot is confirmed and recorded/i)
+  assert.match(orchestration, /Do not target an agent count, split work to fill slots, or duplicate searches/i)
+  assert.match(orchestration, /Keep one or two total reads, sequential queries, changing inputs, the immediate critical path, and final synthesis in the main context/i)
+  assert.match(orchestration, /Before Snapshot confirmation, delegated packets must permit no source writes/i)
+  assert.match(readme, /at least two stable, non-dependent fact domains each need more than one direct read/i)
+  assert.match(spec, /至少两个稳定、互不依赖的事实域各自需要多于一次直接读取/)
+  assert.match(spec, /任何允许源码写入的任务包只能在整份 Snapshot 已确认并记录后派发/)
+})
+
+test('power-worker delegation is never justified by cost alone', async () => {
+  const [orchestration, spec] = await Promise.all([
+    read('power-gan/references/orchestration.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(orchestration, /cost alone never justifies delegation or splitting implementation or tests/i)
+  assert.match(spec, /成本本身不得成为拆分实现或测试的理由/)
 })
 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {
@@ -219,14 +247,15 @@ test('managed reviewer routing stays uniquely named and behaviorally read-only',
   assert.match(readme, /does not rely on the host sandbox being downgraded/i)
   assert.match(spec, /不要求宿主强制降级.*sandbox/)
   assert.match(check, /recompute the identity/i)
-  assert.match(orchestration, /verify the working tree is unchanged after it returns/i)
+  assert.match(orchestration, /verify.*working tree is unchanged/i)
   assert.doesNotMatch(profile, /sandbox_mode/)
 })
 
 test('power-gan custom agent profiles own their routing configuration', async () => {
-  const [orchestration, worker, explorer, planner] = await Promise.all([
+  const [orchestration, worker, scout, explorer, planner] = await Promise.all([
     read('power-gan/references/orchestration.md'),
     read('power-gan/agents/power-worker.toml'),
+    read('power-gan/agents/power-scout.toml'),
     read('power-gan/agents/power-explorer.toml'),
     read('power-gan/agents/power-planner.toml'),
   ])
@@ -237,6 +266,11 @@ test('power-gan custom agent profiles own their routing configuration', async ()
   assert.match(worker, /model = "gpt-5\.6-terra"/)
   assert.match(worker, /model_reasoning_effort = "high"/)
   assert.match(worker, /Write only within the allowed-writes boundary/i)
+  assert.match(scout, /name = "power_scout"/)
+  assert.match(scout, /model = "gpt-5\.6-terra"/)
+  assert.match(scout, /model_reasoning_effort = "medium"/)
+  assert.match(scout, /behaviorally read-only/i)
+  assert.match(scout, /request escalation to power_explorer/i)
   assert.match(explorer, /name = "power_explorer"/)
   assert.match(explorer, /model = "gpt-5\.6-sol"/)
   assert.match(explorer, /model_reasoning_effort = "medium"/)
@@ -245,7 +279,7 @@ test('power-gan custom agent profiles own their routing configuration', async ()
   assert.match(planner, /model = "gpt-5\.6-sol"/)
   assert.match(planner, /model_reasoning_effort = "xhigh"/)
   assert.match(planner, /behaviorally read-only/i)
-  for (const profile of [worker, explorer, planner]) {
+  for (const profile of [worker, scout, explorer, planner]) {
     assert.match(profile, /Do not delegate to another agent/i)
     assert.doesNotMatch(profile, /sandbox_mode/)
   }

@@ -21,6 +21,7 @@ const managedProfiles = [
   ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
   ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-5.6-sol', 'high', undefined],
   ['power-gan/agents/power-worker.toml', 'power_worker', 'gpt-5.6-terra', 'high', undefined],
+  ['power-gan/agents/power-scout.toml', 'power_scout', 'gpt-5.6-terra', 'medium', undefined],
   ['power-gan/agents/power-explorer.toml', 'power_explorer', 'gpt-5.6-sol', 'medium', undefined],
   ['power-gan/agents/power-planner.toml', 'power_planner', 'gpt-5.6-sol', 'xhigh', undefined],
 ]
@@ -165,7 +166,7 @@ function assertProfile(profile, expectedName, model, effort, sandbox) {
     assert.match(profile.developer_instructions, /Write only within the allowed-writes boundary/i)
     assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
   }
-  if (expectedName === 'power_explorer' || expectedName === 'power_planner') {
+  if (expectedName === 'power_scout' || expectedName === 'power_explorer' || expectedName === 'power_planner') {
     assert.match(profile.developer_instructions, /behaviorally read-only/i)
     assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
   }

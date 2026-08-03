@@ -326,14 +326,19 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 
 小任务由主上下文直接完成。需要委派时，通过受管理的具名 profile 按任务形态路由；model 和 reasoning effort 由各 profile 自己持有，spawn 时不重复覆盖：
 
+读取型任务在准备进入第二个独立事实域时执行路由门：如果至少两个稳定、互不依赖的事实域各自需要多于一次直接读取，必须划分不重叠通道并同批派发当前就绪通道。一至两次总读取、前后依赖查询、变化中的输入、关键路径和最终综合仍保留在主上下文；不得为填满并发槽而拆分任务。
+
 - 清晰、有界的实现、测试、修复、文档和确定性验证使用 `power_worker`、`gpt-5.6-terra`、`high`；
+- 清晰、有界的证据收集、清单、直接文档或历史查询以及日志或测试摘要使用行为只读的 `power_scout`、`gpt-5.6-terra`、`medium`；
 - 多假设探索、仓库调查、根因分析和跨模块追踪使用行为只读的 `power_explorer`、`gpt-5.6-sol`、`medium`；
 - 真正模糊的规划、拆分、跨 agent 结果综合和冲突分析使用行为只读的 `power_planner`、`gpt-5.6-sol`、`xhigh`；
 - 完成态实现审查和必须执行的 `$power-check` 使用唯一命名的受管理自定义 `power_reviewer`，避免与宿主内建 `reviewer` 冲突；其 profile 单独拥有 `gpt-5.6-sol`、`high` 和禁止写入、禁止递归委派的 developer instructions。reviewer 的 sandbox 继承宿主，不作为本工作流的通过条件。
 
-模型路由、任务包和 agent 分配是可逆执行策略，不要求用户确认，也不作为 Blueprint 或 Agent Dispatch Plan 持久化。主上下文保留对齐、材料决定、路由、最终仲裁和用户沟通；subagent 的计划、综合、实现或审查结果只能作为主上下文的输入。
+模型路由、任务包和 agent 分配是可逆执行策略，不要求用户确认，也不作为 Blueprint 或 Agent Dispatch Plan 持久化。主上下文保留对齐、材料决定、路由、最终仲裁和用户沟通；subagent 的结果只能作为输入。为材料判断保留主上下文和避免不必要的高阶模型工作只能作为 `power_worker` 委派的次要收益，成本本身不得成为拆分实现或测试的理由。
 
-任务包使用 `fork_turns: none` 或宿主允许的最小正数历史片段。只并行稳定输入上的只读调查或写入所有权不重叠的任务，并禁止生成的 subagent 继续递归委派。`power_worker` 遇到材料歧义或任务包外工作时返回证据，由 `power_explorer` 或 `power_planner` 处理不确定性后再发出明确实现任务。行为只读的 agent 与未提交工作并行且结果用于检查、合并或交接判断时，主上下文在其返回后复核工作树不变；任何变化都会使旧检查对变化内容失效。
+行为只读委派可以在 FR-6 的 Snapshot 确认前支持对齐；任何允许源码写入的任务包只能在整份 Snapshot 已确认并记录后派发，且不得越过该基线。用户确认 Snapshot，不确认路由或任务包；除非改变材料边界或最终载体，路由调整不使确认失效。
+
+任务包使用 `fork_turns: none` 或宿主允许的最小正数历史片段。只并行稳定输入上的只读调查或写入所有权不重叠的任务，并禁止 subagent 递归委派。`power_scout` 遇到冲突证据或因果判断时交回 `power_explorer`；`power_worker` 遇到材料歧义或任务包外工作时返回证据。行为只读的 agent 与未提交工作并行且结果用于检查、合并或交接判断时，主上下文在其返回后复核工作树不变。
 
 当前自定义 agent 覆盖的验证基线为 Codex CLI 0.145.0 multi-agent V2；0.144.1 不作为支持基线。
 
@@ -434,7 +439,7 @@ Then workflow 分别只对齐或继续交付；`ALIGN_ONLY`、`DELIVER`、`FAST`
 
 Given 任务明确、局部、可逆且没有材料风险
 When 进入 `DELIVER`
-Then 使用精简 Snapshot 完整展示实施意图和验证方向，取得一次用户整体确认后直接完成；不强制创建 Issue、规格、Blueprint 或独立检查。
+Then 通过 FR-6 的精简 Snapshot 启动门后直接完成；不强制创建 Issue、规格、Blueprint 或独立检查。
 
 ### AC-3：Deep Grill 内部切换
 
@@ -500,7 +505,7 @@ Then 通过相关 commit、PR 和关联 Decision Issue 获取上下文，必要�
 
 Given 用户已经直接要求实现，且材料对齐和只读调查没有改变其明确范围
 When 即将首次修改源代码
-Then Agent 创建并完整展示包含完成口径、硬约束、最小可信路径、验证方向和暂停条件的 Snapshot，等待用户明确整体确认并记录该确认后才实施。此前的实现请求不越过该门；开工后边界内文件、局部私有接口、算法、顺序和测试方式可以自主调整。
+Then FR-6 的整体确认门仍然适用，此前的实现请求不能替代；开工后边界内文件、局部私有接口、算法、顺序和测试方式可以自主调整。
 
 ### AC-14：材料偏移重新对齐
 
@@ -553,8 +558,8 @@ Then `Core Contract`、`Ownership And The Materiality Test`、`Decision Ledger`�
 ### AC-22：模型路由轻量且可验证
 
 Given 当前 Codex 支持受管理的自定义 agent profile
-When `$power-gan` 将边界清晰的实现、复杂探索、模糊规划或完成态审查交给 subagent
-Then 分别使用 Terra/high `power_worker`、Sol/medium `power_explorer`、Sol/xhigh `power_planner` 或 Sol/high `power_reviewer`；每个 profile 自己持有模型和 effort，explorer、planner 和 reviewer 通过自然语言约束保持行为只读，主上下文保留最终仲裁，任务包不持久化，宿主不能兑现 profile 配置时不声明精确保证。
+When `$power-gan` 将边界清晰的实现、证据收集、复杂探索、模糊规划或完成态审查交给 subagent
+Then 分别使用 Terra/high `power_worker`、Terra/medium `power_scout`、Sol/medium `power_explorer`、Sol/xhigh `power_planner` 或 Sol/high `power_reviewer`；多事实域读取遵守同批路由门，源码写入任务遵守 FR-6；每个 profile 自己持有模型和 effort，行为只读角色通过自然语言约束保持只读，主上下文保留最终仲裁，任务包不持久化，降级时不声明宿主未兑现的保证。
 
 ### AC-23：Decision Ledger 不丢失材料决定
 
