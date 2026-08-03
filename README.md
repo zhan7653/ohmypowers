@@ -4,7 +4,7 @@ Codex skills for decision alignment, adaptive delivery, independent checking, li
 
 ## Core Workflow
 
-`$power-gan` is the main coding entry point. It separates user-owned material decisions from reversible implementation details that the agent executes by default while the user retains visibility and stop authority.
+`$power-gan` is the main coding entry point. It separates user-owned material decisions from reversible implementation details that the agent executes autonomously after the launch baseline is confirmed, while the user retains visibility and stop authority.
 
 It infers whether the user wants discussion only or delivery and whether the task needs a focused pass or a Deep Grill. `ALIGN_ONLY`, `DELIVER`, `FAST`, and `DEEP` remain optional shorthand when the user supplies them; they are not a menu the agent should recite.
 
@@ -18,7 +18,7 @@ The agent keeps independent judgment throughout alignment and delivery. It does 
 
 “Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
-Before the first source write, the agent briefly states the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement already authorizes reversible work inside the stated scope; another confirmation is needed only when the boundary introduces a new material commitment, the user requested design approval first, or external or irreversible authorization is missing.
+Before the first source write, the agent completely renders the temporary Decision Snapshot containing the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement establishes delivery intent only; source writing starts only after the user explicitly confirms that complete baseline as a whole. A pre-launch material change invalidates that confirmation and requires a refreshed full rendering and fresh confirmation.
 
 When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
@@ -33,6 +33,8 @@ Use the smallest durable record justified by repository conventions and coordina
 Materiality alone does not authorize hosted mutation or force creation of an Issue.
 
 At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
+
+Every source-writing delivery keeps the temporary Decision Snapshot until its durable decisions reach the selected carrier; successful handoff deletes it, while failed handoff retains and reports it.
 
 An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 
@@ -53,9 +55,9 @@ The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier`
 
 ## Proportional Subagents
 
-Small tasks stay in the main context. For delegation, `$power-gan` routes clear implementation and tests to the managed Terra/high `power_worker`, multi-hypothesis exploration to the behaviorally read-only Sol/medium `power_explorer`, and genuinely ambiguous planning or cross-agent synthesis to the behaviorally read-only Sol/xhigh `power_planner`. Completed implementation review and required `$power-check` use the uniquely named, behaviorally read-only Sol/high `power_reviewer`. Each profile owns its model, reasoning effort, and behavioral constraints; the workflow does not rely on the host sandbox being downgraded for a child.
+Small tasks stay in the main context. When at least two stable, non-dependent fact domains each need more than one direct read, `$power-gan` dispatches the ready read-only lanes in the same wave; one or two total reads and sequential dependencies stay in the main context.
 
-Routing and task packets remain reversible implementation details: they are not persisted as an Agent Dispatch Plan or put through a user confirmation loop. The main context keeps material decisions, final arbitration, and user communication. If a managed profile is unavailable or its configuration cannot be honored, the workflow uses generic delegation or the main context only when that is still adequate; it does not claim an exact model or independent context that was not provided.
+Task shape determines the profile: `power_worker` handles bounded implementation and tests; behaviorally read-only `power_scout`, `power_explorer`, and `power_planner` handle bounded evidence, multi-hypothesis investigation, and ambiguous planning or synthesis; `power_reviewer` handles completed review and required `$power-check`. Routing remains agent-owned runtime state and never bypasses the Snapshot launch gate. Each profile owns its configuration; the workflow does not rely on the host sandbox being downgraded, and unavailable profiles degrade only when the fallback remains adequate.
 
 ## Independent Checks
 
@@ -73,7 +75,7 @@ Run:
 ./scripts/install.sh
 ```
 
-The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_worker`, `power_explorer`, `power_planner`, `power_reviewer`, and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. Managed profiles replace existing files with the same basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these profiles. Restart Codex afterward.
+The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_worker`, `power_scout`, `power_explorer`, `power_planner`, `power_reviewer`, and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. Managed profiles replace existing files with the same basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these profiles. Restart Codex afterward.
 
 ## Examples
 

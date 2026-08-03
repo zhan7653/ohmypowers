@@ -33,9 +33,10 @@ async function availablePowerShell(t) {
 }
 
 test('power-gan grills unresolved decisions naturally and delivers adaptively', async () => {
-  const [skill, orchestration] = await Promise.all([
+  const [skill, orchestration, snapshotTemplate] = await Promise.all([
     read('power-gan/SKILL.md'),
     read('power-gan/references/orchestration.md'),
+    read('power-gan/assets/decision-snapshot.md'),
   ])
 
   assert.match(skill, /`ALIGN_ONLY`/)
@@ -43,7 +44,7 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /`FAST`/)
   assert.match(skill, /`DEEP`/)
   assert.match(skill, /Keep any required skill announcement to one brief clause/i)
-  assert.match(skill, /direct request to implement authorizes reversible work within the confirmed scope/i)
+  assert.match(skill, /direct request to implement establishes delivery intent, not launch authorization/i)
   assert.match(skill, /If implementation intent is unclear, ask only that/i)
   const mainHeadings = [
     'Core Contract',
@@ -76,17 +77,24 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /Never ask the user to choose reversible mechanics/i)
   assert.match(skill, /only an explicit user decision.*resolves a material boundary/i)
   assert.match(skill, /Do not flatter, appease, or mirror/i)
-  assert.match(skill, /A direct implementation request covers reversible work/i)
+  assert.match(skill, /direct implementation request establishes delivery intent only/i)
   assert.match(skill, /Every material element of the launch basis must already sit in 已确认 or 已委托/i)
+  assert.match(skill, /Do not write source until a reply made after the complete rendering explicitly confirms the whole Snapshot/i)
+  assert.match(skill, /Silence, partial answers, confirmation of individual decisions, blanket delegation, and any earlier implementation request do not pass this gate/i)
+  assert.match(skill, /invalidates the earlier confirmation[\s\S]*fresh whole-baseline confirmation/i)
+  assert.doesNotMatch(skill, /direct (?:implementation )?request[^.]*authorizes reversible work/i)
   assert.match(skill, /Do not reopen settled decisions or re-grill history/i)
   assert.match(skill, /Materiality alone neither forces an Issue nor authorizes hosted mutation/i)
   assert.match(skill, /follow code → commit → PR\/MR → Decision Issue/i)
   assert.match(skill, /references\/issue-persistence\.md/)
   assert.match(skill, /references\/delivery-evidence\.md/)
+  assert.match(skill, /assets\/decision-snapshot\.md/)
   assert.match(skill, /references\/orchestration\.md/)
   assert.match(skill, /CHECK_REQUIRED/)
   assert.match(skill, /At alignment completion, always state the smallest adequate carrier/i)
   assert.match(skill, /proactively show the Decision Record draft/i)
+  assert.match(skill, /A source-writing delivery must select Issue, PR, or commit/i)
+  assert.match(skill, /Keep the Snapshot current[\s\S]*Whenever delivery stops before verified handoff[\s\S]*retain the snapshot/i)
   assert.match(skill, /power-check's Applicability section/i)
   assert.match(skill, /power-check's Caller Protocol/i)
   assert.match(skill, /build the Check Packet/i)
@@ -98,11 +106,15 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(orchestration, /fork_turns: none.*smallest supported positive history slice/i)
   assert.match(orchestration, /Do not persist it as a Blueprint or Agent Dispatch Plan/i)
   assert.match(orchestration, /If a profile is unavailable/i)
+  assert.match(snapshotTemplate, /^# Decision Snapshot$/m)
+  assert.match(snapshotTemplate, /Confirmed \/ delegated decisions:/i)
+  assert.match(snapshotTemplate, /Overall launch confirmation: pending/i)
+  assert.match(snapshotTemplate, /Handoff status: pending/i)
   assert.doesNotMatch(skill, /^# (?:Task Contract|Execution Blueprint|Agent Dispatch Plan)$/m)
   assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
 })
 
-test('power-gan question batching stays consistent across workflow guidance', async () => {
+test('power-gan workflow guidance stays consistent', async () => {
   const [skill, readme, spec] = await Promise.all([
     read('power-gan/SKILL.md'),
     read('README.md'),
@@ -114,6 +126,38 @@ test('power-gan question batching stays consistent across workflow guidance', as
   assert.match(spec, /每轮必须提出一至三个最高杠杆问题/)
   assert.match(spec, /同一决策层的独立问题/)
   assert.doesNotMatch(spec, /Deep Grill 必须一次只问一个问题/)
+  assert.match(readme, /source writing starts only after the user explicitly confirms that complete baseline as a whole/i)
+  assert.match(spec, /完整展示并得到用户整体确认后才能写入源码/)
+  assert.match(spec, /AC-2：简单任务快速交付[\s\S]*通过 FR-6 的精简 Snapshot 启动门后直接完成/)
+  assert.doesNotMatch(spec, /不额外等待启动授权/)
+})
+
+test('power-gan routes multi-domain reads without bypassing launch authorization', async () => {
+  const [skill, orchestration, readme, spec] = await Promise.all([
+    read('power-gan/SKILL.md'),
+    read('power-gan/references/orchestration.md'),
+    read('README.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(skill, /at least two stable, non-dependent domains each require more than one direct read/i)
+  assert.match(skill, /no source-writing task packet may be dispatched until the complete Snapshot is confirmed and recorded/i)
+  assert.match(orchestration, /Do not target an agent count, split work to fill slots, or duplicate searches/i)
+  assert.match(orchestration, /Keep one or two total reads, sequential queries, changing inputs, the immediate critical path, and final synthesis in the main context/i)
+  assert.match(orchestration, /Before Snapshot confirmation, delegated packets must permit no source writes/i)
+  assert.match(readme, /at least two stable, non-dependent fact domains each need more than one direct read/i)
+  assert.match(spec, /至少两个稳定、互不依赖的事实域各自需要多于一次直接读取/)
+  assert.match(spec, /任何允许源码写入的任务包只能在整份 Snapshot 已确认并记录后派发/)
+})
+
+test('power-worker delegation is never justified by cost alone', async () => {
+  const [orchestration, spec] = await Promise.all([
+    read('power-gan/references/orchestration.md'),
+    read('docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md'),
+  ])
+
+  assert.match(orchestration, /cost alone never justifies delegation or splitting implementation or tests/i)
+  assert.match(spec, /成本本身不得成为拆分实现或测试的理由/)
 })
 
 test('power-check is read-only and checks only current decisions and final evidence', async () => {
@@ -203,14 +247,15 @@ test('managed reviewer routing stays uniquely named and behaviorally read-only',
   assert.match(readme, /does not rely on the host sandbox being downgraded/i)
   assert.match(spec, /不要求宿主强制降级.*sandbox/)
   assert.match(check, /recompute the identity/i)
-  assert.match(orchestration, /verify the working tree is unchanged after it returns/i)
+  assert.match(orchestration, /verify.*working tree is unchanged/i)
   assert.doesNotMatch(profile, /sandbox_mode/)
 })
 
 test('power-gan custom agent profiles own their routing configuration', async () => {
-  const [orchestration, worker, explorer, planner] = await Promise.all([
+  const [orchestration, worker, scout, explorer, planner] = await Promise.all([
     read('power-gan/references/orchestration.md'),
     read('power-gan/agents/power-worker.toml'),
+    read('power-gan/agents/power-scout.toml'),
     read('power-gan/agents/power-explorer.toml'),
     read('power-gan/agents/power-planner.toml'),
   ])
@@ -221,6 +266,11 @@ test('power-gan custom agent profiles own their routing configuration', async ()
   assert.match(worker, /model = "gpt-5\.6-terra"/)
   assert.match(worker, /model_reasoning_effort = "high"/)
   assert.match(worker, /Write only within the allowed-writes boundary/i)
+  assert.match(scout, /name = "power_scout"/)
+  assert.match(scout, /model = "gpt-5\.6-terra"/)
+  assert.match(scout, /model_reasoning_effort = "medium"/)
+  assert.match(scout, /behaviorally read-only/i)
+  assert.match(scout, /request escalation to power_explorer/i)
   assert.match(explorer, /name = "power_explorer"/)
   assert.match(explorer, /model = "gpt-5\.6-sol"/)
   assert.match(explorer, /model_reasoning_effort = "medium"/)
@@ -229,7 +279,7 @@ test('power-gan custom agent profiles own their routing configuration', async ()
   assert.match(planner, /model = "gpt-5\.6-sol"/)
   assert.match(planner, /model_reasoning_effort = "xhigh"/)
   assert.match(planner, /behaviorally read-only/i)
-  for (const profile of [worker, explorer, planner]) {
+  for (const profile of [worker, scout, explorer, planner]) {
     assert.match(profile, /Do not delegate to another agent/i)
     assert.doesNotMatch(profile, /sandbox_mode/)
   }

@@ -14,8 +14,8 @@ If everything else fades in a long session, keep these five rules:
 1. The user owns material decisions; the agent owns reversible implementation details. Never ask the user to choose reversible mechanics; never resolve a material boundary by assumption.
 2. While a material boundary is unresolved, run grill turns: one to three highest-leverage questions, each with exactly one recommendation and reason, then stop and wait for the answer.
 3. Maintain the Decision Ledger every turn. The ledger — not conversational memory — is the record of what is confirmed, pending, and delegated.
-4. A direct request to implement authorizes reversible work within the confirmed scope. Before the first source write, state the launch basis. Pause mid-delivery only for a new material delta.
-5. At alignment completion, select and state the smallest adequate persistence carrier. Hosted state is created or updated only with explicit authorization.
+4. A direct request to implement establishes delivery intent, not launch authorization. Before the first source write, render the complete Decision Snapshot and wait for the user's explicit confirmation of it as a whole.
+5. At alignment completion, select and state the smallest adequate persistence carrier. A source-writing delivery keeps a temporary Decision Snapshot until that carrier is verified. Hosted state is created or updated only with explicit authorization.
 
 ## Ownership And The Materiality Test
 
@@ -51,7 +51,7 @@ Ledger rules:
 - If the user answers only part of a batch, the unanswered items stay in 待定 and reappear in the next batch. Do not advance to questions whose meaning depends on an unaccepted recommendation.
 - "剩下的你定" or an equivalent blanket delegation is itself an explicit decision: move the currently named 待定 items to 已委托, choose sensible defaults, and surface them in the launch basis and the delivery report. Blanket delegation never covers safety, legality, irreversible actions, external spend, or missing external authorization — those still stop the work.
 - At alignment completion, 已确认 (plus 已委托 defaults) seeds the Decision Record. The ledger itself is runtime state: do not persist it as a blueprint, paste it into Issues, or turn it into a menu of questions.
-- In long sessions, mirror the ledger into a session-temporary working file when the host provides one; never commit it to the repository.
+- For a source-writing delivery, copy the ledger's material items into the temporary Decision Snapshot before the first write; never commit the snapshot itself.
 
 ## Alignment: The Grill Loop
 
@@ -86,11 +86,13 @@ After each answer, update the ledger, inspect newly named evidence when useful, 
 
 ## Delivery
 
-**Launch authorization.** A direct implementation request covers reversible work within the scope as recorded in the ledger. Before the first source write, state the launch basis — for a small task one sentence is enough:
+**Launch authorization.** A direct implementation request establishes delivery intent only; it never authorizes the first source write. After alignment completes and the final carrier is selected, create a session-unique Markdown file outside the repository from [assets/decision-snapshot.md](assets/decision-snapshot.md), fill it, report its exact path, render its complete contents, and ask the user to confirm that complete launch baseline as a whole. The launch basis may be one sentence for a small task:
 
 > 基准:修复 X 使 Y 可观察成立;硬约束 Z;当前最小方案是先加回归测试再改实现;若发现触及公共 schema 即停。
 
-Every material element of the launch basis must already sit in 已确认 or 已委托. If one does not, ask about that element — stating it in the basis does not confirm it. Wait for fresh confirmation only when the boundary now includes a new material commitment, the user explicitly asked to approve the design first, or required external or irreversible authorization is missing.
+Every material element of the launch basis must already sit in 已确认 or 已委托. If one does not, ask about that element — stating it in the basis does not confirm it. Do not write source until a reply made after the complete rendering explicitly confirms the whole Snapshot. Silence, partial answers, confirmation of individual decisions, blanket delegation, and any earlier implementation request do not pass this gate. Record the confirmation in the Snapshot before the first source write.
+
+Keep the Snapshot current. Any pre-launch change to a material decision or final carrier invalidates the earlier confirmation: update the Snapshot, render its complete contents again, and obtain fresh whole-baseline confirmation. If the Snapshot cannot be created or confirmation is absent, pause before writing source.
 
 Within the authorized boundary, change files, private interfaces, algorithms, work order, and test technique without asking. Report a meaningful replan as non-blocking information when it helps the user.
 
@@ -112,14 +114,18 @@ Run required checks through power-check's Caller Protocol: build the Check Packe
 
 ## Persistence
 
-At alignment completion, always state the smallest adequate carrier with one brief reason: an existing Decision Issue, a new Issue, a PR, a commit, or no durable record. An Issue fits high-risk, long-running, cross-session, or collaborative decisions that need a canonical home; a PR carries ordinary delivery rationale; a commit suffices for tiny local changes. Materiality alone neither forces an Issue nor authorizes hosted mutation.
+At alignment completion, always state the smallest adequate carrier with one brief reason: an existing Decision Issue, a new Issue, a PR, a commit, or — for discussion-only work — no durable record. An Issue fits high-risk, long-running, cross-session, or collaborative decisions that need a canonical home; a PR carries ordinary delivery rationale; a commit suffices for tiny local changes. A source-writing delivery must select Issue, PR, or commit; materiality alone neither forces an Issue nor authorizes hosted mutation.
+
+The temporary Snapshot is the universal pre-launch confirmation surface regardless of whether the final carrier is an Issue, PR, or commit; it does not replace or alter the repository's Issue template.
 
 When a new Issue is warranted and none exists, proactively show the Decision Record draft and request explicit authorization to create it — and before drafting or touching hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. If authorization is declined, use the smallest permitted alternative; pause only when the missing canonical record creates a material coordination risk.
+
+Before declaring a source-writing delivery complete, transfer its durable decisions into the selected carrier and verify the transfer, then delete the exact snapshot. Whenever delivery stops before verified handoff, retain the snapshot and report its path and pending handoff.
 
 For historical context, start from the user-provided Issue/PR or the affected code, then follow code → commit → PR/MR → Decision Issue and any `supersedes` link; use narrow search only when no direct entry point exists. Do not create repository decision Markdown unless the document itself is the requested deliverable — code, tests, schema, types, and configuration remain the primary implementation truth.
 
 ## Orchestration
 
-Small tasks stay in the main context. Consider delegation only for bounded independently useful work, safe parallel read-only investigation, non-overlapping writes, or a genuinely independent review — then read [references/orchestration.md](references/orchestration.md) and route by task shape across `power_worker`, `power_explorer`, `power_planner`, and `power_reviewer`. Each profile owns its own model and effort configuration; do not restate or override them here.
+Small tasks stay in the main context. Before starting a second independent fact domain, if at least two stable, non-dependent domains each require more than one direct read, read [references/orchestration.md](references/orchestration.md) and dispatch the ready qualifying lanes in the same wave. Keep one or two total reads, sequential dependencies, changing inputs, the immediate critical path, and synthesis in the main context. Use the same reference for other independently useful delegation and profile routing, including `power_scout`.
 
-Routing and task packets are reversible implementation details: never ask the user to confirm them and never persist them. The main context keeps material decisions, final arbitration, and user communication; a subagent may return a plan, synthesis, implementation, or review, but never replaces the main agent's reconciliation against the ledger and the current repository state.
+Behaviorally read-only delegation may support alignment before Snapshot confirmation, but no source-writing task packet may be dispatched until the complete Snapshot is confirmed and recorded. Routing and task packets are reversible implementation details: the user confirms the Snapshot, never the routing or packet. The main context keeps material decisions, final arbitration, and user communication; a subagent never replaces its reconciliation against the ledger and current repository state.
