@@ -82,6 +82,7 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /stable ID/i)
   assert.match(skill, /rejected or superseded/i)
   assert.match(skill, /scripts\/validate-decision-state\.mjs/)
+  assert.match(skill, /content SHA-256/i)
   assert.match(skill, /same file becomes the launch Snapshot/i)
   assert.match(skill, /do not maintain a separate Decision Journal/i)
   assert.match(skill, /An unconfirmed recommendation lives in 待定/i)
@@ -176,30 +177,45 @@ test('power-gan decision state validator prevents lossy or premature launch', as
     .replace('- D002 [pending]:', '- D002 [delegated]:')
   await writeFile(statePath, launchState, 'utf8')
 
-  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'launch'])
+  const { stdout: launchOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'launch'],
+  )
+  const launchDigest = launchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
+  assert.ok(launchDigest, 'launch validation must return the confirmation digest')
   await rejectsWithStderr(
     execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized']),
     /launch confirmation/i,
   )
 
+  const authorizedState = launchState.replace(
+    '- Overall launch confirmation: pending',
+    `- Overall launch confirmation: confirmed — sha256:${launchDigest} — user confirmed complete rendering`,
+  )
+  await writeFile(statePath, authorizedState, 'utf8')
+  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized'])
+
   await writeFile(
     statePath,
-    launchState.replace(
-      '- Overall launch confirmation: pending',
-      '- Overall launch confirmation: confirmed by user after complete rendering',
+    authorizedState.replace(
+      'Preserve the public response contract.',
+      'Change the public response contract.',
     ),
     'utf8',
   )
-  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized'])
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized']),
+    /does not match current launch content/i,
+  )
+
+  await writeFile(statePath, authorizedState, 'utf8')
   await rejectsWithStderr(
     execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'handoff']),
     /handoff status/i,
   )
   await writeFile(
     statePath,
-    launchState
-      .replace('- Overall launch confirmation: pending', '- Overall launch confirmation: confirmed by user')
-      .replace('- Handoff status: pending', '- Handoff status: complete — commit abc123'),
+    authorizedState.replace('- Handoff status: pending', '- Handoff status: complete — commit abc123'),
     'utf8',
   )
   await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'handoff'])
@@ -242,6 +258,7 @@ test('power-gan routes multi-domain reads without bypassing launch authorization
   assert.match(orchestration, /Do not target an agent count, split work to fill slots, or duplicate searches/i)
   assert.match(orchestration, /Keep one or two total reads, sequential queries, changing inputs, the immediate critical path, and final synthesis in the main context/i)
   assert.match(orchestration, /Before Snapshot confirmation, delegated packets must permit no source writes/i)
+  assert.match(orchestration, /validate-decision-state\.mjs --phase authorized/i)
   assert.match(readme, /at least two stable, non-dependent fact domains each need more than one direct read/i)
   assert.match(spec, /至少两个稳定、互不依赖的事实域各自需要多于一次直接读取/)
   assert.match(spec, /任何允许源码写入的任务包只能在整份 Snapshot 已确认、写回并通过授权态校验后派发/)

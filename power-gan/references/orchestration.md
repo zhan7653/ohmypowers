@@ -39,7 +39,7 @@ The host does not support per-subagent sandbox overrides, so read-only means ins
 
 ## Task Packet
 
-Launch authorization stays in the main context. Before Snapshot confirmation, delegated packets must permit no source writes and use a behaviorally read-only profile or adequate read-only fallback. A source-writing packet may be dispatched only after the complete Snapshot is confirmed and recorded, and it must remain within that baseline. The user confirms the Snapshot, not the packet; changing routes does not invalidate confirmation unless it changes a material boundary or final carrier.
+Launch authorization stays in the main context. Before Snapshot confirmation, delegated packets must permit no source writes and use a behaviorally read-only profile or adequate read-only fallback. A source-writing packet may be dispatched only after the complete Snapshot is confirmed, recorded, and accepted by `validate-decision-state.mjs --phase authorized`; it must remain within that baseline. The user confirms the Snapshot, not the packet; changing routes does not invalidate confirmation unless it changes a material boundary or final carrier.
 
 Send a compact packet containing the objective, confirmed decisions from 已确认 and 已委托, repository evidence, scope, allowed writes, dependencies, deliverable, validation, and stop conditions. The packet is runtime state — do not persist it as a Blueprint or Agent Dispatch Plan. For explicit overrides, use `fork_turns: none` or the smallest supported positive history slice; do not use a full-history fork when the host forbids overrides.
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from 'node:crypto'
 import { writeSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 
@@ -23,7 +24,9 @@ if (errors.length > 0) {
   writeSync(2, `${errors.map(error => `decision state invalid: ${error}`).join('\n')}\n`)
   process.exitCode = 1
 } else {
-  console.log(`decision state valid for ${phase}: ${statePath}`)
+  const output = [`decision state valid for ${phase}: ${statePath}`]
+  if (phase !== 'alignment') output.push(`launch content sha256: ${launchContentDigest(text)}`)
+  writeSync(1, `${output.join('\n')}\n`)
 }
 
 function validateDecisionState(text, phase) {
@@ -81,8 +84,12 @@ function validateDecisionState(text, phase) {
   }
 
   if (phase === 'authorized' || phase === 'handoff') {
-    if (!/^confirmed\b/i.test(fieldValue(lines, 'Overall launch confirmation') || '')) {
+    const confirmation = fieldValue(lines, 'Overall launch confirmation') || ''
+    const recordedDigest = confirmation.match(/\bsha256:([0-9a-f]{64})\b/i)?.[1].toLowerCase()
+    if (!/^confirmed\b/i.test(confirmation) || !recordedDigest) {
       errors.push('whole launch confirmation must be recorded before source writes')
+    } else if (recordedDigest !== launchContentDigest(text)) {
+      errors.push('whole launch confirmation does not match current launch content')
     }
   }
   if (phase === 'handoff' && !/^complete\b/i.test(fieldValue(lines, 'Handoff status') || '')) {
@@ -90,6 +97,14 @@ function validateDecisionState(text, phase) {
   }
 
   return errors
+}
+
+function launchContentDigest(text) {
+  const normalized = text
+    .replaceAll('\r\n', '\n')
+    .replace(/^- Overall launch confirmation:.*$/m, '- Overall launch confirmation: pending')
+    .replace(/^- Handoff status:.*$/m, '- Handoff status: pending')
+  return createHash('sha256').update(normalized, 'utf8').digest('hex')
 }
 
 function fieldValue(lines, name) {
