@@ -10,7 +10,7 @@ It infers whether the user wants discussion only or delivery and whether the tas
 
 Deep Grill follows the actual decision tree in focused rounds of one to three questions. The agent asks one when later questions depend on that answer, and batches two or three only when they are independent questions from the same decision layer. It inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives a recommendation for each question, and lets the answers determine the next branch until both sides share the same understanding.
 
-Throughout alignment, `$power-gan` maintains a compact Decision Ledger with confirmed decisions, pending material boundaries, visible reversible defaults, and explicitly delegated boundaries. Unanswered recommendations remain pending, and the ledger—not conversational memory—seeds any later Decision Record.
+From the first material item, `$power-gan` maintains one session-unique decision file in the operating system's temporary directory, keyed by `CODEX_THREAD_ID`. Stable decision IDs retain confirmed, pending, delegated, rejected, and superseded material boundaries. Every user answer is reconciled into that file before the next question or task action, and compacted or resumed contexts re-read it instead of rebuilding decisions from conversational memory.
 
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
@@ -18,7 +18,7 @@ The agent keeps independent judgment throughout alignment and delivery. It does 
 
 “Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
 
-Before the first source write, the agent completely renders the temporary Decision Snapshot containing the completion basis, hard constraints, current smallest approach, validation direction, and real stop conditions. A direct request to implement establishes delivery intent only; source writing starts only after the user explicitly confirms that complete baseline as a whole. A pre-launch material change invalidates that confirmation and requires a refreshed full rendering and fresh confirmation.
+Before the first source write, the same decision file becomes the Decision Snapshot by adding the completion basis, hard constraints, current smallest approach, validation direction, stop conditions, and final carrier. A bundled validator rejects missing decision IDs, active pending items, incomplete launch fields, or an unrecorded whole-baseline confirmation. A direct request to implement establishes delivery intent only; source writing starts only after the user explicitly confirms the completely rendered file as a whole. A pre-launch material change invalidates that confirmation and requires a refreshed full rendering and fresh confirmation.
 
 When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
 
@@ -34,7 +34,7 @@ Materiality alone does not authorize hosted mutation or force creation of an Iss
 
 At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
 
-Every source-writing delivery keeps the temporary Decision Snapshot until its durable decisions reach the selected carrier; successful handoff deletes it, while failed handoff retains and reports it.
+Every source-writing delivery keeps that single temporary decision file until its active decisions reach the selected carrier; successful validated handoff deletes it, while failed handoff retains and reports it. The workflow does not maintain a second Journal or a repository-local decision database.
 
 An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 

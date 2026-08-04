@@ -9,9 +9,22 @@ import test from 'node:test'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const execFileAsync = promisify(execFile)
+const decisionStateValidator = path.join(
+  root,
+  'power-gan',
+  'scripts',
+  'validate-decision-state.mjs',
+)
 
 async function read(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8')
+}
+
+async function rejectsWithStderr(promise, pattern) {
+  await assert.rejects(promise, error => {
+    assert.match(error.stderr, pattern)
+    return true
+  })
 }
 
 function extractPowerShellBlock(reference, marker) {
@@ -62,6 +75,15 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.deepEqual(skill.match(/^## .+$/gm), mainHeadings.map(heading => `## ${heading}`))
   for (const marker of ['▸ 已确认:', '▸ 待定:', '▸ 默认(可改):', '▸ 已委托:']) assert.match(skill, new RegExp(marker.replace(/[()]/g, '\\$&')))
   assert.match(skill, /ledger — not conversational memory/i)
+  assert.match(skill, /CODEX_THREAD_ID/)
+  assert.match(skill, /first material item/i)
+  assert.match(skill, /before investigating, asking the next question, or implementing/i)
+  assert.match(skill, /re-read the decision file before any task action/i)
+  assert.match(skill, /stable ID/i)
+  assert.match(skill, /rejected or superseded/i)
+  assert.match(skill, /scripts\/validate-decision-state\.mjs/)
+  assert.match(skill, /same file becomes the launch Snapshot/i)
+  assert.match(skill, /do not maintain a separate Decision Journal/i)
   assert.match(skill, /An unconfirmed recommendation lives in 待定/i)
   assert.match(skill, /If the user answers only part of a batch, the unanswered items stay in 待定/i)
   assert.match(skill, /blanket delegation never covers safety, legality, irreversible actions/i)
@@ -78,7 +100,7 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /only an explicit user decision.*resolves a material boundary/i)
   assert.match(skill, /Do not flatter, appease, or mirror/i)
   assert.match(skill, /direct implementation request establishes delivery intent only/i)
-  assert.match(skill, /Every material element of the launch basis must already sit in 已确认 or 已委托/i)
+  assert.match(skill, /Every material element of the launch basis must already have an active `confirmed` or `delegated` ID and therefore sit in 已确认 or 已委托/i)
   assert.match(skill, /Do not write source until a reply made after the complete rendering explicitly confirms the whole Snapshot/i)
   assert.match(skill, /Silence, partial answers, confirmation of individual decisions, blanket delegation, and any earlier implementation request do not pass this gate/i)
   assert.match(skill, /invalidates the earlier confirmation[\s\S]*fresh whole-baseline confirmation/i)
@@ -107,11 +129,86 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(orchestration, /Do not persist it as a Blueprint or Agent Dispatch Plan/i)
   assert.match(orchestration, /If a profile is unavailable/i)
   assert.match(snapshotTemplate, /^# Decision Snapshot$/m)
-  assert.match(snapshotTemplate, /Confirmed \/ delegated decisions:/i)
+  assert.match(snapshotTemplate, /^- Thread: <CODEX_THREAD_ID>$/m)
+  assert.match(snapshotTemplate, /^## Decisions$/m)
+  assert.match(snapshotTemplate, /D001 \[pending\]/)
   assert.match(snapshotTemplate, /Overall launch confirmation: pending/i)
   assert.match(snapshotTemplate, /Handoff status: pending/i)
   assert.doesNotMatch(skill, /^# (?:Task Contract|Execution Blueprint|Agent Dispatch Plan)$/m)
   assert.doesNotMatch(skill, /Ask exactly one highest-leverage unresolved question/i)
+})
+
+test('power-gan decision state validator prevents lossy or premature launch', async t => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'power-gan-decision-state-'))
+  t.after(() => rm(tmp, { recursive: true, force: true }))
+  const statePath = path.join(tmp, 'decision-snapshot.md')
+  const alignmentState = `# Decision Snapshot
+
+- Thread: test-thread
+- Next decision ID: D003
+- Outcome: pending
+- Scope / non-goals: pending
+- Launch basis: pending
+- Stop / reopen conditions: pending
+- Final carrier: pending
+- Overall launch confirmation: pending
+- Handoff status: pending
+
+## Decisions
+
+- D001 [confirmed]: Preserve the public response contract.
+- D002 [pending]: Decide whether old clients remain supported.
+`
+  await writeFile(statePath, alignmentState, 'utf8')
+
+  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'alignment'])
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'launch']),
+    /pending decision/i,
+  )
+
+  const launchState = alignmentState
+    .replace('- Outcome: pending', '- Outcome: Ship the compatible response contract.')
+    .replace('- Scope / non-goals: pending', '- Scope / non-goals: Keep old clients; do not redesign transport.')
+    .replace('- Launch basis: pending', '- Launch basis: Add contract tests before implementation.')
+    .replace('- Stop / reopen conditions: pending', '- Stop / reopen conditions: Stop if wire compatibility must break.')
+    .replace('- Final carrier: pending', '- Final carrier: commit')
+    .replace('- D002 [pending]:', '- D002 [delegated]:')
+  await writeFile(statePath, launchState, 'utf8')
+
+  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'launch'])
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized']),
+    /launch confirmation/i,
+  )
+
+  await writeFile(
+    statePath,
+    launchState.replace(
+      '- Overall launch confirmation: pending',
+      '- Overall launch confirmation: confirmed by user after complete rendering',
+    ),
+    'utf8',
+  )
+  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized'])
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'handoff']),
+    /handoff status/i,
+  )
+  await writeFile(
+    statePath,
+    launchState
+      .replace('- Overall launch confirmation: pending', '- Overall launch confirmation: confirmed by user')
+      .replace('- Handoff status: pending', '- Handoff status: complete — commit abc123'),
+    'utf8',
+  )
+  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'handoff'])
+
+  await writeFile(statePath, launchState.replace(/^- D002 .*\n/m, ''), 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'launch']),
+    /contiguous/i,
+  )
 })
 
 test('power-gan workflow guidance stays consistent', async () => {
@@ -126,8 +223,8 @@ test('power-gan workflow guidance stays consistent', async () => {
   assert.match(spec, /每轮必须提出一至三个最高杠杆问题/)
   assert.match(spec, /同一决策层的独立问题/)
   assert.doesNotMatch(spec, /Deep Grill 必须一次只问一个问题/)
-  assert.match(readme, /source writing starts only after the user explicitly confirms that complete baseline as a whole/i)
-  assert.match(spec, /完整展示并得到用户整体确认后才能写入源码/)
+  assert.match(readme, /source writing starts only after the user explicitly confirms the completely rendered file as a whole/i)
+  assert.match(spec, /完整展示并得到用户整体确认后.*授权态校验.*才能写入源码/)
   assert.match(spec, /AC-2：简单任务快速交付[\s\S]*通过 FR-6 的精简 Snapshot 启动门后直接完成/)
   assert.doesNotMatch(spec, /不额外等待启动授权/)
 })
@@ -141,13 +238,13 @@ test('power-gan routes multi-domain reads without bypassing launch authorization
   ])
 
   assert.match(skill, /at least two stable, non-dependent domains each require more than one direct read/i)
-  assert.match(skill, /no source-writing task packet may be dispatched until the complete Snapshot is confirmed and recorded/i)
+  assert.match(skill, /no source-writing task packet may be dispatched until the complete Snapshot is confirmed, recorded, and validated/i)
   assert.match(orchestration, /Do not target an agent count, split work to fill slots, or duplicate searches/i)
   assert.match(orchestration, /Keep one or two total reads, sequential queries, changing inputs, the immediate critical path, and final synthesis in the main context/i)
   assert.match(orchestration, /Before Snapshot confirmation, delegated packets must permit no source writes/i)
   assert.match(readme, /at least two stable, non-dependent fact domains each need more than one direct read/i)
   assert.match(spec, /至少两个稳定、互不依赖的事实域各自需要多于一次直接读取/)
-  assert.match(spec, /任何允许源码写入的任务包只能在整份 Snapshot 已确认并记录后派发/)
+  assert.match(spec, /任何允许源码写入的任务包只能在整份 Snapshot 已确认、写回并通过授权态校验后派发/)
 })
 
 test('power-worker delegation is never justified by cost alone', async () => {
