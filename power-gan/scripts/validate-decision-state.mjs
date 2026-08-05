@@ -82,6 +82,10 @@ function validateDecisionState(text, phase) {
   if (isPlaceholder(fieldValue(lines, 'Thread'))) errors.push('Thread must identify the current session')
 
   if (phase !== 'alignment') {
+    const reservedMarker = [snapshotStartMarker, snapshotEndMarker].find(marker =>
+      launchContent(text).includes(marker),
+    )
+    if (reservedMarker) errors.push(`launch content contains reserved snapshot marker: ${reservedMarker}`)
     const pending = decisions.filter(decision => decision.status === 'pending')
     if (pending.length > 0) errors.push(`pending decision IDs block launch: ${pending.map(item => item.id).join(', ')}`)
     for (const field of ['Outcome', 'Scope / non-goals', 'Launch basis', 'Stop / reopen conditions', 'Final carrier']) {

@@ -86,6 +86,7 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /content SHA-256/i)
   assert.match(skill, /forward the validator's entire launch output verbatim/i)
   assert.match(skill, /Do not retype, reflow, shorten, translate/i)
+  assert.match(skill, /marker strings are reserved/i)
   assert.match(skill, /same file becomes the launch Snapshot/i)
   assert.match(skill, /do not maintain a separate Decision Journal/i)
   assert.match(skill, /An unconfirmed recommendation lives in 待定/i)
@@ -195,6 +196,23 @@ test('power-gan decision state validator prevents lossy or premature launch', as
   const renderedSnapshot = launchOutput.slice(contentStart, contentEnd)
   assert.equal(renderedSnapshot, launchState.replaceAll('\r\n', '\n'))
   assert.equal(createHash('sha256').update(renderedSnapshot, 'utf8').digest('hex'), launchDigest)
+
+  for (const marker of [snapshotStart.trimEnd(), snapshotEnd]) {
+    await writeFile(
+      statePath,
+      launchState.replace(
+        'Preserve the public response contract.',
+        `Preserve the public response contract. ${marker}`,
+      ),
+      'utf8',
+    )
+    await rejectsWithStderr(
+      execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'launch']),
+      /reserved snapshot marker/i,
+    )
+  }
+  await writeFile(statePath, launchState, 'utf8')
+
   await rejectsWithStderr(
     execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized']),
     /launch confirmation/i,
