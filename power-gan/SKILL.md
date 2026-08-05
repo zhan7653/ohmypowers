@@ -102,7 +102,7 @@ After each answer, reconcile and validate the decision file before inspecting ne
 
 ## Delivery
 
-**Launch authorization.** A direct implementation request establishes delivery intent only; it never authorizes the first source write. After alignment completes and the final carrier is selected, fill Outcome, Scope / non-goals, Launch basis, Stop / reopen conditions, and Final carrier in the existing decision file. The same file becomes the launch Snapshot; do not copy its decisions into a second artifact. Run `node <skill-dir>/scripts/validate-decision-state.mjs <path> --phase launch`; it prints the launch content SHA-256. Report the exact path, render the complete file, and ask the user to confirm that launch baseline as a whole. The launch basis may be one sentence for a small task:
+**Launch authorization.** A direct implementation request establishes delivery intent only; it never authorizes the first source write. After alignment completes and the final carrier is selected, fill Outcome, Scope / non-goals, Launch basis, Stop / reopen conditions, and Final carrier in the existing decision file. The same file becomes the launch Snapshot; do not copy its decisions into a second artifact. Run `node <skill-dir>/scripts/validate-decision-state.mjs <path> --phase launch`; it prints the launch content SHA-256 and the complete normalized file between fixed markers. Forward the validator's entire launch output verbatim in the confirmation request. Do not retype, reflow, shorten, translate, or replace it with the compact Ledger; ask the user to confirm that exact baseline as a whole immediately after the block. The launch basis may be one sentence for a small task:
 
 > 基准:修复 X 使 Y 可观察成立;硬约束 Z;当前最小方案是先加回归测试再改实现;若发现触及公共 schema 即停。
 

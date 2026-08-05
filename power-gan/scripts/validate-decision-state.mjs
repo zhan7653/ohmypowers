@@ -5,6 +5,8 @@ import { writeSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 
 const allowedPhases = new Set(['alignment', 'launch', 'authorized', 'handoff'])
+const snapshotStartMarker = '-----BEGIN POWER-GAN DECISION SNAPSHOT-----'
+const snapshotEndMarker = '-----END POWER-GAN DECISION SNAPSHOT-----'
 const args = process.argv.slice(2)
 const statePath = args[0]
 const phaseIndex = args.indexOf('--phase')
@@ -25,8 +27,16 @@ if (errors.length > 0) {
   process.exitCode = 1
 } else {
   const output = [`decision state valid for ${phase}: ${statePath}`]
-  if (phase !== 'alignment') output.push(`launch content sha256: ${launchContentDigest(text)}`)
-  writeSync(1, `${output.join('\n')}\n`)
+  const renderedContent = phase === 'alignment' ? undefined : launchContent(text)
+  if (renderedContent !== undefined) {
+    output.push(`launch content sha256: ${contentDigest(renderedContent)}`)
+  }
+  if (phase === 'launch') {
+    output.push(snapshotStartMarker)
+    writeSync(1, `${output.join('\n')}\n${renderedContent}${snapshotEndMarker}\n`)
+  } else {
+    writeSync(1, `${output.join('\n')}\n`)
+  }
 }
 
 function validateDecisionState(text, phase) {
@@ -100,11 +110,18 @@ function validateDecisionState(text, phase) {
 }
 
 function launchContentDigest(text) {
-  const normalized = text
+  return contentDigest(launchContent(text))
+}
+
+function contentDigest(content) {
+  return createHash('sha256').update(content, 'utf8').digest('hex')
+}
+
+function launchContent(text) {
+  return text
     .replaceAll('\r\n', '\n')
     .replace(/^- Overall launch confirmation:.*$/m, '- Overall launch confirmation: pending')
     .replace(/^- Handoff status:.*$/m, '- Handoff status: pending')
-  return createHash('sha256').update(normalized, 'utf8').digest('hex')
 }
 
 function fieldValue(lines, name) {

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -83,6 +84,8 @@ test('power-gan grills unresolved decisions naturally and delivers adaptively', 
   assert.match(skill, /rejected or superseded/i)
   assert.match(skill, /scripts\/validate-decision-state\.mjs/)
   assert.match(skill, /content SHA-256/i)
+  assert.match(skill, /forward the validator's entire launch output verbatim/i)
+  assert.match(skill, /Do not retype, reflow, shorten, translate/i)
   assert.match(skill, /same file becomes the launch Snapshot/i)
   assert.match(skill, /do not maintain a separate Decision Journal/i)
   assert.match(skill, /An unconfirmed recommendation lives in 待定/i)
@@ -183,6 +186,15 @@ test('power-gan decision state validator prevents lossy or premature launch', as
   )
   const launchDigest = launchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
   assert.ok(launchDigest, 'launch validation must return the confirmation digest')
+  const snapshotStart = '-----BEGIN POWER-GAN DECISION SNAPSHOT-----\n'
+  const snapshotEnd = '-----END POWER-GAN DECISION SNAPSHOT-----'
+  const contentStart = launchOutput.indexOf(snapshotStart) + snapshotStart.length
+  const contentEnd = launchOutput.lastIndexOf(snapshotEnd)
+  assert.ok(contentStart >= snapshotStart.length, 'launch output must contain the start marker')
+  assert.ok(contentEnd >= contentStart, 'launch output must contain the end marker')
+  const renderedSnapshot = launchOutput.slice(contentStart, contentEnd)
+  assert.equal(renderedSnapshot, launchState.replaceAll('\r\n', '\n'))
+  assert.equal(createHash('sha256').update(renderedSnapshot, 'utf8').digest('hex'), launchDigest)
   await rejectsWithStderr(
     execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized']),
     /launch confirmation/i,
@@ -193,7 +205,11 @@ test('power-gan decision state validator prevents lossy or premature launch', as
     `- Overall launch confirmation: confirmed — sha256:${launchDigest} — user confirmed complete rendering`,
   )
   await writeFile(statePath, authorizedState, 'utf8')
-  await execFileAsync(process.execPath, [decisionStateValidator, statePath, '--phase', 'authorized'])
+  const { stdout: authorizedOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'authorized'],
+  )
+  assert.doesNotMatch(authorizedOutput, /BEGIN POWER-GAN DECISION SNAPSHOT/)
 
   await writeFile(
     statePath,
