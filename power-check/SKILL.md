@@ -74,6 +74,8 @@ Run this only in a fresh non-implementation context. Do not spawn another review
 
 **Evidence boundary.** Use only: the packet's decision source; its explicit non-goals; the final tree and diff at the stated identity; the supplied self-validation and external evidence; and regression risks visible in the final implementation. A Working Strategy, Blueprint, rejected option, historical proposal, or comment that never entered the current Decision Record creates no obligation. Do not add preferences or imagined requirements. Missing tests are a finding only when the decision source's validation expectations or a material risk in the final diff requires them — never as generic coverage appetite.
 
+**Evidence quality.** Credit a test only for a claim its mechanism can falsify. Tests that only read source code, prompts, rubrics, skills, configuration prose, or documentation and match expected wording, headings, or regular expressions do not prove behavior; neither do assertions that merely restate implementation constants. Exact text assertions count only when the text is itself an observable output or a machine-consumed contract and the test exercises its producer or consumer. Mocks and fakes do not prove omitted semantics such as real concurrency, transactions or locking, filesystem or platform behavior, or network integration. Ignore low-value tests when adequate primary evidence exists; their mere presence is not a finding. When a decision expectation or material risk depends on such a test as its necessary evidence, treat the behavior as lacking adequate evidence, return `BLOCKED`, and name the smallest meaningful validation needed.
+
 The first check uses full mode and covers the complete final diff.
 
 **Full mode:**
