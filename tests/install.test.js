@@ -158,16 +158,4 @@ function assertProfile(profile, expectedName, model, effort, sandbox) {
   assert.equal(profile.model_reasoning_effort, effort)
   assert.equal(profile.sandbox_mode, sandbox)
   assert.equal(typeof profile.developer_instructions, 'string')
-  if (expectedName === 'power_reviewer') {
-    assert.match(profile.developer_instructions, /Do not edit files, Git state, Issues, PRs, comments, or any external state/i)
-    assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
-  }
-  if (expectedName === 'power_worker') {
-    assert.match(profile.developer_instructions, /Write only within the allowed-writes boundary/i)
-    assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
-  }
-  if (expectedName === 'power_scout' || expectedName === 'power_explorer' || expectedName === 'power_planner') {
-    assert.match(profile.developer_instructions, /behaviorally read-only/i)
-    assert.match(profile.developer_instructions, /Do not delegate to another agent/i)
-  }
 }

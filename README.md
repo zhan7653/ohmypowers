@@ -77,6 +77,12 @@ Run:
 
 The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_worker`, `power_scout`, `power_explorer`, `power_planner`, `power_reviewer`, and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. Managed profiles replace existing files with the same basename; unrelated agent profiles are preserved. Custom-agent routing was verified with Codex CLI 0.145.0 multi-agent V2; 0.144.1 is not a supported baseline for these profiles. Restart Codex afterward.
 
+## Testing
+
+Run the deterministic, model-free suite with `node --test tests/*.test.js`. These tests execute the installer, Decision Snapshot validator, and embedded PowerShell helpers; they do not treat skill or documentation wording as runtime-behavior evidence.
+
+Run `node tests/model-evidence.eval.mjs` explicitly to evaluate test-evidence judgment through the installed `$power-gan`. This opt-in check uses the local Codex credentials and model tokens, requires the installed power-gan files to match the repository, captures Codex JSONL tool events, runs read-only, and verifies that the repository state is unchanged. It is intentionally excluded from default CI and is representative rather than exhaustive.
+
 ## Examples
 
 ```text
