@@ -10,7 +10,7 @@ It infers whether the user wants discussion only or delivery and whether the tas
 
 Deep Grill follows the actual decision tree in focused rounds of one to three questions. The agent asks one when later questions depend on that answer, and batches two or three only when they are independent questions from the same decision layer. It inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives a recommendation for each question, and lets the answers determine the next branch until both sides share the same understanding.
 
-From the first material item, `$power-gan` maintains one session-unique decision file in the operating system's temporary directory, keyed by `CODEX_THREAD_ID`. Stable decision IDs retain confirmed, pending, delegated, rejected, and superseded material boundaries. Every user answer is reconciled into that file before the next question or task action, and compacted or resumed contexts re-read it instead of rebuilding decisions from conversational memory.
+From the first material item, `$power-gan` maintains one permanent, goal-scoped Decision Ledger under `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md`. Stable decision IDs retain confirmed, pending, delegated, rejected, and superseded material boundaries together with sourced basis, presented recommendation, and resolution evidence. Follow-up work on the same outcome reuses the Ledger across threads; an independent outcome receives another delivery ID. Every user answer is reconciled before the next question or task action, and compacted or resumed contexts re-read the Ledger instead of rebuilding decisions from conversational memory. This policy applies to newly created Ledgers only; existing temporary snapshots are left untouched.
 
 The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
 
@@ -24,17 +24,19 @@ When implementation reveals a new material boundary, `$power-gan` pauses only fo
 
 ## Persistence
 
-Use the smallest durable record justified by repository conventions and coordination needs:
+Before non-mechanical source work, `$power-gan` searches for a relevant existing Decision Issue and proposes updating it, or proposes creating one when none fits. It shows the exact hosted mutation, requires explicit user authorization, and verifies the write by reading it back before launch. A purely mechanical edit can request an Issue exemption in the complete launch Snapshot; uncertainty favors an Issue.
+
+For the implementation handoff, use the carrier justified by repository conventions and coordination needs:
 
 - Issue: high-risk, long or cross-session work, or collaboration that needs a canonical decision home.
 - PR: normal PR-sized delivery rationale and evidence.
 - Commit: tiny local changes.
 
-Materiality alone does not authorize hosted mutation or force creation of an Issue.
+Hosted mutations always require explicit authorization; confirming an Issue does not authorize source changes, and confirming source launch does not authorize a later Issue update.
 
-At the end of alignment, `$power-gan` always selects and states the smallest adequate persistence carrier. When a new Issue is warranted and no canonical Issue exists, it proactively presents the Decision Record and requests hosted-write authorization instead of waiting for the user to mention Issue creation.
+At the end of alignment, `$power-gan` records the verified Decision Issue or the visible mechanical exemption and selects the implementation handoff carrier.
 
-Every source-writing delivery keeps that single temporary decision file until its active decisions reach the selected carrier; successful validated handoff deletes it, while failed handoff retains and reports it. The workflow does not maintain a second Journal or a repository-local decision database.
+Every delivery keeps its Decision Ledger permanently, including after verified handoff. The workflow updates that one file without truncating decision history and does not maintain a second Journal or a repository-local decision database.
 
 An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
 

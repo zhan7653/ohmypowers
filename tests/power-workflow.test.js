@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
@@ -47,7 +47,9 @@ async function availablePowerShell(t) {
 }
 
 test('power-gan decision state validator prevents lossy or premature launch', async t => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'power-gan-decision-state-'))
+  const legacyRoot = path.join(os.tmpdir(), 'power-gan')
+  await mkdir(legacyRoot, { recursive: true })
+  const tmp = await mkdtemp(path.join(legacyRoot, 'legacy-decision-state-'))
   t.after(() => rm(tmp, { recursive: true, force: true }))
   const statePath = path.join(tmp, 'decision-snapshot.md')
   const alignmentState = `# Decision Snapshot
@@ -163,6 +165,232 @@ test('power-gan decision state validator prevents lossy or premature launch', as
     /contiguous/i,
   )
 })
+
+test('power-gan keeps version 2 ledgers durable and gates launch on Issue persistence', async t => {
+  const codexHome = await mkdtemp(path.join(os.tmpdir(), 'power-gan-codex-home-'))
+  t.after(() => rm(codexHome, { recursive: true, force: true }))
+  const repositoryKey = 'github.com-zhan7653-ohmypowers'
+  const deliveryId = 'delivery-018f8f86-7b10-7f42-9f44-7f68f93a4a1c'
+  const statePath = path.join(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    deliveryId,
+    'decision-snapshot.md',
+  )
+  await mkdir(path.dirname(statePath), { recursive: true })
+  const validatorOptions = { env: { ...process.env, CODEX_HOME: codexHome } }
+  const alignmentState = `# Decision Snapshot
+
+- Ledger version: 2
+- Repository key: ${repositoryKey}
+- Delivery ID: ${deliveryId}
+- Thread: test-thread
+- Next decision ID: D003
+- Outcome: pending
+- Scope / non-goals: pending
+- Launch basis: pending
+- Stop / reopen conditions: pending
+- Final carrier: pending
+- Issue persistence: pending
+- Overall launch confirmation: pending
+- Handoff status: pending
+
+## Decisions
+
+- D001 [confirmed]: Preserve the public response contract.
+  Basis: Existing clients consume the verified response shape.
+  Recommendation: Preserve that shape because compatibility is required.
+  Resolution evidence: User explicitly confirmed the compatibility boundary.
+- D002 [pending]: Decide whether old clients remain supported.
+  Basis: Repository inspection found both old and new client versions.
+  Recommendation: Keep old clients because removing them changes the public contract.
+  Resolution evidence: pending
+`
+  await writeFile(statePath, alignmentState, 'utf8')
+
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'alignment'],
+    validatorOptions,
+  )
+
+  const versionlessOutsideLegacyPath = path.join(codexHome, 'versionless', 'decision-snapshot.md')
+  await mkdir(path.dirname(versionlessOutsideLegacyPath), { recursive: true })
+  await writeFile(
+    versionlessOutsideLegacyPath,
+    alignmentState
+      .replace('- Ledger version: 2\n', '')
+      .replace(`- Repository key: ${repositoryKey}\n`, '')
+      .replace(`- Delivery ID: ${deliveryId}\n`, '')
+      .replace('- Issue persistence: pending\n', ''),
+    'utf8',
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, versionlessOutsideLegacyPath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /version 2 is required outside the legacy temporary/i,
+  )
+
+  const outsidePath = path.join(codexHome, 'outside', 'decision-snapshot.md')
+  await mkdir(path.dirname(outsidePath), { recursive: true })
+  await writeFile(outsidePath, alignmentState, 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, outsidePath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /permanent ledger path/i,
+  )
+
+  await writeFile(statePath, alignmentState.replace('  Basis: Existing clients', '  Context: Existing clients'), 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /D001.*Basis/i,
+  )
+
+  const issueBodyDigest = 'a'.repeat(64)
+  const launchState = alignmentState
+    .replace('- Outcome: pending', '- Outcome: Ship the compatible response contract.')
+    .replace('- Scope / non-goals: pending', '- Scope / non-goals: Keep old clients; do not redesign transport.')
+    .replace('- Launch basis: pending', '- Launch basis: Add contract tests before implementation.')
+    .replace('- Stop / reopen conditions: pending', '- Stop / reopen conditions: Stop if wire compatibility must break.')
+    .replace('- Final carrier: pending', '- Final carrier: Decision Issue #38 — https://github.com/example/project/issues/38')
+    .replace(
+      '- Issue persistence: pending',
+      `- Issue persistence: verified — Issue #38 — https://github.com/example/project/issues/38 — authorization confirmed — read-back sha256:${issueBodyDigest}`,
+    )
+    .replace('- D002 [pending]:', '- D002 [confirmed]:')
+    .replace('  Resolution evidence: pending', '  Resolution evidence: User explicitly confirmed continued old-client support.')
+  await writeFile(statePath, launchState, 'utf8')
+
+  const { stdout: launchOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'launch'],
+    validatorOptions,
+  )
+  const launchDigest = launchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
+  assert.ok(launchDigest)
+
+  await writeFile(
+    statePath,
+    launchState.replace('authorization confirmed', 'authorization pending'),
+    'utf8',
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'launch'],
+      validatorOptions,
+    ),
+    /Issue persistence/i,
+  )
+
+  const authorizedState = launchState.replace(
+    '- Overall launch confirmation: pending',
+    `- Overall launch confirmation: confirmed — sha256:${launchDigest} — user confirmed complete rendering`,
+  )
+  const handoffState = authorizedState.replace(
+    '- Handoff status: pending',
+    `- Handoff status: complete — Issue #38 — read-back sha256:${'b'.repeat(64)}`,
+  )
+  await writeFile(
+    statePath,
+    authorizedState.replace('- Handoff status: pending', '- Handoff status: complete — Issue #38'),
+    'utf8',
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'handoff'],
+      validatorOptions,
+    ),
+    /carrier read-back evidence/i,
+  )
+  await writeFile(statePath, handoffState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+  assert.equal(await readFile(statePath, 'utf8'), handoffState)
+
+  const secondDeliveryId = 'delivery-018f8f86-7b10-7f42-9f44-7f68f93a4a1d'
+  const secondStatePath = path.join(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    secondDeliveryId,
+    'decision-snapshot.md',
+  )
+  await mkdir(path.dirname(secondStatePath), { recursive: true })
+  await writeFile(
+    secondStatePath,
+    alignmentState.replace(`- Delivery ID: ${deliveryId}`, `- Delivery ID: ${secondDeliveryId}`),
+    'utf8',
+  )
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, secondStatePath, '--phase', 'alignment'],
+    validatorOptions,
+  )
+  assert.notEqual(statePath, secondStatePath)
+
+  const conflictingMechanicalState = launchState
+    .replace(
+      /^- Final carrier:.*$/m,
+      '- Final carrier: commit after a purely mechanical formatting correction',
+    )
+    .replace(
+      /^- Issue persistence:.*$/m,
+      '- Issue persistence: mechanical exemption requested — formatting-only edit with no observable or contract change',
+    )
+  await writeFile(statePath, conflictingMechanicalState, 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'launch'],
+      validatorOptions,
+    ),
+    /mechanical Issue exemption cannot coexist with active material decisions/i,
+  )
+
+  const mechanicalLaunchState = conflictingMechanicalState
+    .replace('- Next decision ID: D003', '- Next decision ID: D001')
+    .replace(/\n- D001[\s\S]*$/, '\n')
+  await writeFile(statePath, mechanicalLaunchState, 'utf8')
+  const { stdout: mechanicalLaunchOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'launch'],
+    validatorOptions,
+  )
+  const mechanicalDigest = mechanicalLaunchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
+  assert.ok(mechanicalDigest)
+  await writeFile(
+    statePath,
+    mechanicalLaunchState.replace(
+      '- Overall launch confirmation: pending',
+      `- Overall launch confirmation: confirmed — sha256:${mechanicalDigest} — user confirmed complete rendering including the mechanical exemption`,
+    ),
+    'utf8',
+  )
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'authorized'],
+    validatorOptions,
+  )
+})
+
 test('PowerShell payload creation is collision-safe across concurrent sessions', async t => {
   const pwsh = await availablePowerShell(t)
   if (!pwsh) return

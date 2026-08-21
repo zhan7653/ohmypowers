@@ -13,9 +13,9 @@ If everything else fades in a long session, keep these five rules:
 
 1. The user owns material decisions; the agent owns reversible implementation details. Never ask the user to choose reversible mechanics; never resolve a material boundary by assumption.
 2. While a material boundary is unresolved, run grill turns: one to three highest-leverage questions, each with exactly one recommendation and reason, then stop and wait for the answer.
-3. Persist the Decision Ledger from the first material item and reconcile it after every user answer. The ledger — not conversational memory or a compaction summary — is the record of what is confirmed, pending, delegated, rejected, and superseded.
+3. Persist one permanent, goal-scoped Decision Ledger from the first material item and reconcile it after every user answer. The ledger — not conversational memory or a compaction summary — is the record of what is confirmed, pending, delegated, rejected, and superseded.
 4. A direct request to implement establishes delivery intent, not launch authorization. Before the first source write, render the complete Decision Snapshot and wait for the user's explicit confirmation of it as a whole.
-5. At alignment completion, turn that same decision file into the launch Snapshot and select the smallest adequate final carrier. Keep the file until that carrier is verified; create or update hosted state only with explicit authorization.
+5. At alignment completion, turn that same decision file into the launch Snapshot. Non-mechanical source work requires a user-authorized, read-back-verified Decision Issue before launch; create or update hosted state only with explicit authorization. Keep the Ledger permanently after handoff.
 
 ## Ownership And The Materiality Test
 
@@ -34,21 +34,30 @@ Verified repository facts are facts — inspect before asking. A repository-deri
 
 ## Decision Ledger
 
-At the first material item, create one session-unique Markdown file outside the repository from [assets/decision-snapshot.md](assets/decision-snapshot.md). Use the operating system's temporary directory under `power-gan/<CODEX_THREAD_ID>/decision-snapshot.md`; if `CODEX_THREAD_ID` is unavailable, create a collision-safe session-unique directory and report its exact path. If a source-writing task has no material item, create the file before launch authorization.
+At the first material item, establish one immutable delivery identity for the user's outcome and create its Markdown Ledger outside the repository from [assets/decision-snapshot.md](assets/decision-snapshot.md). If a source-writing task has no material item, create the file before launch authorization.
 
-This one file is the authoritative Decision Ledger during alignment and the launch Snapshot later; do not maintain a separate Decision Journal. Give every material item a stable ID, keep IDs sequential, and write one complete contract statement:
+Store new Ledgers at `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md`. Derive `repository-key` as a lowercase path-safe slug from the canonical repository identity and add a short SHA-256 suffix when normalization could collide. Generate `delivery-id` once as a collision-safe, lowercase path-safe identifier; it belongs to the outcome, not the thread. Record every participating `CODEX_THREAD_ID` as metadata and report the exact Ledger path when created and at handoff.
+
+Before creating a Ledger for a continuation, search that repository's records directory using a known delivery ID or exact verified Decision Issue URL. Reuse the Ledger only when the outcome match is unique; ask when it is ambiguous. Corrections, reopenings, follow-up work, and cross-thread continuation of the same outcome reuse it, while an independent outcome gets a new delivery ID. Never use thread identity alone to decide that two outcomes are the same.
+
+This policy is prospective. A Ledger without `Ledger version: 2` is legacy state: leave it at its existing path and never migrate, rewrite, classify, or delete it merely because this version of the skill is running.
+
+This one file is the authoritative Decision Ledger during alignment and the launch Snapshot later; do not maintain a separate Decision Journal. Give every material item a stable ID, keep IDs sequential, and record the complete contract plus only detail captured from an explicit source:
 
 ```text
 - D001 [pending]: <one complete material contract>
+  Basis: <verified repository or Issue fact, or user-provided context>
+  Recommendation: <recommendation and rationale actually presented to the user>
+  Resolution evidence: pending
 - D002 [confirmed]: <one complete material contract>
-- D003 [delegated]: <one complete material contract>
-- D004 [rejected]: <rejected material recommendation>
-- D005 [superseded]: <old contract; superseded by D006>
+  Basis: <explicit source>
+  Recommendation: <presented recommendation and rationale>
+  Resolution evidence: <user reply, delegation, authorization, or verified result>
 ```
 
-Never reuse an ID, silently delete an entry, or edit an accepted contract into a different meaning. When a confirmed decision changes, retain it as `superseded` and add the replacement under the next ID. A decision may avoid repeating a long canonical artifact only by naming an immutable, already verified path or hosted record plus its content hash or commit; a mutable path or version label alone is not coverage.
+Never reuse an ID, silently delete an entry, or edit an accepted contract into a different meaning. When a confirmed decision changes, retain it as `superseded` and add the replacement under the next ID. `Basis`, `Recommendation`, and `Resolution evidence` must describe only information captured at the relevant event; never infer missing facts, reconstruct them from memory, copy full transcripts, or paste raw logs. A decision may avoid repeating a long canonical artifact only by naming an immutable, already verified path or hosted record plus its content hash or commit; a mutable path or version label alone is not coverage.
 
-After every user answer, first re-read the file, update all answered IDs and any newly discovered material item, advance `Next decision ID`, and run [scripts/validate-decision-state.mjs](scripts/validate-decision-state.mjs) with `--phase alignment`. Do this before investigating, asking the next question, or implementing. After compaction, resume, or a cross-turn continuation, re-read the decision file before any task action. If the file cannot be located or validated, stop instead of rebuilding it from memory.
+After every user answer, first re-read the file, update all answered IDs and any newly discovered material item, advance `Next decision ID`, and run [scripts/validate-decision-state.mjs](scripts/validate-decision-state.mjs) with `--phase alignment`. Do this before investigating, asking the next question, or implementing. After compaction, resume, or a cross-turn continuation, locate, re-read, and validate the goal's Ledger before any task action. If it cannot be uniquely located or validated, stop instead of rebuilding it from memory.
 
 Render a compact view derived from the file at the end of every grill turn and at alignment completion. Use the conversation language and these fixed labels:
 
@@ -67,7 +76,7 @@ Ledger rules:
 - If the user answers only part of a batch, the unanswered items stay in 待定 and reappear in the next batch. Do not advance to questions whose meaning depends on an unaccepted recommendation.
 - "剩下的你定" or an equivalent blanket delegation is itself explicit: mark the currently named pending IDs as `delegated`, record the chosen contract, and surface it in the launch basis and delivery report. Blanket delegation never covers safety, legality, irreversible actions, external spend, or missing external authorization — those still stop the work.
 - Rejected or superseded entries are history, not current obligations. The active launch set is every `confirmed` or `delegated` ID; every `pending` ID blocks launch.
-- The session file is temporary workflow state, not a repository blueprint or project decision database. At handoff, transfer the active material decisions into the selected carrier, verify them, then delete the file.
+- The Ledger is permanent workflow state, not a repository blueprint or project decision database. Update it atomically in place for the same delivery; never truncate history, clear it at completion, overwrite it with another delivery, or delete it automatically.
 
 ## Alignment: The Grill Loop
 
@@ -102,7 +111,7 @@ After each answer, reconcile and validate the decision file before inspecting ne
 
 ## Delivery
 
-**Launch authorization.** A direct implementation request establishes delivery intent only; it never authorizes the first source write. After alignment completes and the final carrier is selected, fill Outcome, Scope / non-goals, Launch basis, Stop / reopen conditions, and Final carrier in the existing decision file. The same file becomes the launch Snapshot; do not copy its decisions into a second artifact. Run `node <skill-dir>/scripts/validate-decision-state.mjs <path> --phase launch`; it prints the launch content SHA-256 and the complete normalized file between fixed markers. The marker strings are reserved, and validation rejects them inside Snapshot content. Forward the validator's entire launch output verbatim in the confirmation request. Do not retype, reflow, shorten, translate, or replace it with the compact Ledger; ask the user to confirm that exact baseline as a whole immediately after the block. The launch basis may be one sentence for a small task:
+**Launch authorization.** A direct implementation request establishes delivery intent only; it never authorizes the first source write. After alignment completes and the final carrier is selected, fill Outcome, Scope / non-goals, Launch basis, Stop / reopen conditions, Final carrier, and Issue persistence in the existing decision file. The same file becomes the launch Snapshot; do not copy its decisions into a second artifact. Run `node <skill-dir>/scripts/validate-decision-state.mjs <path> --phase launch`; it prints the launch content SHA-256 and the complete normalized file between fixed markers. The marker strings are reserved, and validation rejects them inside Snapshot content. Forward the validator's entire launch output verbatim in the confirmation request. Do not retype, reflow, shorten, translate, or replace it with the compact Ledger; ask the user to confirm that exact baseline as a whole immediately after the block. The launch basis may be one sentence for a small task:
 
 > 基准:修复 X 使 Y 可观察成立;硬约束 Z;当前最小方案是先加回归测试再改实现;若发现触及公共 schema 即停。
 
@@ -134,13 +143,15 @@ Run required checks through power-check's Caller Protocol: build the Check Packe
 
 ## Persistence
 
-At alignment completion, always state the smallest adequate carrier with one brief reason: an existing Decision Issue, a new Issue, a PR, a commit, or — for discussion-only work — no durable record. An Issue fits high-risk, long-running, cross-session, or collaborative decisions that need a canonical home; a PR carries ordinary delivery rationale; a commit suffices for tiny local changes. A source-writing delivery must select Issue, PR, or commit; materiality alone neither forces an Issue nor authorizes hosted mutation.
+Before any non-mechanical source-writing launch, search the repository's hosted Issues read-only. Propose updating a uniquely relevant Decision Issue when one exists; otherwise propose a new one. Show the exact mutation, obtain the user's explicit hosted-write authorization, perform only that mutation, and read it back exactly under [references/issue-persistence.md](references/issue-persistence.md). Record `Issue persistence: verified — <Issue identity and URL> — authorization confirmed — read-back sha256:<body digest>` before launch. A local Ledger alone never satisfies this gate.
 
-The single temporary decision file is the universal alignment record and pre-launch confirmation surface regardless of whether the final carrier is an Issue, PR, or commit; it does not replace or alter the repository's Issue template.
+A purely mechanical edit — one with no observable behavior, public contract, durable cost/risk, or material decision — may instead record `Issue persistence: mechanical exemption requested — <concrete reason>` in the complete launch Snapshot. The user's whole-Snapshot confirmation also confirms that visible exemption. If classification is uncertain, use an Issue. Discussion-only work may retain only its permanent Ledger unless the user requests or coordination risk warrants a hosted record.
 
-When a new Issue is warranted and none exists, proactively show the Decision Record draft and request explicit authorization to create it — and before drafting or touching hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full. If authorization is declined, use the smallest permitted alternative; pause only when the missing canonical record creates a material coordination risk.
+The permanent Ledger is the universal alignment record and pre-launch confirmation surface. It complements the hosted Decision Record and does not replace or alter the repository's Issue template. Select Issue, PR, or commit as the implementation handoff carrier appropriate to repository workflow, but non-mechanical work still needs the separate verified Decision Issue gate before launch.
 
-Before declaring a source-writing delivery complete, reconcile the final implementation against every active decision ID, transfer the durable decisions into the selected carrier, verify the transfer, set `Handoff status: complete — <carrier identity>`, and run the validator with `--phase handoff`; only then delete the exact file. Whenever delivery stops before verified handoff, retain the Snapshot and report its path and pending handoff.
+Before drafting or touching hosted state, read [references/issue-persistence.md](references/issue-persistence.md) in full. Proactively show the complete Decision Record creation or update draft and request explicit authorization. If authorization is declined for non-mechanical source work, remain in alignment; do not substitute a commit, PR, or local Ledger for the missing Issue gate. When creating or updating a delivery PR/MR or preparing an external handoff, read [references/delivery-evidence.md](references/delivery-evidence.md) in full.
+
+Before declaring a source-writing delivery complete, reconcile the final implementation against every active decision ID, transfer the durable decisions and evidence into the selected carrier with any separately required hosted-write authorization, verify the transfer, set `Handoff status: complete — <carrier identity and read-back evidence>`, and run the validator with `--phase handoff`. Never delete the Ledger. Report its exact permanent path and carrier at handoff; if handoff is incomplete, retain it with pending status and report the blocker.
 
 For historical context, start from the user-provided Issue/PR or the affected code, then follow code → commit → PR/MR → Decision Issue and any `supersedes` link; use narrow search only when no direct entry point exists. Do not create repository decision Markdown unless the document itself is the requested deliverable — code, tests, schema, types, and configuration remain the primary implementation truth.
 
