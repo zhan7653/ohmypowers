@@ -707,6 +707,42 @@ test('power-gan version 4 makes handed-off ledgers terminal and links a new deli
     ),
     /Predecessor/i,
   )
+  const invalidPredecessors = [
+    `delivery:prior/path — issue — body sha256:${predecessorDigest} — handoff commit`,
+    `delivery:prior-delivery — Issue #39 https://github.com/example/project/issues/40 — body sha256:${predecessorDigest} — handoff commit abc1234`,
+    `delivery:prior-delivery — Issue #39 https://github.com/example/project/issues/39 — body sha256:${predecessorDigest} — handoff commit`,
+  ]
+  for (const invalidPredecessor of invalidPredecessors) {
+    await writeFile(
+      statePath,
+      alignmentState.replace(`- Predecessor: ${predecessor}`, `- Predecessor: ${invalidPredecessor}`),
+      'utf8',
+    )
+    await rejectsWithStderr(
+      execFileAsync(
+        process.execPath,
+        [decisionStateValidator, statePath, '--phase', 'alignment'],
+        validatorOptions,
+      ),
+      /Predecessor/i,
+    )
+  }
+  await writeFile(
+    statePath,
+    alignmentState.replace(
+      `- Predecessor: ${predecessor}`,
+      `- Predecessor: ${predecessor}\n- Predecessor: ${predecessor}`,
+    ),
+    'utf8',
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /exactly one.*Predecessor/i,
+  )
   await writeFile(statePath, alignmentState.replace(`- Predecessor: ${predecessor}`, '- Predecessor: none'), 'utf8')
   await execFileAsync(
     process.execPath,

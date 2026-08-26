@@ -142,7 +142,13 @@ function validateDecisionState(text, phase, ledgerPath) {
   }
   if (isPlaceholder(fieldValue(lines, 'Thread'))) errors.push('Thread must identify the current session')
   if (isPermanentLedger) validatePermanentPath(lines, ledgerPath, errors)
-  if (ledgerVersion === '4') validatePredecessor(fieldValue(lines, 'Predecessor'), errors)
+  if (ledgerVersion === '4') {
+    const predecessorLines = lines.filter(line => line.startsWith('- Predecessor:'))
+    if (predecessorLines.length !== 1) {
+      errors.push('version 4 Ledger must contain exactly one `Predecessor` field')
+    }
+    validatePredecessor(fieldValue(lines, 'Predecessor'), errors)
+  }
 
   const handoff = fieldValue(lines, 'Handoff status') || ''
   if (ledgerVersion === '4' && phase !== 'handoff' && /^complete\b/i.test(handoff)) {
@@ -334,19 +340,41 @@ function validateHandoffRetention(value, errors) {
 
 function validatePredecessor(value, errors) {
   if (value === 'none') return
-  const normalized = value || ''
-  if (!/^delivery:[a-z0-9][a-z0-9._-]*\b/.test(normalized)) {
-    errors.push('Predecessor must start with a path-safe `delivery:<id>` or be `none`')
+  const parts = (value || '').split(' — ')
+  if (parts.length !== 4) {
+    errors.push('Predecessor must contain exactly delivery, durable source, content digest, and handoff carrier')
+    return
   }
-  if (!/\b(issue|pr|commit)\b/i.test(normalized)) {
-    errors.push('Predecessor must identify the prior durable source')
+  const [delivery, durableSource, contentDigest, handoffCarrier] = parts
+  if (!/^delivery:[a-z0-9][a-z0-9._-]*$/.test(delivery)) {
+    errors.push('Predecessor delivery ID must be one complete path-safe `delivery:<id>` value')
   }
-  if (!/\b(?:body|content) sha256:[0-9a-f]{64}\b/i.test(normalized)) {
-    errors.push('Predecessor must record the verified prior content SHA-256')
+  if (!isDurableSourceIdentity(durableSource)) {
+    errors.push('Predecessor durable source must identify a concrete Issue, PR, MR, or commit')
   }
-  if (!/\bhandoff\s+(?:issue|pr|commit)\b/i.test(normalized)) {
-    errors.push('Predecessor must identify the prior handoff carrier')
+  if (!/^(?:body|content) sha256:[0-9a-f]{64}$/i.test(contentDigest)) {
+    errors.push('Predecessor must record one exact prior content SHA-256')
   }
+  if (!isHandoffCarrierIdentity(handoffCarrier)) {
+    errors.push('Predecessor handoff carrier must identify a concrete commit or read-back hosted record')
+  }
+}
+
+function isDurableSourceIdentity(value) {
+  if (/^commit [0-9a-f]{7,64}$/i.test(value)) return true
+  const issue = value.match(/^Issue #(\d+) (https:\/\/\S+)$/)
+  if (issue) return new RegExp(`\/(?:-\/)?issues\/${issue[1]}$`).test(issue[2])
+  const pullRequest = value.match(/^PR #(\d+) (https:\/\/\S+)$/)
+  if (pullRequest) return new RegExp(`\/pull\/${pullRequest[1]}$`).test(pullRequest[2])
+  const mergeRequest = value.match(/^MR !(\d+) (https:\/\/\S+)$/)
+  if (mergeRequest) return new RegExp(`\/(?:-\/)?merge_requests\/${mergeRequest[1]}$`).test(mergeRequest[2])
+  return false
+}
+
+function isHandoffCarrierIdentity(value) {
+  if (/^handoff commit [0-9a-f]{7,64}$/i.test(value)) return true
+  const hosted = value.match(/^handoff (.+) read-back sha256:[0-9a-f]{64}$/i)
+  return Boolean(hosted && isDurableSourceIdentity(hosted[1]))
 }
 
 function parseDecision(line) {
