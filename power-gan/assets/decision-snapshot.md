@@ -1,6 +1,6 @@
 # Decision Snapshot
 
-- Ledger version: 2
+- Ledger version: 3
 - Repository key: <lowercase path-safe repository identity>
 - Delivery ID: <immutable goal-scoped delivery identity>
 - Thread: <CODEX_THREAD_ID; append IDs when the same delivery continues elsewhere>
@@ -11,6 +11,7 @@
 - Stop / reopen conditions: pending
 - Final carrier: pending
 - Issue persistence: pending
+- Handoff retention: pending
 - Overall launch confirmation: pending
 - Handoff status: pending
 

@@ -233,7 +233,7 @@ test('power-gan keeps version 2 ledgers durable and gates launch on Issue persis
       [decisionStateValidator, versionlessOutsideLegacyPath, '--phase', 'alignment'],
       validatorOptions,
     ),
-    /version 2 is required outside the legacy temporary/i,
+    /version 2 or 3 is required outside the legacy temporary/i,
   )
 
   const outsidePath = path.join(codexHome, 'outside', 'decision-snapshot.md')
@@ -389,6 +389,232 @@ test('power-gan keeps version 2 ledgers durable and gates launch on Issue persis
     [decisionStateValidator, statePath, '--phase', 'authorized'],
     validatorOptions,
   )
+})
+
+test('power-gan version 3 separates launch confirmation from history and compacts routine handoff', async t => {
+  const codexHome = await mkdtemp(path.join(os.tmpdir(), 'power-gan-v3-codex-home-'))
+  t.after(() => rm(codexHome, { recursive: true, force: true }))
+  const repositoryKey = 'github.com-zhan7653-ohmypowers'
+  const deliveryId = 'compact-routine-delivery'
+  const statePath = path.join(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    deliveryId,
+    'decision-snapshot.md',
+  )
+  await mkdir(path.dirname(statePath), { recursive: true })
+  const validatorOptions = { env: { ...process.env, CODEX_HOME: codexHome } }
+  const issueBodyDigest = 'a'.repeat(64)
+  const alignmentState = `# Decision Snapshot
+
+- Ledger version: 3
+- Repository key: ${repositoryKey}
+- Delivery ID: ${deliveryId}
+- Thread: test-thread
+- Next decision ID: D005
+- Outcome: Ship the compatible response contract.
+- Scope / non-goals: Keep old clients; do not redesign transport.
+- Launch basis: Add contract tests before implementation.
+- Stop / reopen conditions: Stop if wire compatibility must break.
+- Final carrier: commit on develop linked to Decision Issue #39 https://github.com/example/project/issues/39
+- Issue persistence: verified — Issue #39 https://github.com/example/project/issues/39 — authorization confirmed — read-back sha256:${issueBodyDigest}
+- Handoff retention: pending
+- Overall launch confirmation: pending
+- Handoff status: pending
+
+## Decisions
+
+- D001 [confirmed]: Preserve the public response contract.
+  Basis: Existing clients consume the verified response shape.
+  Recommendation: Preserve that shape because compatibility is required.
+  Resolution evidence: User explicitly confirmed the compatibility boundary.
+- D002 [delegated]: Keep old clients supported.
+  Basis: Repository inspection found both old and new client versions.
+  Recommendation: Keep old clients because removing them changes the public contract.
+  Resolution evidence: User explicitly delegated this boundary.
+- D003 [rejected]: Remove the old response contract immediately.
+  Basis: The old contract was considered during alignment.
+  Recommendation: Do not remove it because verified clients still depend on it.
+  Resolution evidence: User rejected immediate removal.
+- D004 [superseded]: Return only the legacy response shape.
+  Basis: This was the first confirmed compatibility boundary.
+  Recommendation: Keep it until the additive shape was confirmed.
+  Resolution evidence: Superseded by D002 after the additive contract was confirmed.
+
+## Working defaults
+
+- Use debug logging while implementing.
+`
+  await writeFile(statePath, alignmentState, 'utf8')
+
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'alignment'],
+    validatorOptions,
+  )
+
+  const { stdout: launchOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'launch'],
+    validatorOptions,
+  )
+  const launchDigest = launchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
+  assert.ok(launchDigest)
+  const snapshotStart = '-----BEGIN POWER-GAN DECISION SNAPSHOT-----\n'
+  const snapshotEnd = '-----END POWER-GAN DECISION SNAPSHOT-----'
+  const renderedSnapshot = launchOutput.slice(
+    launchOutput.indexOf(snapshotStart) + snapshotStart.length,
+    launchOutput.lastIndexOf(snapshotEnd),
+  )
+  const expectedProjection = `# Decision Snapshot
+
+- Outcome: Ship the compatible response contract.
+- Scope / non-goals: Keep old clients; do not redesign transport.
+- Launch basis: Add contract tests before implementation.
+- Stop / reopen conditions: Stop if wire compatibility must break.
+- Final carrier: commit on develop linked to Decision Issue #39 https://github.com/example/project/issues/39
+- Issue persistence: verified — Issue #39 https://github.com/example/project/issues/39 — authorization confirmed — read-back sha256:${issueBodyDigest}
+
+## Active decisions
+
+- D001 [confirmed]: Preserve the public response contract.
+- D002 [delegated]: Keep old clients supported.
+`
+  assert.equal(renderedSnapshot, expectedProjection)
+  assert.equal(createHash('sha256').update(renderedSnapshot, 'utf8').digest('hex'), launchDigest)
+
+  const authorizedState = alignmentState.replace(
+    '- Overall launch confirmation: pending',
+    `- Overall launch confirmation: confirmed — sha256:${launchDigest} — user confirmed complete rendering`,
+  )
+  await writeFile(statePath, authorizedState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'authorized'],
+    validatorOptions,
+  )
+
+  const historyOnlyChange = authorizedState
+    .replace(
+      'Recommendation: Preserve that shape because compatibility is required.',
+      'Recommendation: Historical recommendation wording changed.',
+    )
+    .replace(
+      'Remove the old response contract immediately.',
+      'Remove every legacy response contract immediately.',
+    )
+    .replace('Return only the legacy response shape.', 'Return only the original response shape.')
+    .replace('Use debug logging while implementing.', 'Use trace logging while implementing.')
+  await writeFile(statePath, historyOnlyChange, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'authorized'],
+    validatorOptions,
+  )
+
+  await writeFile(
+    statePath,
+    historyOnlyChange.replace(
+      'Preserve the public response contract.',
+      'Change the public response contract.',
+    ),
+    'utf8',
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'authorized'],
+      validatorOptions,
+    ),
+    /does not match current launch content/i,
+  )
+
+  const compactHandoffState = historyOnlyChange
+    .replace(
+      '- Handoff retention: pending',
+      '- Handoff retention: compact — routine delivery with no material protected risk',
+    )
+    .replace('- Handoff status: pending', '- Handoff status: complete — commit abc1234')
+  await writeFile(statePath, compactHandoffState, 'utf8')
+  const { stdout: handoffOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+  const indexStart = '-----BEGIN POWER-GAN DECISION INDEX-----\n'
+  const indexEnd = '-----END POWER-GAN DECISION INDEX-----'
+  const renderedIndex = handoffOutput.slice(
+    handoffOutput.indexOf(indexStart) + indexStart.length,
+    handoffOutput.lastIndexOf(indexEnd),
+  )
+  const expectedIndex = `# Decision Ledger Index
+
+- Ledger version: 3
+- Repository key: ${repositoryKey}
+- Delivery ID: ${deliveryId}
+- Next decision ID: D005
+- Decision source: verified — Issue #39 https://github.com/example/project/issues/39 — authorization confirmed — read-back sha256:${issueBodyDigest}
+- Final carrier: commit on develop linked to Decision Issue #39 https://github.com/example/project/issues/39
+- Decision content SHA-256: sha256:${launchDigest}
+- Handoff evidence: complete — commit abc1234
+`
+  assert.equal(renderedIndex, expectedIndex)
+  assert.match(
+    handoffOutput,
+    new RegExp(`decision index sha256: ${createHash('sha256').update(expectedIndex, 'utf8').digest('hex')}`),
+  )
+
+  await writeFile(statePath, renderedIndex, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+
+  const fullDeliveryId = 'retain-full-risk-delivery'
+  const fullStatePath = path.join(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    fullDeliveryId,
+    'decision-snapshot.md',
+  )
+  await mkdir(path.dirname(fullStatePath), { recursive: true })
+  const fullHandoffState = authorizedState
+    .replace(`- Delivery ID: ${deliveryId}`, `- Delivery ID: ${fullDeliveryId}`)
+    .replace(
+      '- Handoff retention: pending',
+      '- Handoff retention: full — material cross-version compatibility risk',
+    )
+    .replace('- Handoff status: pending', '- Handoff status: complete — commit def5678')
+  await writeFile(fullStatePath, fullHandoffState, 'utf8')
+  const { stdout: fullHandoffOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, fullStatePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+  assert.doesNotMatch(fullHandoffOutput, /BEGIN POWER-GAN DECISION INDEX/)
+  assert.equal(await readFile(fullStatePath, 'utf8'), fullHandoffState)
+
+  const incompleteHandoffState = fullHandoffState
+    .replace(
+      '- Handoff retention: full — material cross-version compatibility risk',
+      '- Handoff retention: pending',
+    )
+    .replace('- Handoff status: complete — commit def5678', '- Handoff status: pending')
+  await writeFile(fullStatePath, incompleteHandoffState, 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, fullStatePath, '--phase', 'handoff'],
+      validatorOptions,
+    ),
+    /handoff status|retention/i,
+  )
+  assert.equal(await readFile(fullStatePath, 'utf8'), incompleteHandoffState)
 })
 
 test('PowerShell payload creation is collision-safe across concurrent sessions', async t => {

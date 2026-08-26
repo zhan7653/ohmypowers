@@ -9,6 +9,16 @@ import path from 'node:path'
 const allowedPhases = new Set(['alignment', 'launch', 'authorized', 'handoff'])
 const snapshotStartMarker = '-----BEGIN POWER-GAN DECISION SNAPSHOT-----'
 const snapshotEndMarker = '-----END POWER-GAN DECISION SNAPSHOT-----'
+const indexStartMarker = '-----BEGIN POWER-GAN DECISION INDEX-----'
+const indexEndMarker = '-----END POWER-GAN DECISION INDEX-----'
+const launchFields = [
+  'Outcome',
+  'Scope / non-goals',
+  'Launch basis',
+  'Stop / reopen conditions',
+  'Final carrier',
+  'Issue persistence',
+]
 const args = process.argv.slice(2)
 const statePath = args[0]
 const phaseIndex = args.indexOf('--phase')
@@ -23,19 +33,35 @@ if (!statePath || !allowedPhases.has(phase)) {
 }
 
 const text = await readFile(statePath, 'utf8')
-const errors = validateDecisionState(text, phase, statePath)
+const normalizedText = normalizeText(text)
+const isDecisionIndex = normalizedText.startsWith('# Decision Ledger Index\n')
+const errors = isDecisionIndex
+  ? validateDecisionIndex(normalizedText, phase, statePath)
+  : validateDecisionState(normalizedText, phase, statePath)
+
 if (errors.length > 0) {
   writeSync(2, `${errors.map(error => `decision state invalid: ${error}`).join('\n')}\n`)
   process.exitCode = 1
+} else if (isDecisionIndex) {
+  writeSync(
+    1,
+    `decision index valid for handoff: ${statePath}\n` +
+      `decision index sha256: ${contentDigest(normalizedText)}\n`,
+  )
 } else {
+  const ledgerVersion = ledgerVersionOf(normalizedText)
   const output = [`decision state valid for ${phase}: ${statePath}`]
-  const renderedContent = phase === 'alignment' ? undefined : launchContent(text)
+  const renderedContent = phase === 'alignment' ? undefined : launchContent(normalizedText, ledgerVersion)
   if (renderedContent !== undefined) {
     output.push(`launch content sha256: ${contentDigest(renderedContent)}`)
   }
   if (phase === 'launch') {
     output.push(snapshotStartMarker)
     writeSync(1, `${output.join('\n')}\n${renderedContent}${snapshotEndMarker}\n`)
+  } else if (phase === 'handoff' && ledgerVersion === '3' && retentionMode(normalizedText) === 'compact') {
+    const renderedIndex = decisionIndex(normalizedText)
+    output.push(`decision index sha256: ${contentDigest(renderedIndex)}`, indexStartMarker)
+    writeSync(1, `${output.join('\n')}\n${renderedIndex}${indexEndMarker}\n`)
   } else {
     writeSync(1, `${output.join('\n')}\n`)
   }
@@ -43,33 +69,31 @@ if (errors.length > 0) {
 
 function validateDecisionState(text, phase, ledgerPath) {
   const errors = []
-  const lines = text.replaceAll('\r\n', '\n').split('\n')
+  const lines = text.split('\n')
   if (lines[0] !== '# Decision Snapshot') errors.push('missing `# Decision Snapshot` heading')
   if (!lines.includes('## Decisions')) errors.push('missing `## Decisions` section')
 
   const ledgerVersion = fieldValue(lines, 'Ledger version')
-  const isPermanentLedger = ledgerVersion === '2'
+  const isPermanentLedger = ledgerVersion === '2' || ledgerVersion === '3'
   if (ledgerVersion !== undefined && !isPermanentLedger) {
-    errors.push('Ledger version must be 2 when present')
+    errors.push('Ledger version must be 2 or 3 when present')
   } else if (ledgerVersion === undefined && !isLegacyLedgerPath(ledgerPath)) {
-    errors.push('Ledger version 2 is required outside the legacy temporary Ledger namespace')
+    errors.push('Ledger version 2 or 3 is required outside the legacy temporary Ledger namespace')
   }
 
   const decisions = []
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
     const line = lines[lineIndex]
     if (!/^- D\d/.test(line)) continue
-    const match = line.match(
-      /^- (D(\d{3,})) \[(pending|confirmed|delegated|rejected|superseded)\]:? (.+)$/,
-    )
-    if (!match) {
+    const parsed = parseDecision(line)
+    if (!parsed) {
       errors.push(`malformed decision entry: ${line}`)
       continue
     }
-    const [, id, number, status, statement] = match
+    const { id, number, status, statement } = parsed
     if (isPlaceholder(statement)) errors.push(`${id} has an empty or placeholder statement`)
     const details = decisionDetails(lines, lineIndex)
-    decisions.push({ id, number: Number(number), status, details })
+    decisions.push({ id, number, status, statement, details })
     if (isPermanentLedger) {
       for (const detail of ['Basis', 'Recommendation', 'Resolution evidence']) {
         const value = details.get(detail)
@@ -111,6 +135,7 @@ function validateDecisionState(text, phase, ledgerPath) {
     requiredFields.unshift('Ledger version', 'Repository key', 'Delivery ID')
     requiredFields.push('Issue persistence')
   }
+  if (ledgerVersion === '3') requiredFields.push('Handoff retention')
   for (const field of requiredFields) {
     if (fieldValue(lines, field) === undefined) errors.push(`missing \`${field}\` field`)
   }
@@ -118,13 +143,14 @@ function validateDecisionState(text, phase, ledgerPath) {
   if (isPermanentLedger) validatePermanentPath(lines, ledgerPath, errors)
 
   if (phase !== 'alignment') {
+    const renderedContent = launchContent(text, ledgerVersion)
     const reservedMarker = [snapshotStartMarker, snapshotEndMarker].find(marker =>
-      launchContent(text).includes(marker),
+      renderedContent.includes(marker),
     )
     if (reservedMarker) errors.push(`launch content contains reserved snapshot marker: ${reservedMarker}`)
     const pending = decisions.filter(decision => decision.status === 'pending')
     if (pending.length > 0) errors.push(`pending decision IDs block launch: ${pending.map(item => item.id).join(', ')}`)
-    for (const field of ['Outcome', 'Scope / non-goals', 'Launch basis', 'Stop / reopen conditions', 'Final carrier']) {
+    for (const field of launchFields.slice(0, 5)) {
       if (isPlaceholder(fieldValue(lines, field))) errors.push(`${field} must be complete before launch`)
     }
     const carrier = fieldValue(lines, 'Final carrier') || ''
@@ -141,7 +167,7 @@ function validateDecisionState(text, phase, ledgerPath) {
     const recordedDigest = confirmation.match(/\bsha256:([0-9a-f]{64})\b/i)?.[1].toLowerCase()
     if (!/^confirmed\b/i.test(confirmation) || !recordedDigest) {
       errors.push('whole launch confirmation must be recorded before source writes')
-    } else if (recordedDigest !== launchContentDigest(text)) {
+    } else if (recordedDigest !== launchContentDigest(text, ledgerVersion)) {
       errors.push('whole launch confirmation does not match current launch content')
     }
   }
@@ -150,15 +176,54 @@ function validateDecisionState(text, phase, ledgerPath) {
     if (!/^complete\b/i.test(handoff)) {
       errors.push('handoff status must be complete before declaring delivery complete')
     } else if (isPermanentLedger) {
-      if (!/\b(issue|pr|commit)\b/i.test(handoff)) {
-        errors.push('handoff status must identify the verified Issue, PR, or commit carrier')
-      }
-      if (!/(?:\bread-back sha256:[0-9a-f]{64}\b|\bcommit [0-9a-f]{7,64}\b)/i.test(handoff)) {
-        errors.push('handoff status must include carrier read-back evidence')
-      }
+      validateHandoffEvidence(handoff, errors)
     }
+    if (ledgerVersion === '3') validateHandoffRetention(fieldValue(lines, 'Handoff retention'), errors)
   }
 
+  return errors
+}
+
+function validateDecisionIndex(text, phase, ledgerPath) {
+  const errors = []
+  if (phase !== 'handoff') errors.push('Decision Ledger Index is valid only for the handoff phase')
+  const lines = text.split('\n')
+  const fields = [
+    'Ledger version',
+    'Repository key',
+    'Delivery ID',
+    'Next decision ID',
+    'Decision source',
+    'Final carrier',
+    'Decision content SHA-256',
+    'Handoff evidence',
+  ]
+  const values = new Map()
+  for (const field of fields) {
+    const matches = lines.filter(line => line.startsWith(`- ${field}:`))
+    if (matches.length !== 1) errors.push(`Decision Ledger Index must contain exactly one \`${field}\` field`)
+    values.set(field, fieldValue(lines, field))
+  }
+  if (values.get('Ledger version') !== '3') errors.push('Decision Ledger Index must use Ledger version 3')
+  if (!/^D\d{3,}$/.test(values.get('Next decision ID') || '')) {
+    errors.push('Next decision ID must preserve the next unused stable decision ID')
+  }
+  if (isPlaceholder(values.get('Decision source'))) errors.push('Decision source must identify the durable decision carrier')
+  if (!/\b(issue|pr|commit)\b/i.test(values.get('Final carrier') || '')) {
+    errors.push('Final carrier must identify an Issue, PR, or commit')
+  }
+  if (!/^sha256:[0-9a-f]{64}$/i.test(values.get('Decision content SHA-256') || '')) {
+    errors.push('Decision content SHA-256 must contain the final decision digest')
+  }
+  const handoff = values.get('Handoff evidence') || ''
+  if (!/^complete\b/i.test(handoff)) errors.push('Handoff evidence must be complete')
+  else validateHandoffEvidence(handoff, errors)
+  validatePermanentPath(lines, ledgerPath, errors)
+
+  if (errors.length === 0) {
+    const canonical = decisionIndexFromValues(values)
+    if (text !== canonical) errors.push('Decision Ledger Index must use the canonical compact format')
+  }
   return errors
 }
 
@@ -232,6 +297,31 @@ function validateIssuePersistence(value, decisions, errors) {
   errors.push('Issue persistence must be verified or request a concrete mechanical exemption')
 }
 
+function validateHandoffEvidence(handoff, errors) {
+  if (!/\b(issue|pr|commit)\b/i.test(handoff)) {
+    errors.push('handoff status must identify the verified Issue, PR, or commit carrier')
+  }
+  if (!/(?:\bread-back sha256:[0-9a-f]{64}\b|\bcommit [0-9a-f]{7,64}\b)/i.test(handoff)) {
+    errors.push('handoff status must include carrier read-back evidence')
+  }
+}
+
+function validateHandoffRetention(value, errors) {
+  const match = (value || '').match(/^(compact|full)\b\s*[—:-]\s*(.+)$/i)
+  if (!match || isPlaceholder(match[2])) {
+    errors.push('Handoff retention must be `compact — <reason>` or `full — <reason>` before handoff')
+  }
+}
+
+function parseDecision(line) {
+  const match = line.match(
+    /^- (D(\d{3,})) \[(pending|confirmed|delegated|rejected|superseded)\]:? (.+)$/,
+  )
+  if (!match) return undefined
+  const [, id, number, status, statement] = match
+  return { id, number: Number(number), status, statement }
+}
+
 function decisionDetails(lines, decisionLineIndex) {
   const details = new Map()
   for (let cursor = decisionLineIndex + 1; cursor < lines.length; cursor += 1) {
@@ -244,19 +334,73 @@ function decisionDetails(lines, decisionLineIndex) {
   return details
 }
 
-function launchContentDigest(text) {
-  return contentDigest(launchContent(text))
+function launchContentDigest(text, ledgerVersion) {
+  return contentDigest(launchContent(text, ledgerVersion))
 }
 
 function contentDigest(content) {
   return createHash('sha256').update(content, 'utf8').digest('hex')
 }
 
-function launchContent(text) {
+function launchContent(text, ledgerVersion) {
+  if (ledgerVersion === '3') return launchProjection(text)
   return text
-    .replaceAll('\r\n', '\n')
     .replace(/^- Overall launch confirmation:.*$/m, '- Overall launch confirmation: pending')
     .replace(/^- Handoff status:.*$/m, '- Handoff status: pending')
+}
+
+function launchProjection(text) {
+  const lines = text.split('\n')
+  const active = lines
+    .map(parseDecision)
+    .filter(decision => decision && ['confirmed', 'delegated'].includes(decision.status))
+  const projection = [
+    '# Decision Snapshot',
+    '',
+    ...launchFields.map(field => `- ${field}: ${fieldValue(lines, field) || ''}`),
+    '',
+    '## Active decisions',
+    '',
+    ...active.map(decision => `- ${decision.id} [${decision.status}]: ${decision.statement}`),
+  ]
+  return `${projection.join('\n')}\n`
+}
+
+function decisionIndex(text) {
+  const lines = text.split('\n')
+  return decisionIndexFromValues(new Map([
+    ['Ledger version', '3'],
+    ['Repository key', fieldValue(lines, 'Repository key')],
+    ['Delivery ID', fieldValue(lines, 'Delivery ID')],
+    ['Next decision ID', fieldValue(lines, 'Next decision ID')],
+    ['Decision source', fieldValue(lines, 'Issue persistence')],
+    ['Final carrier', fieldValue(lines, 'Final carrier')],
+    ['Decision content SHA-256', `sha256:${launchContentDigest(text, '3')}`],
+    ['Handoff evidence', fieldValue(lines, 'Handoff status')],
+  ]))
+}
+
+function decisionIndexFromValues(values) {
+  return `# Decision Ledger Index
+
+- Ledger version: ${values.get('Ledger version')}
+- Repository key: ${values.get('Repository key')}
+- Delivery ID: ${values.get('Delivery ID')}
+- Next decision ID: ${values.get('Next decision ID')}
+- Decision source: ${values.get('Decision source')}
+- Final carrier: ${values.get('Final carrier')}
+- Decision content SHA-256: ${values.get('Decision content SHA-256')}
+- Handoff evidence: ${values.get('Handoff evidence')}
+`
+}
+
+function retentionMode(text) {
+  const value = fieldValue(text.split('\n'), 'Handoff retention') || ''
+  return value.match(/^(compact|full)\b/i)?.[1].toLowerCase()
+}
+
+function ledgerVersionOf(text) {
+  return fieldValue(text.split('\n'), 'Ledger version')
 }
 
 function fieldValue(lines, name) {
@@ -277,4 +421,8 @@ function isPlaceholder(value) {
   if (value === undefined) return true
   const normalized = value.trim()
   return !normalized || normalized.toLowerCase() === 'pending' || /<[^>]+>/.test(normalized)
+}
+
+function normalizeText(text) {
+  return text.replaceAll('\r\n', '\n')
 }
