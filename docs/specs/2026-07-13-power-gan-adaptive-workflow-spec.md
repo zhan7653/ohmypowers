@@ -104,9 +104,9 @@ Deep Grill 必须：
 - 允许新证据推翻旧前提并回到相关分支；
 - 在没有未解决材料分支时结束，而不是穷举所有可能的实施细节。
 
-首个材料项出现时，主 Agent 从随附模板在 `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md` 创建一个按用户 outcome 定位的 version 3 决策文件；`CODEX_THREAD_ID` 只作为参与线程元数据。该文件从对齐开始就是材料决定的唯一完整工作来源，结束对齐后补齐启动字段，由校验器派生启动 Snapshot，不再维护第二份 Journal 或持久化 Snapshot 副本。version 2 和无版本 legacy 文件保持既有行为，不自动迁移、压缩或删除。
+首个材料项出现时，主 Agent 从随附模板在 `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md` 创建一个按单次 delivery 定位的 version 4 决策文件；`CODEX_THREAD_ID` 只作为参与线程元数据。首次交付的 `Predecessor` 为 `none`；verified handoff 后的 follow-up 使用新 delivery ID，并记录前一 delivery、持久来源内容 SHA-256 和 handoff carrier。该文件从对齐开始就是材料决定的唯一完整工作来源，结束对齐后补齐启动字段，由校验器派生启动 Snapshot，不再维护第二份 Journal 或持久化 Snapshot 副本。version 2、version 3 和无版本 legacy 文件保持既有行为，不自动迁移、压缩或删除。
 
-每项材料决定使用不可复用的连续稳定 ID，状态为 `pending`、`confirmed`、`delegated`、`rejected` 或 `superseded`。用户每次回答后，Agent 必须先重读完整工作文件、更新全部已回答项和新发现的材料项、推进下一 ID 并通过结构校验，才能继续调查、提问或实施。被拒绝或替代的项在 active delivery 中保留历史状态；已确认语义变化时新增 ID，并把旧项标为 `superseded`，不得原地改写或静默删除。上下文压缩、恢复或跨 turn 继续时，任何任务动作前都先重读并校验该 outcome 的完整 Ledger 或 compact index，不能从对话记忆或摘要重建。
+每项材料决定使用在当前 delivery 内不可复用的连续稳定 ID，状态为 `pending`、`confirmed`、`delegated`、`rejected` 或 `superseded`。用户每次回答后，Agent 必须先重读完整工作文件、更新全部已回答项和新发现的材料项、推进下一 ID 并通过结构校验，才能继续调查、提问或实施。被拒绝或替代的项在 active delivery 中保留历史状态；已确认语义变化时新增 ID，并把旧项标为 `superseded`，不得原地改写或静默删除。上下文压缩、恢复或跨 turn 继续时，任何任务动作前都先重读该 delivery 的状态；handoff-complete full Ledger 或 compact index 只能验证 predecessor，不能重新激活，后续工作必须创建新 Ledger。
 
 面向用户仍固定渲染“已确认”“待定”“默认（可改）”“已委托”四类紧凑 Ledger，仅记录材料项。未确认的推荐在用户接受、拒绝或修改前始终保持 `pending`；部分回答不能让未回答项自动确认。“剩下的你定”等明确委托只覆盖当前已命名的待定 ID，不覆盖安全、合法性、不可逆操作、外部支出或缺失授权。长期规范正文已经存在于不可变、可验证的载体时，决策项可以引用其精确路径或托管记录以及内容哈希或 commit，不能只写可变路径或版本名。
 
@@ -191,7 +191,9 @@ Working Strategy：
 
 对齐结束时，Agent 必须主动选择并说明最小充分载体。需要新 Issue 且不存在规范来源时，主动给出 Decision Record 并请求托管写入授权，不等待用户先提出 Issue；只有不写源码的讨论任务可以明确选择不建立长期记录。
 
-源码交付沿用首个材料项时创建的单一 outcome-scoped 决策文件。首次写入前，校验器从完整 Ledger 派生只含 active `confirmed`/`delegated` 决策语句与启动字段的 Snapshot；推荐、过程证据、`rejected`/`superseded` 历史、元数据和 Working defaults 不进入确认正文或哈希。Agent 原样展示投影并得到用户整体确认、再通过授权态校验后，才能写入源码。完成前按 active decision ID 核对实现，把必要决定转入已选载体并验证；普通交付将完整 Ledger 替换为校验器生成且二次验证的 compact index，明确要求或实质影响受保护风险类别及材料成本的交付保留完整 Ledger，失败时始终保留完整工作态并报告路径。
+Ledger identity 与 Issue identity 相互独立。verified handoff 后的新 Ledger 若与旧 Issue 直接相关且该 Issue 仍适合作为 canonical Decision Record，可以在单独授权下修订同一 Issue；新 Ledger 与修订后正文都必须记录 predecessor delivery、更新前 Issue body SHA-256 和前次 handoff carrier。无直接关联或旧 Issue 不再适合作为 current record 时才新建 Issue。复用 Issue 绝不允许复用其 terminal Ledger。
+
+源码交付沿用首个材料项时创建的单一 delivery-scoped 决策文件。首次写入前，校验器从完整 Ledger 派生只含 active `confirmed`/`delegated` 决策语句与启动字段的 Snapshot；推荐、过程证据、`rejected`/`superseded` 历史、元数据和 Working defaults 不进入确认正文或哈希。Agent 原样展示投影并得到用户整体确认、再通过授权态校验后，才能写入源码。完成前按 active decision ID 核对实现，把必要决定转入已选载体并验证；普通交付将完整 Ledger 替换为校验器生成且二次验证的 terminal compact index，高风险交付保留同样 terminal 的完整 Ledger，失败时始终保留 active 完整工作态。任何后续工作都创建新 delivery ID/Ledger，并通过 predecessor 链接终态交付。
 
 能够机器化表达的长期约束应优先进入测试、schema、类型、配置、静态规则或代码结构。只有需要指导未来 Agent 行为时，才经过明确确认写入就近的 `AGENTS.md`。
 
@@ -414,8 +416,8 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 | Issue 创建后的材料变化 | 简短 Decision Note comment | 随 Issue 永久保留 |
 | 小型交付的上下文和证据 | PR | 随 PR 保留 |
 | 极小修改 | commit | 随 Git 历史保留 |
-| Active delivery 的材料决定与源码交付边界 | 仓库外、按 repository/outcome 定位的单一 version 3 Ledger | 首个材料项出现时创建；每次回答后更新；从中派生整体确认投影；交接前保留完整工作态 |
-| 已完成普通交付的本地恢复索引 | 同一路径的 compact Decision Ledger Index | 最终载体读回验证后，由校验器生成并二次校验；只留 identity、next ID、载体、最终内容哈希和 handoff 证据 |
+| Active delivery 的材料决定与源码交付边界 | 仓库外、按 repository/delivery 定位的单一 version 4 Ledger | 首个材料项出现时创建；每次回答后更新；从中派生整体确认投影；交接前保留完整工作态 |
+| 已完成普通交付的本地终态索引 | 同一路径的 compact Decision Ledger Index | 最终载体读回验证后，由校验器生成并二次校验；只留 delivery identity、predecessor、载体、最终内容哈希和 handoff 证据，不留 next ID |
 | 显式要求或实质高风险交付的审计历史 | 同一路径的完整 Decision Ledger | handoff 后继续保留；仅触碰相关文件不构成高风险 |
 | 当前实施策略 | 当前会话 | 默认不持久化 |
 | 可机器表达的长期约束 | 测试、schema、类型、配置或代码 | 与代码共同演进 |
@@ -575,13 +577,13 @@ Then Agent 在任何后续动作前先重读会话决策文件；未回答推荐
 
 Given 对话发生上下文压缩、恢复或跨 turn 继续
 When Agent 准备调查、提问、实施或生成启动基准
-Then Agent 必须先按 repository/outcome 找到并重读同一个决策文件；完整 Ledger 通过 alignment 校验，compact index 先通过 handoff 校验并用于定位、哈希验证最终载体，再从该载体恢复当前 active 契约。文件、载体或哈希无效时停止，不能从摘要或记忆重建并继续。
+Then Agent 必须先按 repository/delivery 找到并重读当前决策文件；active 完整 Ledger 通过 alignment 校验。handoff-complete full Ledger 或 compact index 只通过 handoff 校验并用于验证 predecessor；后续工作创建新的 delivery ID/Ledger，不从终态文件恢复或追加 active 决策。文件、载体或哈希无效时停止，不能从摘要或记忆重建并继续。
 
 ### AC-24：单一决策文件、启动确认与最终交接
 
 Given `$power-gan` 已完成材料对齐并将写入仓库跟踪的源码、测试、配置、schema 或文档
 When 开始和结束交付
-Then 首个材料项时创建的仓库外单一决策文件已保留连续稳定 ID 和完整工作状态；首次写入前补齐启动字段，校验器在固定标记内输出与 SHA-256 同源的 active launch projection，Agent 原样转发整段输出而不重写或摘要。只有用户整体确认、确认及对应 SHA-256 已写回且授权态校验通过后才开始写入；active 决策或启动字段变化必须因哈希不匹配而阻止授权，纯历史或 Working defaults 变化不得使授权失效。完成前按 active ID 转存必要决定并验证；普通交付的 handoff 校验输出 compact index，Agent 原子替换并二次验证，高风险交付保留完整 Ledger，失败则保留完整工作态并报告待交接状态；不得为同一内容另建 Journal 或第二份 Snapshot。
+Then 首个材料项时创建的仓库外单一决策文件已保留 delivery 内连续稳定 ID 和完整工作状态；首次写入前补齐启动字段，校验器在固定标记内输出与 SHA-256 同源的 active launch projection，Agent 原样转发整段输出而不重写或摘要。只有用户整体确认、确认及对应 SHA-256 已写回且授权态校验通过后才开始写入；active 决策或启动字段变化必须因哈希不匹配而阻止授权，纯历史或 Working defaults 变化不得使授权失效。完成前按 active ID 转存必要决定并验证；普通交付的 handoff 校验输出不含 next ID 的 terminal compact index，Agent 原子替换并二次验证，高风险交付保留 terminal 完整 Ledger，失败则保留 active 完整工作态。终态文件不得重新进入 alignment/launch；follow-up 必须新建 Ledger，不得为同一 active delivery 另建 Journal 或第二份 Snapshot。
 
 ## 已解决问题
 

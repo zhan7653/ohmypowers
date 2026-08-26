@@ -233,7 +233,7 @@ test('power-gan keeps version 2 ledgers durable and gates launch on Issue persis
       [decisionStateValidator, versionlessOutsideLegacyPath, '--phase', 'alignment'],
       validatorOptions,
     ),
-    /version 2 or 3 is required outside the legacy temporary/i,
+    /version 2, 3, or 4 is required outside the legacy temporary/i,
   )
 
   const outsidePath = path.join(codexHome, 'outside', 'decision-snapshot.md')
@@ -633,6 +633,179 @@ test('power-gan version 3 separates launch confirmation from history and compact
     /handoff status|retention/i,
   )
   assert.equal(await readFile(fullStatePath, 'utf8'), incompleteHandoffState)
+})
+
+test('power-gan version 4 makes handed-off ledgers terminal and links a new delivery predecessor', async t => {
+  const codexHome = await mkdtemp(path.join(os.tmpdir(), 'power-gan-v4-codex-home-'))
+  t.after(() => rm(codexHome, { recursive: true, force: true }))
+  const repositoryKey = 'github.com-zhan7653-ohmypowers'
+  const deliveryId = 'follow-up-delivery'
+  const statePath = path.join(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    deliveryId,
+    'decision-snapshot.md',
+  )
+  await mkdir(path.dirname(statePath), { recursive: true })
+  const validatorOptions = { env: { ...process.env, CODEX_HOME: codexHome } }
+  const issueBodyDigest = 'a'.repeat(64)
+  const predecessorDigest = 'b'.repeat(64)
+  const predecessor = `delivery:prior-delivery — Issue #39 https://github.com/example/project/issues/39 — body sha256:${predecessorDigest} — handoff commit abc1234`
+  const alignmentState = `# Decision Snapshot
+
+- Ledger version: 4
+- Repository key: ${repositoryKey}
+- Delivery ID: ${deliveryId}
+- Predecessor: ${predecessor}
+- Thread: test-thread
+- Next decision ID: D002
+- Outcome: Ship a follow-up without reopening the prior Ledger.
+- Scope / non-goals: Keep the prior Ledger terminal; reuse the related Issue only as a revisioned carrier.
+- Launch basis: Validate predecessor and terminal-state behavior before implementation.
+- Stop / reopen conditions: Stop if version 2 or 3 behavior would change.
+- Final carrier: commit on develop linked to Decision Issue #39 https://github.com/example/project/issues/39
+- Issue persistence: verified — Issue #39 https://github.com/example/project/issues/39 — authorization confirmed — read-back sha256:${issueBodyDigest}
+- Handoff retention: pending
+- Overall launch confirmation: pending
+- Handoff status: pending
+
+## Decisions
+
+- D001 [confirmed]: A verified handoff makes the prior Ledger terminal and a follow-up uses a new delivery identity.
+  Basis: The user confirmed the delivery lifecycle boundary.
+  Recommendation: Start a new Ledger while allowing a related Issue revision.
+  Resolution evidence: User explicitly confirmed the boundary.
+`
+  await writeFile(statePath, alignmentState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'alignment'],
+    validatorOptions,
+  )
+
+  await writeFile(statePath, alignmentState.replace(`- Predecessor: ${predecessor}\n`, ''), 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /Predecessor/i,
+  )
+  await writeFile(
+    statePath,
+    alignmentState.replace(`- Predecessor: ${predecessor}`, '- Predecessor: delivery:prior-delivery — Issue #39'),
+    'utf8',
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /Predecessor/i,
+  )
+  await writeFile(statePath, alignmentState.replace(`- Predecessor: ${predecessor}`, '- Predecessor: none'), 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'alignment'],
+    validatorOptions,
+  )
+  await writeFile(statePath, alignmentState, 'utf8')
+
+  const { stdout: launchOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'launch'],
+    validatorOptions,
+  )
+  const launchDigest = launchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
+  assert.ok(launchDigest)
+  const authorizedState = alignmentState.replace(
+    '- Overall launch confirmation: pending',
+    `- Overall launch confirmation: confirmed — sha256:${launchDigest} — user confirmed complete rendering`,
+  )
+  await writeFile(statePath, authorizedState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'authorized'],
+    validatorOptions,
+  )
+
+  const compactHandoffState = authorizedState
+    .replace('- Handoff retention: pending', '- Handoff retention: compact — routine follow-up')
+    .replace('- Handoff status: pending', '- Handoff status: complete — commit def5678')
+  await writeFile(statePath, compactHandoffState, 'utf8')
+  const { stdout: handoffOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+  const indexStart = '-----BEGIN POWER-GAN DECISION INDEX-----\n'
+  const indexEnd = '-----END POWER-GAN DECISION INDEX-----'
+  const renderedIndex = handoffOutput.slice(
+    handoffOutput.indexOf(indexStart) + indexStart.length,
+    handoffOutput.lastIndexOf(indexEnd),
+  )
+  const expectedIndex = `# Decision Ledger Index
+
+- Ledger version: 4
+- Repository key: ${repositoryKey}
+- Delivery ID: ${deliveryId}
+- Predecessor: ${predecessor}
+- Decision source: verified — Issue #39 https://github.com/example/project/issues/39 — authorization confirmed — read-back sha256:${issueBodyDigest}
+- Final carrier: commit on develop linked to Decision Issue #39 https://github.com/example/project/issues/39
+- Decision content SHA-256: sha256:${launchDigest}
+- Handoff evidence: complete — commit def5678
+`
+  assert.equal(renderedIndex, expectedIndex)
+  assert.doesNotMatch(renderedIndex, /Next decision ID/)
+  await writeFile(statePath, renderedIndex, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, statePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'alignment'],
+      validatorOptions,
+    ),
+    /only.*handoff|handoff.*only/i,
+  )
+
+  const fullDeliveryId = 'full-risk-follow-up'
+  const fullStatePath = path.join(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    fullDeliveryId,
+    'decision-snapshot.md',
+  )
+  await mkdir(path.dirname(fullStatePath), { recursive: true })
+  const fullHandoffState = authorizedState
+    .replace(`- Delivery ID: ${deliveryId}`, `- Delivery ID: ${fullDeliveryId}`)
+    .replace('- Handoff retention: pending', '- Handoff retention: full — material compatibility risk')
+    .replace('- Handoff status: pending', '- Handoff status: complete — commit 1234abc')
+  await writeFile(fullStatePath, fullHandoffState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, fullStatePath, '--phase', 'handoff'],
+    validatorOptions,
+  )
+  for (const terminalPhase of ['alignment', 'launch', 'authorized']) {
+    await rejectsWithStderr(
+      execFileAsync(
+        process.execPath,
+        [decisionStateValidator, fullStatePath, '--phase', terminalPhase],
+        validatorOptions,
+      ),
+      /terminal.*new delivery|new delivery.*terminal/i,
+    )
+  }
 })
 
 test('PowerShell payload creation is collision-safe across concurrent sessions', async t => {

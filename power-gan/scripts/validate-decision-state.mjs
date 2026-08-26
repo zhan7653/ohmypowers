@@ -58,8 +58,8 @@ if (errors.length > 0) {
   if (phase === 'launch') {
     output.push(snapshotStartMarker)
     writeSync(1, `${output.join('\n')}\n${renderedContent}${snapshotEndMarker}\n`)
-  } else if (phase === 'handoff' && ledgerVersion === '3' && retentionMode(normalizedText) === 'compact') {
-    const renderedIndex = decisionIndex(normalizedText)
+  } else if (phase === 'handoff' && ['3', '4'].includes(ledgerVersion) && retentionMode(normalizedText) === 'compact') {
+    const renderedIndex = decisionIndex(normalizedText, ledgerVersion)
     output.push(`decision index sha256: ${contentDigest(renderedIndex)}`, indexStartMarker)
     writeSync(1, `${output.join('\n')}\n${renderedIndex}${indexEndMarker}\n`)
   } else {
@@ -74,11 +74,11 @@ function validateDecisionState(text, phase, ledgerPath) {
   if (!lines.includes('## Decisions')) errors.push('missing `## Decisions` section')
 
   const ledgerVersion = fieldValue(lines, 'Ledger version')
-  const isPermanentLedger = ledgerVersion === '2' || ledgerVersion === '3'
+  const isPermanentLedger = ['2', '3', '4'].includes(ledgerVersion)
   if (ledgerVersion !== undefined && !isPermanentLedger) {
-    errors.push('Ledger version must be 2 or 3 when present')
+    errors.push('Ledger version must be 2, 3, or 4 when present')
   } else if (ledgerVersion === undefined && !isLegacyLedgerPath(ledgerPath)) {
-    errors.push('Ledger version 2 or 3 is required outside the legacy temporary Ledger namespace')
+    errors.push('Ledger version 2, 3, or 4 is required outside the legacy temporary Ledger namespace')
   }
 
   const decisions = []
@@ -135,12 +135,19 @@ function validateDecisionState(text, phase, ledgerPath) {
     requiredFields.unshift('Ledger version', 'Repository key', 'Delivery ID')
     requiredFields.push('Issue persistence')
   }
-  if (ledgerVersion === '3') requiredFields.push('Handoff retention')
+  if (ledgerVersion === '3' || ledgerVersion === '4') requiredFields.push('Handoff retention')
+  if (ledgerVersion === '4') requiredFields.push('Predecessor')
   for (const field of requiredFields) {
     if (fieldValue(lines, field) === undefined) errors.push(`missing \`${field}\` field`)
   }
   if (isPlaceholder(fieldValue(lines, 'Thread'))) errors.push('Thread must identify the current session')
   if (isPermanentLedger) validatePermanentPath(lines, ledgerPath, errors)
+  if (ledgerVersion === '4') validatePredecessor(fieldValue(lines, 'Predecessor'), errors)
+
+  const handoff = fieldValue(lines, 'Handoff status') || ''
+  if (ledgerVersion === '4' && phase !== 'handoff' && /^complete\b/i.test(handoff)) {
+    errors.push('version 4 handed-off Ledger is terminal; create a new delivery instead of reactivating it')
+  }
 
   if (phase !== 'alignment') {
     const renderedContent = launchContent(text, ledgerVersion)
@@ -172,16 +179,17 @@ function validateDecisionState(text, phase, ledgerPath) {
     }
   }
   if (phase === 'handoff') {
-    const handoff = fieldValue(lines, 'Handoff status') || ''
     if (!/^complete\b/i.test(handoff)) {
       errors.push('handoff status must be complete before declaring delivery complete')
     } else if (isPermanentLedger) {
       validateHandoffEvidence(handoff, errors)
     }
-    if (ledgerVersion === '3') validateHandoffRetention(fieldValue(lines, 'Handoff retention'), errors)
-    if (ledgerVersion === '3' && retentionMode(text) === 'compact') {
+    if (ledgerVersion === '3' || ledgerVersion === '4') {
+      validateHandoffRetention(fieldValue(lines, 'Handoff retention'), errors)
+    }
+    if (['3', '4'].includes(ledgerVersion) && retentionMode(text) === 'compact') {
       const reservedMarker = [indexStartMarker, indexEndMarker].find(marker =>
-        decisionIndex(text).includes(marker),
+        decisionIndex(text, ledgerVersion).includes(marker),
       )
       if (reservedMarker) errors.push(`compact index contains reserved marker: ${reservedMarker}`)
     }
@@ -194,11 +202,13 @@ function validateDecisionIndex(text, phase, ledgerPath) {
   const errors = []
   if (phase !== 'handoff') errors.push('Decision Ledger Index is valid only for the handoff phase')
   const lines = text.split('\n')
+  const ledgerVersion = fieldValue(lines, 'Ledger version')
   const fields = [
     'Ledger version',
     'Repository key',
     'Delivery ID',
-    'Next decision ID',
+    ...(ledgerVersion === '3' ? ['Next decision ID'] : []),
+    ...(ledgerVersion === '4' ? ['Predecessor'] : []),
     'Decision source',
     'Final carrier',
     'Decision content SHA-256',
@@ -210,10 +220,13 @@ function validateDecisionIndex(text, phase, ledgerPath) {
     if (matches.length !== 1) errors.push(`Decision Ledger Index must contain exactly one \`${field}\` field`)
     values.set(field, fieldValue(lines, field))
   }
-  if (values.get('Ledger version') !== '3') errors.push('Decision Ledger Index must use Ledger version 3')
-  if (!/^D\d{3,}$/.test(values.get('Next decision ID') || '')) {
+  if (!['3', '4'].includes(ledgerVersion)) {
+    errors.push('Decision Ledger Index must use Ledger version 3 or 4')
+  }
+  if (ledgerVersion === '3' && !/^D\d{3,}$/.test(values.get('Next decision ID') || '')) {
     errors.push('Next decision ID must preserve the next unused stable decision ID')
   }
+  if (ledgerVersion === '4') validatePredecessor(values.get('Predecessor'), errors)
   if (isPlaceholder(values.get('Decision source'))) errors.push('Decision source must identify the durable decision carrier')
   if (!/\b(issue|pr|commit)\b/i.test(values.get('Final carrier') || '')) {
     errors.push('Final carrier must identify an Issue, PR, or commit')
@@ -227,7 +240,7 @@ function validateDecisionIndex(text, phase, ledgerPath) {
   validatePermanentPath(lines, ledgerPath, errors)
 
   if (errors.length === 0) {
-    const canonical = decisionIndexFromValues(values)
+    const canonical = decisionIndexFromValues(values, ledgerVersion)
     if (text !== canonical) errors.push('Decision Ledger Index must use the canonical compact format')
   }
   return errors
@@ -319,6 +332,23 @@ function validateHandoffRetention(value, errors) {
   }
 }
 
+function validatePredecessor(value, errors) {
+  if (value === 'none') return
+  const normalized = value || ''
+  if (!/^delivery:[a-z0-9][a-z0-9._-]*\b/.test(normalized)) {
+    errors.push('Predecessor must start with a path-safe `delivery:<id>` or be `none`')
+  }
+  if (!/\b(issue|pr|commit)\b/i.test(normalized)) {
+    errors.push('Predecessor must identify the prior durable source')
+  }
+  if (!/\b(?:body|content) sha256:[0-9a-f]{64}\b/i.test(normalized)) {
+    errors.push('Predecessor must record the verified prior content SHA-256')
+  }
+  if (!/\bhandoff\s+(?:issue|pr|commit)\b/i.test(normalized)) {
+    errors.push('Predecessor must identify the prior handoff carrier')
+  }
+}
+
 function parseDecision(line) {
   const match = line.match(
     /^- (D(\d{3,})) \[(pending|confirmed|delegated|rejected|superseded)\]:? (.+)$/,
@@ -349,7 +379,7 @@ function contentDigest(content) {
 }
 
 function launchContent(text, ledgerVersion) {
-  if (ledgerVersion === '3') return launchProjection(text)
+  if (ledgerVersion === '3' || ledgerVersion === '4') return launchProjection(text)
   return text
     .replace(/^- Overall launch confirmation:.*$/m, '- Overall launch confirmation: pending')
     .replace(/^- Handoff status:.*$/m, '- Handoff status: pending')
@@ -372,28 +402,28 @@ function launchProjection(text) {
   return `${projection.join('\n')}\n`
 }
 
-function decisionIndex(text) {
+function decisionIndex(text, ledgerVersion) {
   const lines = text.split('\n')
   return decisionIndexFromValues(new Map([
-    ['Ledger version', '3'],
+    ['Ledger version', ledgerVersion],
     ['Repository key', fieldValue(lines, 'Repository key')],
     ['Delivery ID', fieldValue(lines, 'Delivery ID')],
-    ['Next decision ID', fieldValue(lines, 'Next decision ID')],
+    ...(ledgerVersion === '3' ? [['Next decision ID', fieldValue(lines, 'Next decision ID')]] : []),
+    ...(ledgerVersion === '4' ? [['Predecessor', fieldValue(lines, 'Predecessor')]] : []),
     ['Decision source', fieldValue(lines, 'Issue persistence')],
     ['Final carrier', fieldValue(lines, 'Final carrier')],
-    ['Decision content SHA-256', `sha256:${launchContentDigest(text, '3')}`],
+    ['Decision content SHA-256', `sha256:${launchContentDigest(text, ledgerVersion)}`],
     ['Handoff evidence', fieldValue(lines, 'Handoff status')],
-  ]))
+  ]), ledgerVersion)
 }
 
-function decisionIndexFromValues(values) {
+function decisionIndexFromValues(values, ledgerVersion) {
   return `# Decision Ledger Index
 
-- Ledger version: ${values.get('Ledger version')}
+- Ledger version: ${ledgerVersion}
 - Repository key: ${values.get('Repository key')}
 - Delivery ID: ${values.get('Delivery ID')}
-- Next decision ID: ${values.get('Next decision ID')}
-- Decision source: ${values.get('Decision source')}
+${ledgerVersion === '3' ? `- Next decision ID: ${values.get('Next decision ID')}\n` : ''}${ledgerVersion === '4' ? `- Predecessor: ${values.get('Predecessor')}\n` : ''}- Decision source: ${values.get('Decision source')}
 - Final carrier: ${values.get('Final carrier')}
 - Decision content SHA-256: ${values.get('Decision content SHA-256')}
 - Handoff evidence: ${values.get('Handoff evidence')}

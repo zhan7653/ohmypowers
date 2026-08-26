@@ -1,8 +1,9 @@
 # Decision Snapshot
 
-- Ledger version: 3
+- Ledger version: 4
 - Repository key: <lowercase path-safe repository identity>
-- Delivery ID: <immutable goal-scoped delivery identity>
+- Delivery ID: <immutable delivery identity>
+- Predecessor: none
 - Thread: <CODEX_THREAD_ID; append IDs when the same delivery continues elsewhere>
 - Next decision ID: D002
 - Outcome: pending

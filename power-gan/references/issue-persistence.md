@@ -13,7 +13,7 @@ Read this reference only when `$power-gan` has decided that a task needs a hoste
 ## Shared Flow
 
 1. Read project guidance, Issue templates, and `git remote -v`. Identify the exact host and repository. If remotes or host rules conflict, ask before writing.
-2. Build the Issue body from confirmed material decisions only. Before showing the draft, map every confirmed material item from the working understanding into exactly one clear location in the record; a missing location means the draft is incomplete. Use the host operating system's temporary directory; never hardcode `/tmp` or create a project decision Markdown file.
+2. Build the Issue body from confirmed material decisions only. Before showing the draft, map every confirmed material item from the working understanding into exactly one clear location in the record; a missing location means the draft is incomplete. If the Issue carried a verified prior handoff, never reactivate that delivery's Ledger: create a new Ledger, capture the predecessor delivery ID, exact pre-write Issue body SHA-256, and prior handoff carrier, and include that revision link in both the new Ledger and revised Decision Record. A directly related follow-up may revise the same Issue; unrelated work or an Issue that is no longer an adequate current record gets a new Issue. Use the host operating system's temporary directory; never hardcode `/tmp` or create a project decision Markdown file.
 3. Create or update hosted state only after the user has explicitly requested or confirmed that mutation. Confirmation of one material decision is not automatically permission for unrelated labels, assignees, milestones, or projects.
 4. Before updating an existing Issue, capture its identity, title, exact body, state, URL, revision metadata, and a SHA-256 hash of the UTF-8 body. Treat a failed command, empty output, invalid JSON, missing required field, or undecodable UTF-8 as a hard pre-write stop. Apply only the confirmed replacement to that captured body; preserve every unrelated section.
 5. Immediately before the write, re-read the same fields and abort if they no longer match the captured snapshot. This narrows the lost-update window; when the host exposes an atomic revision or conditional-write contract, use it rather than claiming this check is atomic.
@@ -145,6 +145,8 @@ Use this minimum sufficient body shape when the repository does not provide a st
 
 Decision status: proposed | confirmed | delivering | delivered | superseded
 Decision revision: <increment only for confirmed material decision changes; omit when the repository does not use revisions>
+Current delivery: <new delivery ID; include for a revision after verified handoff>
+Predecessor: <prior delivery ID, exact pre-write body SHA-256, and prior handoff carrier; include for a revision after verified handoff>
 
 ## Outcome
 <observable result>
