@@ -179,6 +179,12 @@ function validateDecisionState(text, phase, ledgerPath) {
       validateHandoffEvidence(handoff, errors)
     }
     if (ledgerVersion === '3') validateHandoffRetention(fieldValue(lines, 'Handoff retention'), errors)
+    if (ledgerVersion === '3' && retentionMode(text) === 'compact') {
+      const reservedMarker = [indexStartMarker, indexEndMarker].find(marker =>
+        decisionIndex(text).includes(marker),
+      )
+      if (reservedMarker) errors.push(`compact index contains reserved marker: ${reservedMarker}`)
+    }
   }
 
   return errors

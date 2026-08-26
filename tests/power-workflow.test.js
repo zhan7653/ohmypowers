@@ -537,6 +537,24 @@ test('power-gan version 3 separates launch confirmation from history and compact
       '- Handoff retention: compact — routine delivery with no material protected risk',
     )
     .replace('- Handoff status: pending', '- Handoff status: complete — commit abc1234')
+  for (const marker of [
+    '-----BEGIN POWER-GAN DECISION INDEX-----',
+    '-----END POWER-GAN DECISION INDEX-----',
+  ]) {
+    await writeFile(
+      statePath,
+      compactHandoffState.replace('complete — commit abc1234', `complete — commit abc1234 ${marker}`),
+      'utf8',
+    )
+    await rejectsWithStderr(
+      execFileAsync(
+        process.execPath,
+        [decisionStateValidator, statePath, '--phase', 'handoff'],
+        validatorOptions,
+      ),
+      /compact index contains reserved marker/i,
+    )
+  }
   await writeFile(statePath, compactHandoffState, 'utf8')
   const { stdout: handoffOutput } = await execFileAsync(
     process.execPath,
