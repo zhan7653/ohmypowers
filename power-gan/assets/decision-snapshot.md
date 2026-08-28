@@ -1,9 +1,11 @@
 # Decision Snapshot
 
-- Ledger version: 4
+- Ledger version: 5
 - Repository key: <lowercase path-safe repository identity>
 - Delivery ID: <immutable delivery identity>
 - Predecessor: none
+- Note lifecycle: active — current discussion note
+- Persistence boundary: pending
 - Thread: <CODEX_THREAD_ID; append IDs when the same delivery continues elsewhere>
 - Next decision ID: D002
 - Outcome: pending
@@ -12,7 +14,7 @@
 - Stop / reopen conditions: pending
 - Final carrier: pending
 - Issue persistence: pending
-- Handoff retention: pending
+- Handoff retention: delete — remove local note after verified carrier handoff
 - Overall launch confirmation: pending
 - Handoff status: pending
 

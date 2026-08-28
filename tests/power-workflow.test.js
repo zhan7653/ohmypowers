@@ -16,6 +16,12 @@ const decisionStateValidator = path.join(
   'scripts',
   'validate-decision-state.mjs',
 )
+const decisionNoteManager = path.join(
+  root,
+  'power-gan',
+  'scripts',
+  'manage-decision-note.mjs',
+)
 
 async function read(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8')
@@ -215,6 +221,14 @@ test('power-gan keeps version 2 ledgers durable and gates launch on Issue persis
     [decisionStateValidator, statePath, '--phase', 'alignment'],
     validatorOptions,
   )
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionStateValidator, statePath, '--phase', 'rollover'],
+      validatorOptions,
+    ),
+    /only.*version 5|version 5.*only/i,
+  )
 
   const versionlessOutsideLegacyPath = path.join(codexHome, 'versionless', 'decision-snapshot.md')
   await mkdir(path.dirname(versionlessOutsideLegacyPath), { recursive: true })
@@ -233,7 +247,7 @@ test('power-gan keeps version 2 ledgers durable and gates launch on Issue persis
       [decisionStateValidator, versionlessOutsideLegacyPath, '--phase', 'alignment'],
       validatorOptions,
     ),
-    /version 2, 3, or 4 is required outside the legacy temporary/i,
+    /version 2, 3, 4, or 5 is required outside the legacy temporary/i,
   )
 
   const outsidePath = path.join(codexHome, 'outside', 'decision-snapshot.md')
@@ -711,6 +725,7 @@ test('power-gan version 4 makes handed-off ledgers terminal and links a new deli
     `delivery:prior/path — issue — body sha256:${predecessorDigest} — handoff commit`,
     `delivery:prior-delivery — Issue #39 https://github.com/example/project/issues/40 — body sha256:${predecessorDigest} — handoff commit abc1234`,
     `delivery:prior-delivery — Issue #39 https://github.com/example/project/issues/39 — body sha256:${predecessorDigest} — handoff commit`,
+    `delivery:prior-delivery — Issue #39 https://github.com/example/project/issues/39 — body sha256:${predecessorDigest} — persistence Issue #39 https://github.com/example/project/issues/39 read-back sha256:${predecessorDigest}`,
   ]
   for (const invalidPredecessor of invalidPredecessors) {
     await writeFile(
@@ -842,6 +857,109 @@ test('power-gan version 4 makes handed-off ledgers terminal and links a new deli
       /terminal.*new delivery|new delivery.*terminal/i,
     )
   }
+})
+
+test('power-gan version 5 rolls over after durable persistence and deletes only verified local notes', async t => {
+  const codexHome = await mkdtemp(path.join(os.tmpdir(), 'power-gan-v5-codex-home-'))
+  t.after(() => rm(codexHome, { recursive: true, force: true }))
+  const repositoryKey = 'github.com-zhan7653-ohmypowers'
+  const sourceDelivery = 'v5-source-delivery'
+  const successorDelivery = 'v5-successor-delivery'
+  const sourcePath = path.join(codexHome, 'power-gan', 'records', repositoryKey, sourceDelivery, 'decision-snapshot.md')
+  const successorPath = path.join(codexHome, 'power-gan', 'records', repositoryKey, successorDelivery, 'decision-snapshot.md')
+  await mkdir(path.dirname(sourcePath), { recursive: true })
+  await mkdir(path.dirname(successorPath), { recursive: true })
+  const validatorOptions = { env: { ...process.env, CODEX_HOME: codexHome } }
+  const issueDigest = 'c'.repeat(64)
+  const sourceBoundary = `verified — Issue #39 https://github.com/zhan7653/ohmypowers/issues/39 — read-back sha256:${issueDigest}`
+  const issuePersistence = `verified — Issue #39 https://github.com/zhan7653/ohmypowers/issues/39 — authorization confirmed — read-back sha256:${issueDigest}`
+  const sourceState = `# Decision Snapshot
+
+- Ledger version: 5
+- Repository key: ${repositoryKey}
+- Delivery ID: ${sourceDelivery}
+- Predecessor: none
+- Note lifecycle: active — current note
+- Persistence boundary: pending
+- Thread: test-thread
+- Next decision ID: D002
+- Outcome: Ship the persisted decision.
+- Scope / non-goals: Keep the current decision; no unrelated changes.
+- Launch basis: Validate the version 5 lifecycle.
+- Stop / reopen conditions: Stop if carrier read-back fails.
+- Final carrier: commit on develop linked to Decision Issue #39 https://github.com/zhan7653/ohmypowers/issues/39
+- Issue persistence: ${issuePersistence}
+- Handoff retention: delete — remove the local note after handoff
+- Overall launch confirmation: pending
+- Handoff status: pending
+
+## Decisions
+
+- D001 [confirmed]: Rotate the local note after durable persistence.
+  Basis: A durable Issue carrier has been read back exactly.
+  Recommendation: Start a fresh note after persistence to prevent transcript growth.
+  Resolution evidence: User explicitly confirmed the lifecycle.
+`
+  await writeFile(sourcePath, sourceState, 'utf8')
+  await execFileAsync(process.execPath, [decisionStateValidator, sourcePath, '--phase', 'alignment'], validatorOptions)
+
+  const persistedSourceState = sourceState
+    .replace('- Note lifecycle: active — current note', '- Note lifecycle: sealed — persisted Issue read-back')
+    .replace('- Persistence boundary: pending', `- Persistence boundary: ${sourceBoundary}`)
+  await writeFile(sourcePath, persistedSourceState, 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionStateValidator, sourcePath, '--phase', 'alignment'], validatorOptions),
+    /sealed local note is terminal/i,
+  )
+  await execFileAsync(process.execPath, [decisionStateValidator, sourcePath, '--phase', 'rollover'], validatorOptions)
+
+  const expectedPredecessor = `delivery:${sourceDelivery} — Issue #39 https://github.com/zhan7653/ohmypowers/issues/39 — body sha256:${issueDigest} — persistence Issue #39 https://github.com/zhan7653/ohmypowers/issues/39 read-back sha256:${issueDigest}`
+  const successorState = sourceState
+    .replace(`- Delivery ID: ${sourceDelivery}`, `- Delivery ID: ${successorDelivery}`)
+    .replace('- Predecessor: none', `- Predecessor: ${expectedPredecessor}`)
+  await writeFile(successorPath, successorState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionNoteManager, 'rollover', sourcePath, successorPath],
+    validatorOptions,
+  )
+  await assert.rejects(access(sourcePath))
+  assert.equal(await readFile(successorPath, 'utf8'), successorState)
+
+  const failedSourcePath = path.join(codexHome, 'power-gan', 'records', repositoryKey, 'v5-failed-source', 'decision-snapshot.md')
+  const failedSuccessorPath = path.join(codexHome, 'power-gan', 'records', repositoryKey, 'v5-failed-successor', 'decision-snapshot.md')
+  await mkdir(path.dirname(failedSourcePath), { recursive: true })
+  await mkdir(path.dirname(failedSuccessorPath), { recursive: true })
+  await writeFile(failedSourcePath, persistedSourceState.replace(`- Delivery ID: ${sourceDelivery}`, '- Delivery ID: v5-failed-source'), 'utf8')
+  await writeFile(failedSuccessorPath, successorState.replace(`- Delivery ID: ${successorDelivery}`, '- Delivery ID: v5-failed-successor').replace(expectedPredecessor, 'delivery:v5-failed-source — Issue #39 https://github.com/zhan7653/ohmypowers/issues/39 — body sha256:bad — persistence Issue #39 https://github.com/zhan7653/ohmypowers/issues/39 read-back sha256:bad'), 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(process.execPath, [decisionNoteManager, 'rollover', failedSourcePath, failedSuccessorPath], validatorOptions),
+    /Predecessor|sha256/i,
+  )
+  assert.equal(await readFile(failedSourcePath, 'utf8'), persistedSourceState.replace(`- Delivery ID: ${sourceDelivery}`, '- Delivery ID: v5-failed-source'))
+
+  const { stdout: launchOutput } = await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, successorPath, '--phase', 'launch'],
+    validatorOptions,
+  )
+  const launchDigest = launchOutput.match(/launch content sha256: ([0-9a-f]{64})/i)?.[1]
+  assert.ok(launchDigest)
+  const authorizedState = successorState.replace(
+    '- Overall launch confirmation: pending',
+    `- Overall launch confirmation: confirmed — sha256:${launchDigest} — test confirmation`,
+  )
+  const completedState = authorizedState.replace(
+    '- Handoff status: pending',
+    '- Handoff status: complete — commit abc1234',
+  )
+  await writeFile(successorPath, completedState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionNoteManager, 'handoff', successorPath],
+    validatorOptions,
+  )
+  await assert.rejects(access(successorPath))
 })
 
 test('PowerShell payload creation is collision-safe across concurrent sessions', async t => {

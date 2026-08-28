@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-const allowedPhases = new Set(['alignment', 'launch', 'authorized', 'handoff'])
+const allowedPhases = new Set(['alignment', 'launch', 'authorized', 'rollover', 'handoff'])
 const snapshotStartMarker = '-----BEGIN POWER-GAN DECISION SNAPSHOT-----'
 const snapshotEndMarker = '-----END POWER-GAN DECISION SNAPSHOT-----'
 const indexStartMarker = '-----BEGIN POWER-GAN DECISION INDEX-----'
@@ -27,7 +27,7 @@ const phase = phaseIndex === -1 ? 'alignment' : args[phaseIndex + 1]
 if (!statePath || !allowedPhases.has(phase)) {
   console.error(
     'usage: node validate-decision-state.mjs <decision-snapshot.md> ' +
-      '[--phase alignment|launch|authorized|handoff]',
+      '[--phase alignment|launch|authorized|rollover|handoff]',
   )
   process.exit(2)
 }
@@ -51,7 +51,9 @@ if (errors.length > 0) {
 } else {
   const ledgerVersion = ledgerVersionOf(normalizedText)
   const output = [`decision state valid for ${phase}: ${statePath}`]
-  const renderedContent = phase === 'alignment' ? undefined : launchContent(normalizedText, ledgerVersion)
+  const renderedContent = ['alignment', 'rollover'].includes(phase)
+    ? undefined
+    : launchContent(normalizedText, ledgerVersion)
   if (renderedContent !== undefined) {
     output.push(`launch content sha256: ${contentDigest(renderedContent)}`)
   }
@@ -74,11 +76,14 @@ function validateDecisionState(text, phase, ledgerPath) {
   if (!lines.includes('## Decisions')) errors.push('missing `## Decisions` section')
 
   const ledgerVersion = fieldValue(lines, 'Ledger version')
-  const isPermanentLedger = ['2', '3', '4'].includes(ledgerVersion)
+  if (phase === 'rollover' && ledgerVersion !== '5') {
+    errors.push('rollover validation is available only for Ledger version 5')
+  }
+  const isPermanentLedger = ['2', '3', '4', '5'].includes(ledgerVersion)
   if (ledgerVersion !== undefined && !isPermanentLedger) {
-    errors.push('Ledger version must be 2, 3, or 4 when present')
+    errors.push('Ledger version must be 2, 3, 4, or 5 when present')
   } else if (ledgerVersion === undefined && !isLegacyLedgerPath(ledgerPath)) {
-    errors.push('Ledger version 2, 3, or 4 is required outside the legacy temporary Ledger namespace')
+    errors.push('Ledger version 2, 3, 4, or 5 is required outside the legacy temporary Ledger namespace')
   }
 
   const decisions = []
@@ -135,27 +140,69 @@ function validateDecisionState(text, phase, ledgerPath) {
     requiredFields.unshift('Ledger version', 'Repository key', 'Delivery ID')
     requiredFields.push('Issue persistence')
   }
-  if (ledgerVersion === '3' || ledgerVersion === '4') requiredFields.push('Handoff retention')
-  if (ledgerVersion === '4') requiredFields.push('Predecessor')
+  if (ledgerVersion === '3' || ledgerVersion === '4' || ledgerVersion === '5') requiredFields.push('Handoff retention')
+  if (ledgerVersion === '4' || ledgerVersion === '5') requiredFields.push('Predecessor')
+  if (ledgerVersion === '5') requiredFields.push('Note lifecycle', 'Persistence boundary')
   for (const field of requiredFields) {
     if (fieldValue(lines, field) === undefined) errors.push(`missing \`${field}\` field`)
   }
   if (isPlaceholder(fieldValue(lines, 'Thread'))) errors.push('Thread must identify the current session')
   if (isPermanentLedger) validatePermanentPath(lines, ledgerPath, errors)
-  if (ledgerVersion === '4') {
+  if (ledgerVersion === '4' || ledgerVersion === '5') {
     const predecessorLines = lines.filter(line => line.startsWith('- Predecessor:'))
     if (predecessorLines.length !== 1) {
-      errors.push('version 4 Ledger must contain exactly one `Predecessor` field')
+      errors.push(`version ${ledgerVersion} Ledger must contain exactly one \`Predecessor\` field`)
     }
-    validatePredecessor(fieldValue(lines, 'Predecessor'), errors)
+    validatePredecessor(fieldValue(lines, 'Predecessor'), errors, ledgerVersion)
   }
 
   const handoff = fieldValue(lines, 'Handoff status') || ''
   if (ledgerVersion === '4' && phase !== 'handoff' && /^complete\b/i.test(handoff)) {
     errors.push('version 4 handed-off Ledger is terminal; create a new delivery instead of reactivating it')
   }
+  if (ledgerVersion === '5') {
+    const lifecycle = fieldValue(lines, 'Note lifecycle') || ''
+    if (!/^(active|sealed)\b/i.test(lifecycle)) {
+      errors.push('version 5 Note lifecycle must be `active — <reason>` or `sealed — <reason>`')
+    }
+    const persistence = fieldValue(lines, 'Persistence boundary') || ''
+    if (!/^(pending|verified)\b/i.test(persistence)) {
+      errors.push('version 5 Persistence boundary must be `pending` or `verified — <carrier> — read-back sha256:<digest>`')
+    } else if (/^verified\b/i.test(persistence)) {
+      validatePersistenceBoundary(persistence, errors)
+    }
+    if (/^sealed\b/i.test(lifecycle) && !/^verified\b/i.test(persistence)) {
+      errors.push('version 5 sealed local note requires a verified Persistence boundary')
+    }
+    if (/^sealed\b/i.test(lifecycle) && phase !== 'rollover') {
+      errors.push('version 5 sealed local note is terminal; create a new note instead of reusing it')
+    }
+    if (/^active\b/i.test(lifecycle) && /^verified\b/i.test(persistence)) {
+      errors.push('version 5 active local note cannot retain a verified Persistence boundary; create a new note')
+    }
+    if (phase !== 'handoff' && phase !== 'rollover' && /^complete\b/i.test(handoff)) {
+      errors.push('version 5 handed-off Ledger is terminal; delete it after verified carrier handoff and create a new delivery')
+    }
+    if (phase === 'rollover' && !/^sealed\b/i.test(lifecycle)) {
+      errors.push('version 5 rollover validation requires a sealed local note')
+    }
+    if (phase === 'rollover' && !/^verified\b/i.test(persistence)) {
+      errors.push('version 5 rollover validation requires a verified Persistence boundary')
+    }
+    if (phase === 'handoff') {
+      if (!/^active\b/i.test(lifecycle)) {
+        errors.push('version 5 handoff validation requires the final active local note')
+      }
+      if (!/^pending\b/i.test(persistence)) {
+        errors.push('version 5 handoff validation requires no pending persistence rollover')
+      }
+      if (!/^delete\b/i.test(fieldValue(lines, 'Handoff retention') || '')) {
+        errors.push('version 5 handoff validation requires `delete` retention so the final local note can be removed')
+      }
+    }
+  }
 
-  if (phase !== 'alignment') {
+  if (!['alignment', 'rollover'].includes(phase)) {
     const renderedContent = launchContent(text, ledgerVersion)
     const reservedMarker = [snapshotStartMarker, snapshotEndMarker].find(marker =>
       renderedContent.includes(marker),
@@ -190,8 +237,8 @@ function validateDecisionState(text, phase, ledgerPath) {
     } else if (isPermanentLedger) {
       validateHandoffEvidence(handoff, errors)
     }
-    if (ledgerVersion === '3' || ledgerVersion === '4') {
-      validateHandoffRetention(fieldValue(lines, 'Handoff retention'), errors)
+    if (ledgerVersion === '3' || ledgerVersion === '4' || ledgerVersion === '5') {
+      validateHandoffRetention(fieldValue(lines, 'Handoff retention'), errors, ledgerVersion)
     }
     if (['3', '4'].includes(ledgerVersion) && retentionMode(text) === 'compact') {
       const reservedMarker = [indexStartMarker, indexEndMarker].find(marker =>
@@ -331,14 +378,30 @@ function validateHandoffEvidence(handoff, errors) {
   }
 }
 
-function validateHandoffRetention(value, errors) {
-  const match = (value || '').match(/^(compact|full)\b\s*[—:-]\s*(.+)$/i)
+function validateHandoffRetention(value, errors, ledgerVersion) {
+  const modes = ledgerVersion === '5' ? 'compact|full|delete' : 'compact|full'
+  const match = (value || '').match(new RegExp(`^(${modes})\\b\\s*[—:-]\\s*(.+)$`, 'i'))
   if (!match || isPlaceholder(match[2])) {
-    errors.push('Handoff retention must be `compact — <reason>` or `full — <reason>` before handoff')
+    errors.push(
+      ledgerVersion === '5'
+        ? 'Handoff retention must be `compact — <reason>`, `full — <reason>`, or `delete — <reason>` before handoff'
+        : 'Handoff retention must be `compact — <reason>` or `full — <reason>` before handoff',
+    )
   }
 }
 
-function validatePredecessor(value, errors) {
+function validatePersistenceBoundary(value, errors) {
+  const match = (value || '').match(/^verified\s*[—:-]\s*(.+)\s*[—:-]\s*read-back sha256:([0-9a-f]{64})$/i)
+  if (!match || isPlaceholder(match[1])) {
+    errors.push('Persistence boundary must identify a durable carrier and exact read-back body digest')
+    return
+  }
+  if (!isDurableSourceIdentity(match[1].trim())) {
+    errors.push('Persistence boundary must identify a concrete Issue, PR, MR, or commit carrier')
+  }
+}
+
+function validatePredecessor(value, errors, ledgerVersion = '4') {
   if (value === 'none') return
   const parts = (value || '').split(' — ')
   if (parts.length !== 4) {
@@ -355,8 +418,15 @@ function validatePredecessor(value, errors) {
   if (!/^(?:body|content) sha256:[0-9a-f]{64}$/i.test(contentDigest)) {
     errors.push('Predecessor must record one exact prior content SHA-256')
   }
-  if (!isHandoffCarrierIdentity(handoffCarrier)) {
-    errors.push('Predecessor handoff carrier must identify a concrete commit or read-back hosted record')
+  const validCarrier = ledgerVersion === '5'
+    ? isPersistenceCarrierIdentity(handoffCarrier) || isHandoffCarrierIdentity(handoffCarrier)
+    : isHandoffCarrierIdentity(handoffCarrier)
+  if (!validCarrier) {
+    errors.push(
+      ledgerVersion === '5'
+        ? 'Predecessor carrier must identify a concrete persistence or handoff carrier and read-back digest'
+        : 'Predecessor handoff carrier must identify a concrete commit or read-back hosted record',
+    )
   }
 }
 
@@ -375,6 +445,11 @@ function isHandoffCarrierIdentity(value) {
   if (/^handoff commit [0-9a-f]{7,64}$/i.test(value)) return true
   const hosted = value.match(/^handoff (.+) read-back sha256:[0-9a-f]{64}$/i)
   return Boolean(hosted && isDurableSourceIdentity(hosted[1]))
+}
+
+function isPersistenceCarrierIdentity(value) {
+  const persisted = value.match(/^persistence (.+) read-back sha256:[0-9a-f]{64}$/i)
+  return Boolean(persisted && isDurableSourceIdentity(persisted[1]))
 }
 
 function parseDecision(line) {
@@ -407,7 +482,7 @@ function contentDigest(content) {
 }
 
 function launchContent(text, ledgerVersion) {
-  if (ledgerVersion === '3' || ledgerVersion === '4') return launchProjection(text)
+  if (ledgerVersion === '3' || ledgerVersion === '4' || ledgerVersion === '5') return launchProjection(text)
   return text
     .replace(/^- Overall launch confirmation:.*$/m, '- Overall launch confirmation: pending')
     .replace(/^- Handoff status:.*$/m, '- Handoff status: pending')
