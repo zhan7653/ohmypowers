@@ -1,56 +1,23 @@
-# Orchestration
+# Available Agents
 
-Read this reference when delegation may provide independently useful work. Keep work in the main context when coordination overhead exceeds the benefit.
+This reference is a declarative catalog of the managed agent profiles installed with ohmypowers. It describes capabilities and behavioral boundaries only. Codex owns subagent invocation, scheduling, waiting, and lifecycle behavior.
 
-## When To Delegate
+## Profiles
 
-Delegate only for:
+| Profile | Capability / use | Behavioral boundary |
+| --- | --- | --- |
+| `power_worker` | Bounded implementation, tests, fixes, documentation, and deterministic validation. | Write-capable within the task boundary; does not recursively delegate. |
+| `power_scout` | Bounded factual collection, inventories, direct documentation or history lookup, and log or test summaries. | Behaviorally read-only; does not expand into causal analysis or implementation. |
+| `power_explorer` | Multi-hypothesis investigation, repository tracing, root-cause analysis, and scope discovery. | Behaviorally read-only; does not implement changes. |
+| `power_planner` | Genuinely ambiguous planning, decomposition, cross-agent synthesis, and conflict analysis. | Behaviorally read-only; does not implement changes or recursively delegate. |
+| `power_reviewer` | Independent review of a completed implementation when the applicable checking workflow requires it. | Behaviorally read-only; does not edit or recursively delegate. |
 
-- a bounded implementation chunk fully specifiable in one task packet;
-- a bounded read-only investigation over stable inputs;
-- write tasks with strictly non-overlapping ownership;
-- a genuinely independent review of completed implementation.
+## Profile configuration
 
-Do not target an agent count, split work to fill slots, or duplicate searches. For `power_worker`, preserving the main context for material judgment and avoiding unnecessary stronger-model work are secondary benefits only; cost alone never justifies delegation or splitting implementation or tests.
+Each profile file is the source of its model, reasoning-effort, and developer-instruction settings. An installed profile file describes available configuration; it does not by itself prove that the current host can select or enforce every setting.
 
-### Read-routing gate
+Behaviorally read-only profiles rely on their developer instructions unless the host exposes a separate isolation guarantee. The catalog does not turn that instruction boundary into a sandbox claim.
 
-Before entering a second independent fact domain, check whether at least two stable, non-dependent domains each require more than one direct read. If so, divide them into non-overlapping lanes and dispatch every ready qualifying lane in the same wave before continuing cross-domain collection.
+## Scope
 
-Keep one or two total reads, sequential queries, changing inputs, the immediate critical path, and final synthesis in the main context. The main context may continue non-dependent critical work while lanes run, but must not rescan a delegated lane unless new evidence invalidates its boundary or an immediate decision cannot wait. Stop dispatching when the evidence is sufficient.
-
-Parallelize only read-only work over stable inputs or writes with non-overlapping ownership. Tell every spawned agent not to delegate further.
-
-## Roles
-
-Route by task shape. Each profile owns its model and reasoning-effort configuration in its agent file — do not restate or override them at spawn time:
-
-| Profile | Task shape |
-| --- | --- |
-| `power_worker` | Clear, bounded implementation, tests, fixes, documentation, deterministic validation. |
-| `power_scout` | Bounded evidence collection, inventories, direct documentation or history lookup, log or test summarization. Behaviorally read-only. |
-| `power_explorer` | Multi-hypothesis exploration, repository investigation, root-cause analysis, cross-module tracing. Behaviorally read-only. |
-| `power_planner` | Genuinely ambiguous planning and decomposition, cross-agent synthesis, conflict analysis. Behaviorally read-only. |
-| `power_reviewer` | Completed implementation review and required `$power-check` (see the power-check skill for its contract). |
-
-Use `power_scout` for factual, bounded collection and `power_explorer` for competing hypotheses, causal tracing, or scope discovery. Neither belongs on a one- or two-command read.
-
-The host does not support per-subagent sandbox overrides, so read-only means instruction-enforced behavior in the profile. Do not claim sandbox-level hardening that was not provided. When a behaviorally read-only agent ran alongside uncommitted work and its result informs a check, merge, or handoff, verify afterward that the working tree is unchanged.
-
-## Task Packet
-
-Launch authorization stays in the main context. Before Snapshot confirmation, delegated packets must permit no source writes and use a behaviorally read-only profile or adequate read-only fallback. A source-writing packet may be dispatched only after the complete Snapshot is confirmed, recorded, and accepted by `validate-decision-state.mjs --phase authorized`; it must remain within that baseline. The user confirms the Snapshot, not the packet; changing routes does not invalidate confirmation unless it changes a material boundary or final carrier.
-
-Send a compact packet containing the objective, confirmed decisions from 已确认 and 已委托, repository evidence, scope, allowed writes, dependencies, deliverable, validation, and stop conditions. When the packet adds or changes tests, its validation field names the behavior being proved and the producer, consumer, or system boundary capable of falsifying it; it also states any material semantics omitted by mocks or fakes. Never specify source wording, headings, or regular-expression presence as acceptance evidence unless the text is itself observable output or a machine-consumed contract exercised by the test. The packet is runtime state — do not persist it as a Blueprint or Agent Dispatch Plan. For explicit overrides, use `fork_turns: none` or the smallest supported positive history slice; do not use a full-history fork when the host forbids overrides.
-
-When validation requires a capability the repository does not yet have, the packet's dependencies field names the approved dev/test dependency or environment, the claim it enables, affected manifest and lockfiles, allowed setup writes, installation state, and any CI, permission, download, service, or cost boundary. Sequence installation and a capability smoke test before business implementation. A worker may not substitute a weaker tool or add an undeclared dependency when setup fails; it returns the blocker to the main context.
-
-## Escalation
-
-When `power_scout` encounters conflicting evidence, ambiguous scope, or a need for causal judgment, it returns its evidence for escalation to `power_explorer`. When `power_worker` encounters material ambiguity, an unstable interface, or work outside its packet, it returns evidence instead of guessing; route the uncertainty to `power_explorer` or `power_planner` before reissuing implementation work.
-
-Any newly discovered **material** boundary returns to the main context, ledger, and grill loop. A subagent never resolves it or owns Snapshot creation, confirmation, or handoff.
-
-## Degradation
-
-If a profile is unavailable or the host cannot honor its configuration, use generic delegation or the main context only when that remains adequate. Never claim a model, effort, or independent context that was not provided. When exact independence is required and unavailable, report `CHECK_REQUIRED` for checks or tell the user plainly for other work; require intervention only then.
+This catalog does not prescribe delegation triggers, agent counts, task ordering, parallelism, capacity, task-packet formats, wait or polling behavior, timeout or retry policy, retirement, or other host lifecycle rules. Those decisions remain with Codex and the applicable host or skill contract.

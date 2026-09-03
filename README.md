@@ -55,11 +55,11 @@ Do not create repository decision Markdown by default. Code, tests, schema, type
 
 The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped. `$power-work-report` V1 (archaeology-based daily reports) is retired as well; its successor ships from the standalone `worklog` repository, which installs the event-capture daily report system and the V2 skill.
 
-## Proportional Subagents
+## Managed Agents
 
-Small tasks stay in the main context. When at least two stable, non-dependent fact domains each need more than one direct read, `$power-gan` dispatches the ready read-only lanes in the same wave; one or two total reads and sequential dependencies stay in the main context.
+`power-gan` ships a declarative catalog of managed agent profiles. `power_worker` is for bounded implementation, tests, fixes, documentation, and deterministic validation; `power_scout` is for bounded factual collection and summaries; `power_explorer` is for multi-hypothesis investigation and root-cause tracing; `power_planner` is for genuinely ambiguous planning and synthesis; and `power_reviewer` is for independent review when the applicable checking workflow requires it.
 
-Task shape determines the profile: `power_worker` handles bounded implementation and tests; behaviorally read-only `power_scout`, `power_explorer`, and `power_planner` handle bounded evidence, multi-hypothesis investigation, and ambiguous planning or synthesis; `power_reviewer` handles completed review and required `$power-check`. Routing remains agent-owned runtime state and never bypasses the Snapshot launch gate. Each profile owns its configuration; the workflow does not rely on the host sandbox being downgraded, and unavailable profiles degrade only when the fallback remains adequate.
+The profile files are the source of model, reasoning-effort, and developer-instruction settings. The catalog describes capabilities and behavioral boundaries only; Codex owns subagent invocation, scheduling, waiting, and lifecycle behavior. Existing profile names and installer behavior are unchanged.
 
 ## Independent Checks
 

@@ -2,9 +2,11 @@
 
 > 2026-07-26 修订：Issue [#34](https://github.com/zhan7653/ohmypowers/issues/34) 在保持本规格自适应边界的基础上，加入已由当前 Codex 运行时验证的轻量模型路由和独立 reviewer 执行规则，并取代 Issue #25 中要求双轨模式确认和 Agent Dispatch Plan 的路由决定。
 
+> 2026-09-03 修订：Issue [#40](https://github.com/zhan7653/ohmypowers/issues/40) 将 agent 相关内容收敛为声明式能力目录；Codex 宿主继续负责 subagent 的调用、调度和生命周期，本规格不再把这些宿主行为写成 skill 规则。
+
 ## 背景
 
-当前 Loop Engineering 流程已经通过风险分级、减少实施 Agent、延后最终评审、限制等待轮询、减少重复验证以及允许简单 Issue 直接执行等方式降低了执行成本，但 [Issue #29](https://github.com/zhan7653/ohmypowers/issues/29) 及 [PR #30](https://github.com/zhan7653/ohmypowers/pull/30) 暴露了更早发生的根因：模型在需求对齐之后，自行补充了大量实施方案、安全保证和验证义务，再通过一次没有明确指向这些高成本边界的确认把它们升级成用户合同。
+历史上的 Loop Engineering 流程曾通过风险分级、减少实施 Agent、延后最终评审、限制等待轮询、减少重复验证以及允许简单 Issue 直接执行等方式降低执行成本；这些是背景，不是当前 agent 目录的调度规则。[Issue #29](https://github.com/zhan7653/ohmypowers/issues/29) 及 [PR #30](https://github.com/zhan7653/ohmypowers/pull/30) 暴露了更早发生的根因：模型在需求对齐之后，自行补充了大量实施方案、安全保证和验证义务，再通过一次没有明确指向这些高成本边界的确认把它们升级成用户合同。
 
 Issue #29 的原始需求主要是：
 
@@ -328,27 +330,17 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 
 `power-curator`、`power-work-report` 等业务或维护型 skill 不属于本次重设计范围。
 
-#### FR-18：轻量、按比例的 subagent 编排
+#### FR-18：受管理 agent 能力目录
 
-小任务由主上下文直接完成。需要委派时，通过受管理的具名 profile 按任务形态路由；model 和 reasoning effort 由各 profile 自己持有，spawn 时不重复覆盖：
+`power-gan` 只声明受管理 agent 的身份、能力、适用任务形态和 profile-level 行为边界：
 
-读取型任务在准备进入第二个独立事实域时执行路由门：如果至少两个稳定、互不依赖的事实域各自需要多于一次直接读取，必须划分不重叠通道并同批派发当前就绪通道。一至两次总读取、前后依赖查询、变化中的输入、关键路径和最终综合仍保留在主上下文；不得为填满并发槽而拆分任务。
+- `power_worker`：有界的实现、测试、修复、文档和确定性验证；可在任务边界内写入，不递归委派；
+- `power_scout`：有界的事实收集、清单、直接文档或历史查询以及日志或测试摘要；行为只读；
+- `power_explorer`：多假设调查、仓库追踪、根因分析和范围发现；行为只读；
+- `power_planner`：真正模糊的规划、拆分、跨 agent 结果综合和冲突分析；行为只读，不实施修改；
+- `power_reviewer`：适用检查流程要求时，对完成态实现进行独立审查；行为只读，不递归委派。
 
-- 清晰、有界的实现、测试、修复、文档和确定性验证使用 `power_worker`、`gpt-5.6-terra`、`high`；
-- 清晰、有界的证据收集、清单、直接文档或历史查询以及日志或测试摘要使用行为只读的 `power_scout`、`gpt-5.6-terra`、`medium`；
-- 多假设探索、仓库调查、根因分析和跨模块追踪使用行为只读的 `power_explorer`、`gpt-5.6-sol`、`medium`；
-- 真正模糊的规划、拆分、跨 agent 结果综合和冲突分析使用行为只读的 `power_planner`、`gpt-5.6-sol`、`xhigh`；
-- 完成态实现审查和必须执行的 `$power-check` 使用唯一命名的受管理自定义 `power_reviewer`，避免与宿主内建 `reviewer` 冲突；其 profile 单独拥有 `gpt-5.6-sol`、`high` 和禁止写入、禁止递归委派的 developer instructions。reviewer 的 sandbox 继承宿主，不作为本工作流的通过条件。
-
-模型路由、任务包和 agent 分配是可逆执行策略，不要求用户确认，也不作为 Blueprint 或 Agent Dispatch Plan 持久化。主上下文保留对齐、材料决定、路由、最终仲裁和用户沟通；subagent 的结果只能作为输入。为材料判断保留主上下文和避免不必要的高阶模型工作只能作为 `power_worker` 委派的次要收益，成本本身不得成为拆分实现或测试的理由。
-
-行为只读委派可以在 FR-6 的 Snapshot 确认前支持对齐；任何允许源码写入的任务包只能在整份 Snapshot 已确认、写回并通过授权态校验后派发，且不得越过该基线。用户确认 Snapshot，不确认路由或任务包；除非改变材料边界或最终载体，路由调整不使确认失效。
-
-任务包使用 `fork_turns: none` 或宿主允许的最小正数历史片段。只并行稳定输入上的只读调查或写入所有权不重叠的任务，并禁止 subagent 递归委派。`power_scout` 遇到冲突证据或因果判断时交回 `power_explorer`；`power_worker` 遇到材料歧义或任务包外工作时返回证据。行为只读的 agent 与未提交工作并行且结果用于检查、合并或交接判断时，主上下文在其返回后复核工作树不变。
-
-当前自定义 agent 覆盖的验证基线为 Codex CLI 0.145.0 multi-agent V2；0.144.1 不作为支持基线。
-
-宿主无法兑现精确覆盖时，只在仍然足够的情况下使用通用委派或主上下文；精确模型或独立上下文本身是要求时，必须暂停并报告，不能伪造保证。
+各 profile 文件是 model、reasoning effort 和 developer instructions 的配置来源。安装的 profile 文件本身不证明当前宿主可以选择或强制其中每一项。该目录不规定是否调用、调用数量、顺序、并行、容量、任务包、等待、超时、重试、退休或其他宿主生命周期行为；这些由 Codex 及适用的宿主/skill 契约负责。
 
 ### 非功能需求
 
@@ -356,7 +348,7 @@ Issue 生命周期遵循仓库约定和当前授权。以 Decision Issue 作为�
 - NFR-2：简单任务不得仅因会话决策文件或临时 Snapshot 升级为 Issue、PR 或独立 reviewer。
 - NFR-3：Deep Grill 每轮必须提出一至三个最高杠杆问题；存在依赖、复杂或高风险分支时只问一个，只有同一决策层的独立问题才可合并为两个或三个。
 - NFR-4：不得依赖特定模型名称、推理级别或可选择的自定义 Agent 才能完成基础工作流。
-- NFR-5：操作性 skill 只在宿主显式暴露且能够验证的能力上描述轻量编排，不维护双轨模板、Capability Preflight 确认门或 Agent Dispatch Plan，也不把调度策略升级为用户合同。
+- NFR-5：操作性 skill 只声明宿主显式提供的 agent 能力和 profile 边界，不把调度、等待或生命周期策略升级为 skill 规则或用户合同。
 - NFR-6：不得使用固定文件数量、代码行数、测试数量或固定耗时作为普遍完成标准。
 - NFR-7：持久化记录必须允许人和模型理解当前决定，但不得要求普通执行加载完整历史讨论。
 - NFR-8：不得为兼容尚未稳定的旧 Issue、Blueprint、Dispatch 或 verifier 产物增加新复杂度。
@@ -567,13 +559,13 @@ Then Agent 主动指出它们属于不同价值和风险边界，提供拆分与
 
 Given Codex 加载 `$power-gan` 的操作性指令
 When 执行需求对齐、交付或验证
-Then `Core Contract`、`Ownership And The Materiality Test`、`Decision Ledger`、`Alignment: The Grill Loop`、`Delivery`、`Validation And Independent Check`、`Persistence` 和 `Orchestration` 构成主结构，Grill Me 仍是材料对齐的核心行为，原有授权、持久化和独立检查边界保持不变。
+Then `Core Contract`、`Ownership And The Materiality Test`、`Decision Ledger`、`Alignment: The Grill Loop`、`Delivery`、`Validation And Independent Check`、`Persistence` 和 `Available Agents` 构成主结构，Grill Me 仍是材料对齐的核心行为，原有授权、持久化和独立检查边界保持不变。
 
-### AC-22：模型路由轻量且可验证
+### AC-22：agent 能力目录保持声明式
 
-Given 当前 Codex 支持受管理的自定义 agent profile
-When `$power-gan` 将边界清晰的实现、证据收集、复杂探索、模糊规划或完成态审查交给 subagent
-Then 分别使用 Terra/high `power_worker`、Terra/medium `power_scout`、Sol/medium `power_explorer`、Sol/xhigh `power_planner` 或 Sol/high `power_reviewer`；多事实域读取遵守同批路由门，源码写入任务遵守 FR-6；每个 profile 自己持有模型和 effort，行为只读角色通过自然语言约束保持只读，主上下文保留最终仲裁，任务包不持久化，降级时不声明宿主未兑现的保证。
+Given 仓库安装了受管理的 agent profile
+When `$power-gan` 的 skill 和参考文档被加载
+Then 文档列出 `power_worker`、`power_scout`、`power_explorer`、`power_planner` 和 `power_reviewer` 的用途、能力边界和 profile 配置来源；不规定调用触发条件、agent 数量、排序、并行、容量、等待、超时、重试或生命周期，也不把 profile 文件当作宿主选择能力的证明。
 
 ### AC-23：Decision Ledger 不丢失材料决定
 

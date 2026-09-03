@@ -19,7 +19,7 @@ If everything else fades in a long session, keep these five rules:
 
 ## Ownership And The Materiality Test
 
-The user owns observable outcomes, scope and non-goals, public contracts, material cost and risk, irreversible choices, and authorization. The agent owns files, private helpers and signatures, algorithms, work order, test technique, and model/agent routing.
+The user owns observable outcomes, scope and non-goals, public contracts, material cost and risk, irreversible choices, and authorization. The agent owns files, private helpers and signatures, algorithms, work order, and test technique. The managed agent profiles below are capability descriptions; Codex owns their invocation and lifecycle.
 
 A decision is **material** when any of the following holds; when none holds, treat it as reversible and agent-owned:
 
@@ -143,7 +143,7 @@ When implementation adds or changes tests, each test must exercise a boundary th
 
 Whether an independent `$power-check` is required is defined once, in power-check's Applicability section — apply that contract instead of a restated list. In shorthand: user request, a material effect (not a mere touch) on a protected risk category, material drift, an important merge/release/handoff, or a Decision Record that demands it. Example pair: a migration rewriting the events table requires it; a test-fixture change or a backward-compatible optional config field with proportionate self-validation does not.
 
-Run required checks through power-check's Caller Protocol: build the Check Packet, record the implementation identity, delegate to `power_reviewer`, verify the identity after it returns, and re-check fixes as a delta. If adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
+Run required checks through power-check's Caller Protocol. That skill defines the reviewer handoff and host-specific delegation details; power-gan does not duplicate them. If adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
 
 ## Persistence
 
@@ -159,8 +159,16 @@ Before declaring a source-writing delivery complete, reconcile the final impleme
 
 For historical context, start from the user-provided Issue/PR or the affected code, then follow code → commit → PR/MR → Decision Issue and any `supersedes` link; use narrow search only when no direct entry point exists. Do not create repository decision Markdown unless the document itself is the requested deliverable — code, tests, schema, types, and configuration remain the primary implementation truth.
 
-## Orchestration
+## Available Agents
 
-Small tasks stay in the main context. Before starting a second independent fact domain, if at least two stable, non-dependent domains each require more than one direct read, read [references/orchestration.md](references/orchestration.md) and dispatch the ready qualifying lanes in the same wave. Keep one or two total reads, sequential dependencies, changing inputs, the immediate critical path, and synthesis in the main context. Use the same reference for other independently useful delegation and profile routing, including `power_scout`.
+The managed profiles are a declarative catalog of execution capabilities. Their profile files are the source of model, reasoning, and developer-instruction details. Codex owns invocation and lifecycle; this skill does not define dispatch, ordering, parallelism, capacity, waiting, retry, timeout, or lifecycle rules.
 
-Behaviorally read-only delegation may support alignment before Snapshot confirmation, but no source-writing task packet may be dispatched until the complete Snapshot is confirmed, recorded, and validated. Routing and task packets are reversible implementation details: the user confirms the Snapshot, never the routing or packet. The main context keeps material decisions, final arbitration, and user communication; a subagent never replaces reconciliation against the persisted decision file and current repository state.
+| Profile | Capability / use | Behavioral boundary |
+| --- | --- | --- |
+| `power_worker` | Bounded implementation, tests, fixes, documentation, and deterministic validation. | Write-capable within the task boundary; does not recursively delegate. |
+| `power_scout` | Bounded factual collection, inventories, direct documentation or history lookup, and log or test summaries. | Behaviorally read-only; does not expand into causal analysis or implementation. |
+| `power_explorer` | Multi-hypothesis investigation, repository tracing, root-cause analysis, and scope discovery. | Behaviorally read-only; does not implement changes. |
+| `power_planner` | Genuinely ambiguous planning, decomposition, cross-agent synthesis, and conflict analysis. | Behaviorally read-only; does not implement changes or recursively delegate. |
+| `power_reviewer` | Independent review of a completed implementation when the applicable checking workflow requires it. | Behaviorally read-only; does not edit or recursively delegate. |
+
+The catalog describes capabilities only. It does not replace Codex's native subagent scheduling or claim host-enforced isolation where the host does not expose it.
