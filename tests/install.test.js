@@ -19,11 +19,11 @@ const managedSkills = [
 const retiredSkills = ['power-think', 'power-grill', 'power-loop', 'power-verifier', 'power-work-report']
 const managedProfiles = [
   ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
-  ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-5.6-sol', 'high', undefined],
-  ['power-gan/agents/power-worker.toml', 'power_worker', 'gpt-5.6-terra', 'high', undefined],
+  ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-6-astra', 'medium', undefined],
+  ['power-gan/agents/power-worker.toml', 'power_worker', 'gpt-6-astra', 'low', undefined],
   ['power-gan/agents/power-scout.toml', 'power_scout', 'gpt-5.6-terra', 'medium', undefined],
   ['power-gan/agents/power-explorer.toml', 'power_explorer', 'gpt-5.6-sol', 'medium', undefined],
-  ['power-gan/agents/power-planner.toml', 'power_planner', 'gpt-5.6-sol', 'xhigh', undefined],
+  ['power-gan/agents/power-planner.toml', 'power_planner', 'gpt-6-astra', 'medium', undefined],
 ]
 const retiredProfiles = [
   'power-luna-worker.toml',

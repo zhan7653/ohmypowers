@@ -360,6 +360,17 @@ test('power-gan keeps version 2 ledgers durable and gates launch on Issue persis
   )
   assert.notEqual(statePath, secondStatePath)
 
+  const ordinaryState = launchState
+    .replace(`- Delivery ID: ${deliveryId}`, `- Delivery ID: ${secondDeliveryId}`)
+    .replace('- Final carrier: Decision Issue #38 — https://github.com/example/project/issues/38', '- Final carrier: PR #38 — https://github.com/example/project/pull/38')
+    .replace(/^\- Issue persistence:.*$/m, '- Issue persistence: not required — durable standards unchanged; delivery evidence is in the PR')
+  await writeFile(secondStatePath, ordinaryState, 'utf8')
+  await execFileAsync(
+    process.execPath,
+    [decisionStateValidator, secondStatePath, '--phase', 'launch'],
+    validatorOptions,
+  )
+
   const conflictingMechanicalState = launchState
     .replace(
       /^- Final carrier:.*$/m,
@@ -917,6 +928,19 @@ test('power-gan version 5 rolls over after durable persistence and deletes only 
   const successorState = sourceState
     .replace(`- Delivery ID: ${sourceDelivery}`, `- Delivery ID: ${successorDelivery}`)
     .replace('- Predecessor: none', `- Predecessor: ${expectedPredecessor}`)
+  const wrongSuccessorPath = path.join(codexHome, 'power-gan', 'records', repositoryKey, successorDelivery, 'successor.md')
+  await writeFile(wrongSuccessorPath, successorState, 'utf8')
+  await rejectsWithStderr(
+    execFileAsync(
+      process.execPath,
+      [decisionNoteManager, 'rollover', sourcePath, wrongSuccessorPath],
+      validatorOptions,
+    ),
+    /note path must be|permanent Ledger path/i,
+  )
+  await access(sourcePath)
+  assert.equal(await readFile(wrongSuccessorPath, 'utf8'), successorState)
+  await rm(wrongSuccessorPath)
   await writeFile(successorPath, successorState, 'utf8')
   await execFileAsync(
     process.execPath,

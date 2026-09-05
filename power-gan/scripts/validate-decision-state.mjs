@@ -366,7 +366,12 @@ function validateIssuePersistence(value, decisions, errors) {
     }
     return
   }
-  errors.push('Issue persistence must be verified or request a concrete mechanical exemption')
+  if (/^not required\b/i.test(normalized)) {
+    const reason = normalized.replace(/^not required\b(?:\s*[—:-]\s*)?/i, '')
+    if (isPlaceholder(reason)) errors.push('Issue persistence waiver must state why a canonical Issue is not needed')
+    return
+  }
+  errors.push('Issue persistence must be verified, waived with a concrete reason, or omitted only on the low-risk path')
 }
 
 function validateHandoffEvidence(handoff, errors) {

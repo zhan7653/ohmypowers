@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -9,6 +8,8 @@ import { fileURLToPath } from 'node:url'
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex')
 const installedPowerGan = path.join(codexHome, 'skills', 'power-gan')
+const evalModel = process.env.POWER_GAN_EVAL_MODEL || 'gpt-6-astra'
+const evalReasoningEffort = process.env.POWER_GAN_EVAL_REASONING_EFFORT || 'medium'
 const comparedSkillFiles = [
   'SKILL.md',
   'references/test-capability.md',
@@ -120,6 +121,8 @@ try {
   const completed = events.findLast(event => event.type === 'turn.completed')
   process.stdout.write(`${JSON.stringify({
     status: 'passed',
+    model: evalModel,
+    reasoning_effort: evalReasoningEffort,
     duration_ms: Date.now() - startedAt,
     command_events: commandEvents.length,
     repository_unchanged: true,
@@ -163,9 +166,9 @@ async function runCodex(schemaPath, workspace) {
       'never',
       '--json',
       '--model',
-      'gpt-5.6-luna',
+      evalModel,
       '-c',
-      'model_reasoning_effort="medium"',
+      `model_reasoning_effort="${evalReasoningEffort}"`,
       '--output-schema',
       schemaPath,
       '--skip-git-repo-check',
@@ -214,7 +217,7 @@ async function directoryManifest(directory, relativeDirectory = '') {
       manifest.push({
         path: relativePath,
         type: 'file',
-        sha256: createHash('sha256').update(contents).digest('hex'),
+        contents: contents.toString('base64'),
       })
     } else {
       manifest.push({ path: relativePath, type: 'other' })

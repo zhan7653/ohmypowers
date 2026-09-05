@@ -3,6 +3,7 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFile, rename, unlink } from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -43,7 +44,31 @@ if (operation === 'rollover') {
 async function readVersion5Note(notePath) {
   const text = await readFile(notePath, 'utf8')
   if (fieldValue(text, 'Ledger version') !== '5') fail('note cleanup is supported only for Ledger version 5')
+  assertCanonicalNotePath(notePath, text)
   return { text, digest: digest(text) }
+}
+
+function assertCanonicalNotePath(notePath, text) {
+  const repositoryKey = fieldValue(text, 'Repository key') || ''
+  const deliveryId = fieldValue(text, 'Delivery ID') || ''
+  const safeSegment = /^[a-z0-9][a-z0-9._-]*$/
+  if (!safeSegment.test(repositoryKey) || !safeSegment.test(deliveryId)) {
+    fail('version 5 note path cannot be checked until Repository key and Delivery ID are path-safe')
+  }
+  const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex')
+  const expectedPath = path.resolve(
+    codexHome,
+    'power-gan',
+    'records',
+    repositoryKey,
+    deliveryId,
+    'decision-snapshot.md',
+  )
+  const actualPath = path.resolve(notePath)
+  const comparable = value => (process.platform === 'win32' ? value.toLowerCase() : value)
+  if (comparable(actualPath) !== comparable(expectedPath)) {
+    fail(`version 5 note path must be ${expectedPath}`)
+  }
 }
 
 function validateWith(phase, notePath) {

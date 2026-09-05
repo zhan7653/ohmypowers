@@ -7,7 +7,7 @@ Read this reference only when `$power-gan` has decided that a task needs a hoste
 - [Shared Flow](#shared-flow)
 - [Temporary Files And UTF-8](#temporary-files-and-utf-8)
 - [GitHub CLI](#github-cli)
-- [GitLab CLI](#gitlab-cli)
+- [GitLab CLI / API](#gitlab-cli--api)
 - [Delivery Link](#delivery-link)
 
 ## Shared Flow
@@ -15,9 +15,10 @@ Read this reference only when `$power-gan` has decided that a task needs a hoste
 1. Read project guidance, Issue templates, and `git remote -v`. Identify the exact host and repository. If remotes or host rules conflict, ask before writing.
 2. Build the Issue body from confirmed material decisions only. Before showing the draft, map every confirmed material item from the working understanding into exactly one clear location in the record; a missing location means the draft is incomplete. If the Issue carried a verified prior handoff, never reactivate that delivery's Ledger: create a new Ledger, capture the predecessor delivery ID, exact pre-write Issue body SHA-256, and prior handoff carrier, and include that revision link in both the new Ledger and revised Decision Record. A directly related follow-up may revise the same Issue; unrelated work or an Issue that is no longer an adequate current record gets a new Issue. After successful exact read-back, version 5 seals the current local note, creates a new predecessor-linked note, validates it, and deletes only the sealed local note. Use the host operating system's temporary directory; never hardcode `/tmp` or create a project decision Markdown file.
 3. Create or update hosted state only after the user has explicitly requested or confirmed that mutation. Confirmation of one material decision is not automatically permission for unrelated labels, assignees, milestones, or projects.
-4. Before updating an existing Issue, capture its identity, title, exact body, state, URL, revision metadata, and a SHA-256 hash of the UTF-8 body. Treat a failed command, empty output, invalid JSON, missing required field, or undecodable UTF-8 as a hard pre-write stop. Apply only the confirmed replacement to that captured body; preserve every unrelated section.
-5. Immediately before the write, re-read the same fields and abort if they no longer match the captured snapshot. This narrows the lost-update window; when the host exposes an atomic revision or conditional-write contract, use it rather than claiming this check is atomic.
-6. Re-read the resulting Issue and verify the identity, title, exact expected body, state, URL, host revision metadata when available, and `Decision revision` when present. When project guidance defines protected sections or markers, verify their pre-write and post-write UTF-8 hashes separately.
+   Before selecting command flags, inspect the installed CLI help or API capability. If a documented flag is unavailable, use a supported API/input path instead of retrying the unsupported command.
+4. Before updating an existing Issue, capture its identity, title, exact UTF-8 body, state, URL, and revision metadata. Treat a failed command, empty output, invalid JSON, missing required field, or undecodable UTF-8 as a hard pre-write stop. Apply only the confirmed replacement to that captured body; preserve every unrelated section. Record a body digest only when it is needed to link a durable predecessor or handoff.
+5. Immediately before the write, re-read the same fields and abort if they no longer match the captured snapshot. This narrows the lost-update window; when the host exposes an atomic revision or conditional-write contract, use it rather than claiming this check is atomic. A failed or ambiguous mutation stops with its payload and error retained; do not retry blindly.
+6. Re-read the resulting Issue and verify the identity, title, exact expected body, state, URL, host revision metadata when available, and `Decision revision` when present. When project guidance defines protected sections or markers, verify their pre-write and post-write UTF-8 content separately; do not add hashes unless the host exposes no better comparison boundary.
 7. If Chinese or other non-ASCII text appears as mojibake or `?`, stop. Determine whether the problem is display decoding or remote corruption before attempting another write.
 8. Return the Issue URL. Keep optional labels non-normative.
 
@@ -128,12 +129,6 @@ function Assert-RequiredFields {
     }
 }
 
-function Get-Utf8Sha256 {
-    param([AllowEmptyString()][string]$Text)
-    return [Convert]::ToHexString(
-        [Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($Text))
-    )
-}
 ```
 
 When repository guidance defines protected markers, extract every protected range from the captured body and hash it before writing. Fail before the write if marker discovery is missing, ambiguous, or malformed. Extract the same ranges from the read-back body and compare each hash separately; exact whole-body equality does not replace this project-specific protected-range check.
@@ -222,8 +217,6 @@ $before = Invoke-Utf8JsonCli $gh @(
 Assert-RequiredFields $before @('number', 'title', 'body', 'state', 'url', 'updatedAt') (
     'GitHub Issue pre-read'
 )
-$beforeBodyHash = Get-Utf8Sha256 ([string]$before.body)
-
 # Extract and hash repository-defined protected ranges here. If required markers
 # are absent, duplicated, or malformed, throw before continuing.
 # $protectedBefore = Get-ProjectProtectedRangeHashes ([string]$before.body)
@@ -242,7 +235,7 @@ if (
     [string]$preflight.state -cne [string]$before.state -or
     [string]$preflight.url -cne [string]$before.url -or
     [string]$preflight.updatedAt -cne [string]$before.updatedAt -or
-    (Get-Utf8Sha256 ([string]$preflight.body)) -cne $beforeBodyHash
+    [string]$preflight.body -cne [string]$before.body
 ) {
     throw 'GitHub Issue changed after the captured snapshot; rebuild the intended body.'
 }
@@ -273,56 +266,60 @@ if (
 
 For creation, use `& $gh issue create --repo $repo --title $title --body-file $recordFile`, check `$LASTEXITCODE`, capture the returned URL, and then run the same strict JSON read-back and complete contract comparison. For a confirmed Decision Note, use `& $gh issue comment $issue --repo $repo --body-file $noteFile`, check `$LASTEXITCODE`, and verify the created comment when its exact contents matter.
 
-## GitLab CLI
+## GitLab CLI / API
 
 1. Check `glab auth status` when authentication is not already established.
-2. Follow project guidance for `-R`. For self-hosted GitLab, use the full repository URL when required; do not silently replace it with `group/project`.
-3. `glab issue create` and `glab issue update` accept the description as a string. On PowerShell 7, read the UTF-8 file explicitly, fail closed on every pre-read error, and pass the string as a native argument; do not use Bash command substitution such as `$(cat ...)`:
+2. Inspect `glab issue view --help`, `glab issue create --help`, and `glab issue update --help` before selecting flags. Do not assume a documented `glab` version supports `--description-file`, `--output-format`, or machine-readable flags on `issue view`.
+3. Prefer `glab api` for machine-readable reads and writes. It accepts `--input` and `--field name=@file` across older versions. Use an explicit URL-encoded project path or the repository placeholder supported by the installed `glab`.
+4. Build the canonical body without a terminal CR/LF because GitLab normalizes the description and may remove the final newline. Compare the exact normalized body after read-back; do not weaken comparison to a prefix or trim both sides after the write.
 
 ```powershell
 $glabCommand = Get-Command glab -ErrorAction Stop
 $glab = $glabCommand.Source
-$repo = 'GROUP/PROJECT' # Or the full self-hosted repository URL.
+$project = 'GROUP%2FNAMESPACE%2FPROJECT' # URL-encoded full project path.
 $issue = 42
-$expectedBody = [IO.File]::ReadAllText($recordFile, [Text.Encoding]::UTF8)
+$expectedBody = [IO.File]::ReadAllText($recordFile, [Text.Encoding]::UTF8).TrimEnd([char]13, [char]10)
 
 & $glab auth status
 if ($LASTEXITCODE -ne 0) { throw 'GitLab authentication check failed.' }
-$before = Invoke-Utf8JsonCli $glab @(
-    'issue', 'view', [string]$issue, '-R', $repo, '-F', 'json'
-) 'GitLab Issue pre-read'
-Assert-RequiredFields $before @('iid', 'title', 'description', 'state', 'web_url', 'updated_at') (
-    'GitLab Issue pre-read'
-)
-$beforeBodyHash = Get-Utf8Sha256 ([string]$before.description)
-# $protectedBefore = Get-ProjectProtectedRangeHashes ([string]$before.description)
 
-$preflight = Invoke-Utf8JsonCli $glab @(
-    'issue', 'view', [string]$issue, '-R', $repo, '-F', 'json'
-) 'GitLab Issue pre-write check'
-Assert-RequiredFields $preflight @('iid', 'title', 'description', 'state', 'web_url', 'updated_at') (
-    'GitLab Issue pre-write check'
-)
+function Invoke-GlabApiJson {
+    param([string[]]$Arguments, [string]$Operation)
+    $json = & $glab api @Arguments
+    if ($LASTEXITCODE -ne 0) { throw "$Operation failed: $json" }
+    if ([string]::IsNullOrWhiteSpace(($json -join [Environment]::NewLine))) {
+        throw "$Operation returned no JSON."
+    }
+    try { return ($json -join [Environment]::NewLine) | ConvertFrom-Json -ErrorAction Stop }
+    catch { throw "$Operation returned invalid JSON: $($_.Exception.Message)" }
+}
+
+$before = Invoke-GlabApiJson @("projects/$project/issues/$issue") 'GitLab Issue pre-read'
+Assert-RequiredFields $before @('iid', 'title', 'description', 'state', 'web_url', 'updated_at') 'GitLab Issue pre-read'
+$beforeBody = [string]$before.description
+
+$preflight = Invoke-GlabApiJson @("projects/$project/issues/$issue") 'GitLab Issue pre-write check'
+Assert-RequiredFields $preflight @('iid', 'title', 'description', 'state', 'web_url', 'updated_at') 'GitLab Issue pre-write check'
 if (
     [string]$preflight.iid -cne [string]$before.iid -or
     [string]$preflight.title -cne [string]$before.title -or
     [string]$preflight.state -cne [string]$before.state -or
     [string]$preflight.web_url -cne [string]$before.web_url -or
     [string]$preflight.updated_at -cne [string]$before.updated_at -or
-    (Get-Utf8Sha256 ([string]$preflight.description)) -cne $beforeBodyHash
+    [string]$preflight.description -cne $beforeBody
 ) {
     throw 'GitLab Issue changed after the captured snapshot; rebuild the intended body.'
 }
 
-& $glab issue update $issue -R $repo -d $expectedBody
-if ($LASTEXITCODE -ne 0) { throw 'GitLab Issue update failed.' }
-
-$after = Invoke-Utf8JsonCli $glab @(
-    'issue', 'view', [string]$issue, '-R', $repo, '-F', 'json'
-) 'GitLab Issue read-back'
-Assert-RequiredFields $after @('iid', 'title', 'description', 'state', 'web_url', 'updated_at') (
-    'GitLab Issue read-back'
-)
+$payload = [ordered]@{ description = $expectedBody } | ConvertTo-Json -Compress
+$payloadFile = New-UniqueUtf8PayloadFile 'power-gan-gitlab-update' $payload
+try {
+    $null = Invoke-GlabApiJson @("projects/$project/issues/$issue", '--method', 'PUT', '--input', $payloadFile) 'GitLab Issue update'
+} catch {
+    throw 'GitLab Issue update failed; preserve the payload and stop for diagnosis instead of retrying blindly.'
+}
+$after = Invoke-GlabApiJson @("projects/$project/issues/$issue") 'GitLab Issue read-back'
+Assert-RequiredFields $after @('iid', 'title', 'description', 'state', 'web_url', 'updated_at') 'GitLab Issue read-back'
 if (
     [string]$after.iid -cne [string]$before.iid -or
     [string]$after.title -cne [string]$before.title -or
@@ -330,24 +327,14 @@ if (
     [string]$after.web_url -cne [string]$before.web_url -or
     [string]$after.description -cne $expectedBody
 ) {
-    throw 'GitLab Issue did not round-trip its identity, metadata, and description exactly.'
+    throw 'GitLab Issue did not round-trip its identity, metadata, and normalized body exactly.'
 }
-# $protectedAfter = Get-ProjectProtectedRangeHashes ([string]$after.description)
-# Assert-ProjectProtectedRangeHashes $protectedBefore $protectedAfter
+Remove-Item -LiteralPath $payloadFile -Force
 ```
 
-As in the GitHub example, the project-specific protected-range calls are mandatory only when project guidance defines those markers, exact description equality covers an embedded `Decision revision`, and post-write `updated_at` is retained as evidence rather than compared to the old value.
+For creation, use the same payload-file pattern with endpoint `projects/$project/issues`, method `POST`, and fields `title` and `description`. Capture the returned JSON `web_url`, then read the Issue through `glab api` and compare the exact no-terminal-newline body. Do not retry a failed mutation automatically; retain the payload and error for diagnosis, then perform a new preflight before any explicitly authorized retry.
 
-For creation, use `& $glab issue create -R $repo -t $title -d $expectedBody -y`, check `$LASTEXITCODE`, capture the resulting Issue identity, and then perform the same strict JSON read-back and complete contract comparison. Do not assume `-y` suppresses every prompt on every `glab` version; stop if the CLI requests an unapproved choice.
-
-For a confirmed Decision Note:
-
-```powershell
-$noteBody = [IO.File]::ReadAllText($noteFile, [Text.Encoding]::UTF8)
-& $glab issue note $issue -R $repo -m $noteBody
-```
-
-When the description may approach the operating system's native command-line length limit, use `glab api --input <utf8-json-file>` with the GitLab Issues API instead of passing a large description argument. Re-read the Issue afterward and apply the same exact comparison.
+For a confirmed Decision Note, use a JSON payload with a `body` field against `projects/$project/issues/$issue/notes`, read back the created note when its exact contents matter, and apply the same UTF-8 and failure rules.
 
 ## Delivery Link
 
