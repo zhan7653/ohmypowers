@@ -14,17 +14,19 @@ Default to Simplified Chinese and match the user's language. Keep the process pr
 3. A material delivery uses one current v5 Decision Ledger at `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md`. Low-risk work does not create a Ledger only to obtain confirmation. This branch supports v5 only; historical Ledger versions are outside the contract.
 4. Never write source or hosted state beyond the confirmed boundary. Hosted mutations require separate explicit authorization and an exact read-back.
 
+Every source-writing delivery starts with a grill. Discuss the outcome, scope, constraints, validation direction, and the smallest recommended implementation approach with the user before writing code. A low-risk task uses one concise grill turn; a material or uncertain task continues with focused questions until its material boundaries are resolved. The grill does not ask the user to choose reversible private mechanics such as helper names, file layout, algorithm details inside a stable contract, or test technique.
+
 ## Alignment
 
-- Infer whether the user wants discussion or delivery. A direct implementation request establishes intent, not material launch authorization.
+- Infer whether the user wants discussion or delivery. A direct implementation request establishes intent, not permission to skip the grill or material launch authorization.
 - Resolve the highest-leverage unresolved material boundary first. Ask one question when later questions depend on it; batch two or three only when independent.
 - After each answer, reread and update the Ledger, then run `node <skill-dir>/scripts/validate-decision-state.mjs <ledger> --phase alignment`.
 - Render only the current confirmed, pending, delegated, and visible working defaults. Do not invent alternatives or precompute a private blueprint.
-- Stop when no material decision is pending. Keep reversible implementation choices autonomous.
+- Stop when the agreed outcome, scope, constraints, validation direction, and recommended approach are clear and no material decision is pending. Keep reversible private mechanics autonomous.
 
 ## Delivery
 
-For low-risk work, state the observable change, scope, and validation command; wait for the user's short confirmation, then implement.
+For low-risk work, state the observable change, scope, constraints, validation command, and smallest recommended approach in one concise grill turn; wait for the user's confirmation, then implement.
 
 For material work, complete `Outcome`, `Scope / non-goals`, `Launch basis`, `Stop / reopen conditions`, `Final carrier`, and `Issue persistence` in the v5 Ledger. Run the validator with `--phase launch`, forward the generated Snapshot verbatim, and wait for whole-baseline confirmation. Record its SHA-256 and run `--phase authorized` before the first source write.
 
