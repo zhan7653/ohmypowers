@@ -1,73 +1,26 @@
 # ohmypowers
 
-Codex skills for decision alignment, adaptive delivery, independent checking, lifecycle curation, and work reporting.
+Small Codex skills for decision alignment, independent checks, and optional Decision Issue lifecycle curation.
 
-## Core Workflow
+`$power-gan` is the main entry point. It asks only about material user-owned decisions, keeps reversible implementation details autonomous, and uses a current v5 Decision Ledger only for material deliveries. Low-risk local work uses a short confirmation.
 
-`$power-gan` is the main coding entry point. It separates user-owned material decisions from reversible implementation details that the agent executes autonomously after the launch baseline is confirmed, while the user retains visibility and stop authority.
+The package keeps the safeguards that require explicit state or authorization:
 
-It infers whether the user wants discussion only or delivery and whether the task needs a focused pass or a Deep Grill. `ALIGN_ONLY`, `DELIVER`, `FAST`, and `DEEP` remain optional shorthand when the user supplies them; they are not a menu the agent should recite.
+- material launch is bound to a rendered, user-confirmed Snapshot;
+- hosted mutations require separate authorization and read-back verification;
+- validation must produce evidence for observable behavior;
+- `$power-check` supplies a fresh read-only review when its applicability rules require one;
+- `$power-curator` is explicit-only and reconciles lifecycle evidence without inventing decisions.
 
-Deep Grill follows the actual decision tree in focused rounds of one to three questions. The agent asks one when later questions depend on that answer, and batches two or three only when they are independent questions from the same decision layer. It inspects discoverable facts first, asks only about unresolved user-owned boundaries, gives a recommendation for each question, and lets the answers determine the next branch until both sides share the same understanding.
-
-For material work, `$power-gan` maintains one delivery-scoped Decision Ledger under `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md`. Clearly low-risk, local, reversible work uses a short confirmation and does not create a Ledger solely for launch. Version 5 keeps one active note during alignment; after a durable carrier write and exact read-back it seals that note, creates a new predecessor-linked note, validates it, and deletes only the sealed local file. Verified handoff deletes the final local note. Issue/PR/commit bodies carry the current decision and evidence; hosted bodies and comments are not auto-deleted. Version 2, version 3, and version 4 Ledgers keep their existing behavior and are never migrated automatically.
-
-The workflow freezes outcomes, scope, public contracts, material cost/risk, and authorization. It does not freeze files, local private signatures, implementation order, test matrices, agent assignments, or reviewer topology.
-
-The agent keeps independent judgment throughout alignment and delivery. It does not flatter, appease, or mirror the user's framing, and it does not treat user preference or confidence as evidence. Credible contradictory evidence is stated plainly, without manufacturing disagreement for its own sake.
-
-“Internal” does not automatically mean reversible. A durable subsystem, runtime/deployment/storage/data-ownership boundary, shared cross-module contract, long-lived production dependency, or architecture choice costly to reverse is aligned as a material decision. Local private signatures and replaceable abstractions remain autonomous.
-
-Before the first material source write, the Ledger receives the completion basis, hard constraints, current smallest approach, validation direction, stop conditions, and final carrier. For version 5, the bundled validator derives a launch projection containing only those launch fields and active confirmed/delegated decision statements; recommendations, process evidence, rejected/superseded history, metadata, and Working defaults stay outside the projection and its SHA-256. The agent forwards the marker-delimited projection verbatim. A direct request to implement establishes delivery intent only; material source writing starts only after the user explicitly confirms that complete projection. Low-risk source writing uses the short confirmation path. A change to active content invalidates the material confirmation, while excluded history changes do not.
-
-When implementation reveals a new material boundary, `$power-gan` pauses only for that delta. Internal reversible changes continue without user confirmation.
-
-## Persistence
-
-When a requirement, interface rule, or other durable project standard needs a canonical long-term source, `$power-gan` searches for a relevant existing Decision Issue and proposes updating it, or proposes creating one when none fits. A directly related new Ledger may revise the same Issue after recording the predecessor delivery, exact pre-write body SHA-256, and prior handoff carrier; reusing the Issue never reactivates its terminal Ledger. The workflow shows the exact hosted mutation, requires explicit user authorization, and verifies the write by reading it back before launch. When durable standards remain unchanged, record a concrete `Issue persistence: not required — <reason>` and use the PR or commit as carrier; tiny local changes may use a commit.
-
-For the implementation handoff, use the carrier justified by repository conventions and coordination needs:
-
-- Issue: high-risk, long or cross-session work, or collaboration that needs a canonical decision home.
-- PR: normal PR-sized delivery rationale and evidence.
-- Commit: tiny local changes.
-
-Hosted mutations always require explicit authorization; confirming an Issue does not authorize source changes, and confirming source launch does not authorize a later Issue update.
-
-At the end of material alignment, `$power-gan` records the verified Decision Issue when a durable standard requires one and selects the smallest adequate implementation handoff carrier.
-
-Version 5 does not accumulate a local index: a successful durable write ends the current note, creates a predecessor-linked successor, and deletes only the sealed predecessor; verified handoff deletes the final note. Issue/PR/commit bodies carry the current decision and evidence. Handoff or cleanup failures keep the active local note. Version 2/3/4 Ledgers retain their existing behavior and are never migrated. The workflow does not maintain a second Journal or repository-local decision database.
-
-An Issue body contains the current `Decision Record`: status, outcome, scope/non-goals, confirmed material decisions, short rationale, an optional closest alternative not chosen when it adds useful context, accepted cost/risk, stop/reopen conditions, and a revision only when the repository uses one. Comments hold short `Decision Notes`; they do not add current obligations by themselves.
-
-When persistence is needed, `$power-gan` loads a compact GitHub/GitLab reference for repository discovery, authenticated creation or update, read-back verification, Decision Notes, and PR/MR linkage.
-
-Delivery PRs/MRs and external handoffs use a compact evidence format containing only the decision source, delivered outcome, material deviations, validation, independent-check status, and remaining risks.
-
-Do not create repository decision Markdown by default. Code, tests, schema, types, and configuration remain the primary current implementation truth.
+The repository does not preserve retired Ledger or agent-profile compatibility on the current branch. Historical records remain external data and are not modified or migrated.
 
 ## Skills
 
-- `$power-gan`: align, Deep Grill, implement, and self-validate.
-- `$power-check`: independently and read-only check a completed implementation against current decisions and the final diff.
-- `$power-critic`: explicit-only fresh-context critique of requirements, specs, plans, or model replies; not code review.
-- `$power-curator`: explicitly requested, evidence-based reconciliation of Decision Issue and PR lifecycle state, with exact confirmed mutations only.
+- `$power-gan`: align and deliver a coding task.
+- `$power-check`: independently verify a completed implementation when required.
+- `$power-curator`: explicitly reconcile Decision Issues and delivery lifecycle state.
 
-The retired `$power-think`, `$power-grill`, `$power-loop`, and `$power-verifier` flow is intentionally not installed or compatibility-wrapped. `$power-work-report` V1 (archaeology-based daily reports) is retired as well; its successor ships from the standalone `worklog` repository, which installs the event-capture daily report system and the V2 skill.
-
-## Managed Agents
-
-`power-gan` ships a declarative catalog of managed agent profiles. `power_worker` is for bounded implementation, tests, fixes, documentation, and deterministic validation; `power_scout` is for bounded factual collection and summaries; `power_explorer` is for multi-hypothesis investigation and root-cause tracing; `power_planner` is for genuinely ambiguous planning and synthesis; and `power_reviewer` is for independent review when the applicable checking workflow requires it.
-
-The profile files are the source of model, reasoning-effort, and developer-instruction settings. The catalog describes capabilities and behavioral boundaries only; Codex owns subagent invocation, scheduling, waiting, and lifecycle behavior. Existing profile names and installer behavior are unchanged.
-
-## Independent Checks
-
-Every `$power-gan` delivery performs proportional self-validation. `$power-check` owns the single runtime Applicability contract: require it for an explicit user request, a material effect or credible production risk in a protected category, material drift, an important merge/release/handoff, or a Decision Record that requires independent evidence. Merely touching one of these categories is not enough.
-
-Use a fresh non-implementation context when an independent check is required. The caller builds and validates a Check Packet, then delegates it to the managed `power_reviewer`; a reviewer already in a fresh context checks directly without spawning recursively. Prefer a committed candidate only when the index, working tree, untracked set, and submodule state are clean before and after review. Otherwise bind the result to `HEAD`, a SHA-256 of the binary full-index diff, and a NUL-safe manifest that hashes every untracked path, entry type, and content. If adequate independence is unavailable, report `CHECK_REQUIRED` instead of claiming it.
-
-Start that check only after planned implementation edits and proportional self-validation are complete and the final candidate is stable. The first check covers the complete final diff. When findings lead to fixes, resume the same reviewer when possible; otherwise a new independent reviewer may consume a delta packet containing the prior identity, result, findings, and dispositions. Inspect only the delta plus affected decisions and evidence unless material scope, decisions, the decision source, or the evidence boundary changed. Ordinary packet omissions are repaired by the caller or returned as `BLOCKED`; `NEEDS_HUMAN` is reserved for genuinely missing decisions, interpretations, or authorization.
+Use the Codex built-in `default`, `worker`, and `explorer` agents for ordinary delegation. The only project custom agent is the read-only reviewer at [.codex/agents/reviewer.toml](/home/alan/workspace/ohmypowers/.codex/agents/reviewer.toml). Codex owns spawning and lifecycle; the project profile only defines the review boundary.
 
 ## Installation
 
@@ -77,13 +30,23 @@ Run:
 ./scripts/install.sh
 ```
 
-The installer copies the managed skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the managed `power_worker`, `power_scout`, `power_explorer`, `power_planner`, `power_reviewer`, and `power_critic` agent profiles, and removes retired ohmypowers skills and profiles. Managed profiles replace existing files with the same basename; unrelated agent profiles are preserved. The current development environment reports Codex CLI 0.153.4; profile selection still depends on host support, so restart Codex and verify the profiles after installation.
+The installer copies the three skills into `${CODEX_HOME:-$HOME/.codex}/skills` and removes retired global ohmypowers skills and profiles. It does not copy project agents into the global profile directory. Start Codex from this repository so it can load the project-scoped reviewer.
 
 ## Testing
 
-Run the deterministic, model-free suite with `node --test tests/*.test.js`. These tests execute the installer, Decision Snapshot validator, and embedded PowerShell helpers; they do not treat skill or documentation wording as runtime-behavior evidence.
+Run the deterministic, model-free suite:
 
-Run `node tests/model-evidence.eval.mjs` explicitly to evaluate test-evidence judgment through the installed `$power-gan`. This opt-in check uses the local Codex credentials and model tokens, defaults to `gpt-6-astra` with medium reasoning, and accepts `POWER_GAN_EVAL_MODEL` and `POWER_GAN_EVAL_REASONING_EFFORT` for comparison runs. It requires the installed power-gan files to match the repository, captures Codex JSONL tool events, runs read-only, and verifies that the repository state is unchanged. It is intentionally excluded from default CI and is representative rather than exhaustive.
+```bash
+node --test tests/*.test.js
+```
+
+The opt-in model evidence check uses the installed `$power-gan` and local model credentials:
+
+```bash
+node tests/model-evidence.eval.mjs
+```
+
+It is representative rather than exhaustive and is intentionally excluded from the default suite.
 
 ## Examples
 
@@ -98,9 +61,3 @@ Use $power-gan to grill this permission workflow until the decisions are clear; 
 ```text
 Use $power-check to independently verify this final diff against Issue #42.
 ```
-
-```text
-Use $power-critic to challenge this Decision Record before implementation.
-```
-
-The accepted design is documented in [the power-gan adaptive workflow spec](docs/specs/2026-07-13-power-gan-adaptive-workflow-spec.md).

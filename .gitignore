@@ -1,5 +1,10 @@
 # Local agent/runtime artifacts
 .codex/
+!.codex/
+.codex/*
+!.codex/agents/
+.codex/agents/*
+!.codex/agents/reviewer.toml
 .agents/
 .claude/
 .worktrees/

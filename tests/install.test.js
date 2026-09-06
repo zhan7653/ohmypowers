@@ -1,44 +1,26 @@
 import assert from 'node:assert/strict'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { promises as fs } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 const execFileAsync = promisify(execFile)
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const installer = path.join(root, 'scripts', 'install.sh')
-const managedSkills = [
-  'power-gan',
-  'power-check',
-  'power-curator',
-  'power-critic',
-]
-const retiredSkills = ['power-think', 'power-grill', 'power-loop', 'power-verifier', 'power-work-report']
+const managedSkills = ['power-gan', 'power-check', 'power-curator']
+const retiredSkills = ['power-critic', 'power-think', 'power-grill', 'power-loop', 'power-verifier', 'power-work-report']
 const managedProfiles = [
-  ['power-critic/agents/power-critic.toml', 'power_critic', undefined, 'high', 'read-only'],
-  ['power-check/agents/reviewer.toml', 'power_reviewer', 'gpt-6-astra', 'medium', undefined],
-  ['power-gan/agents/power-worker.toml', 'power_worker', 'gpt-6-astra', 'low', undefined],
-  ['power-gan/agents/power-scout.toml', 'power_scout', 'gpt-5.6-terra', 'medium', undefined],
-  ['power-gan/agents/power-explorer.toml', 'power_explorer', 'gpt-5.6-sol', 'medium', undefined],
-  ['power-gan/agents/power-planner.toml', 'power_planner', 'gpt-6-astra', 'medium', undefined],
-]
-const retiredProfiles = [
-  'power-luna-worker.toml',
-  'power-sol-worker.toml',
-  'power-terra-reviewer.toml',
-  'power-sol-reviewer.toml',
-  'power-sol-high-reviewer.toml',
-  'power-terra-worker.toml',
-  'power-terra-complex-worker.toml',
-  'power-sol-escalation.toml',
-  'power-code-reviewer.toml',
-  'power-verifier.toml',
+  'power-critic.toml',
+  'power-worker.toml',
+  'power-scout.toml',
+  'power-explorer.toml',
+  'power-planner.toml',
 ]
 
-test('installer replaces the retired core workflow and preserves unrelated agents', async t => {
+test('installer installs only active skills, removes retired global profiles, and is idempotent', async t => {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'ohmypowers-install-'))
   t.after(() => fs.rm(tmp, { recursive: true, force: true }))
   const agentsDir = path.join(tmp, 'agents')
@@ -49,8 +31,7 @@ test('installer replaces the retired core workflow and preserves unrelated agent
   await fs.mkdir(agentsDir, { recursive: true })
   await fs.mkdir(skillsDir, { recursive: true })
   await fs.writeFile(personalAgent, personalAgentContents, 'utf8')
-  await fs.writeFile(path.join(agentsDir, 'reviewer.toml'), 'name = "personal_reviewer"\n', 'utf8')
-  for (const retired of retiredProfiles) await fs.writeFile(path.join(agentsDir, retired), 'stale = true\n', 'utf8')
+  for (const retired of managedProfiles) await fs.writeFile(path.join(agentsDir, retired), 'stale = true\n', 'utf8')
   for (const retired of retiredSkills) {
     await fs.mkdir(path.join(skillsDir, retired), { recursive: true })
     await fs.writeFile(path.join(skillsDir, retired, 'stale.txt'), 'stale\n', 'utf8')
@@ -63,23 +44,23 @@ test('installer replaces the retired core workflow and preserves unrelated agent
 
   assert.deepEqual(secondInstall, firstInstall)
   assert.equal(await fs.readFile(personalAgent, 'utf8'), personalAgentContents)
-  for (const retired of retiredProfiles) assert.equal(await exists(path.join(agentsDir, retired)), false)
+  for (const retired of managedProfiles) assert.equal(await exists(path.join(agentsDir, retired)), false)
   for (const retired of retiredSkills) assert.equal(await exists(path.join(skillsDir, retired)), false)
   assert.deepEqual([...managedSkills].sort(), await declaredSkills())
-  assert.deepEqual(
-    managedProfiles.map(([source]) => source).sort(),
-    await declaredProfileSources(),
-  )
 
   for (const skill of managedSkills) {
     assert.deepEqual(await listFiles(path.join(skillsDir, skill)), await listFiles(path.join(root, skill)))
   }
+})
 
-  for (const [source, expectedName, model, effort, sandbox] of managedProfiles) {
-    const installed = path.join(agentsDir, path.basename(source))
-    assert.deepEqual(await fs.readFile(installed), await fs.readFile(path.join(root, source)))
-    assertProfile(await parseToml(installed), expectedName, model, effort, sandbox)
-  }
+test('project reviewer is a valid narrow custom agent', async () => {
+  const reviewerPath = path.join(root, '.codex', 'agents', 'reviewer.toml')
+  const reviewer = await parseToml(reviewerPath)
+  assert.equal(reviewer.name, 'power_reviewer')
+  assert.equal(reviewer.sandbox_mode, 'read-only')
+  assert.equal(reviewer.model_reasoning_effort, 'medium')
+  assert.match(reviewer.description, /read-only/i)
+  assert.match(reviewer.developer_instructions, /Do not edit files/i)
 })
 
 async function install(codexHome) {
@@ -97,13 +78,7 @@ async function exists(filePath) {
 
 async function installedInventory(codexHome) {
   const inventory = {}
-  for (const skill of managedSkills) {
-    inventory[`skills/${skill}`] = await listFiles(path.join(codexHome, 'skills', skill))
-  }
-  for (const [source] of managedProfiles) {
-    const installed = path.join(codexHome, 'agents', path.basename(source))
-    inventory[`agents/${path.basename(source)}`] = (await fs.readFile(installed)).toString('base64')
-  }
+  for (const skill of managedSkills) inventory[`skills/${skill}`] = await listFiles(path.join(codexHome, 'skills', skill))
   return inventory
 }
 
@@ -114,18 +89,6 @@ async function declaredSkills() {
     if (entry.isDirectory() && (await exists(path.join(root, entry.name, 'SKILL.md')))) skills.push(entry.name)
   }
   return skills.sort()
-}
-
-async function declaredProfileSources() {
-  const profiles = []
-  for (const skill of await declaredSkills()) {
-    const agentsDir = path.join(root, skill, 'agents')
-    if (!(await exists(agentsDir))) continue
-    for (const entry of await fs.readdir(agentsDir, { withFileTypes: true })) {
-      if (entry.isFile() && entry.name.endsWith('.toml')) profiles.push(path.join(skill, 'agents', entry.name))
-    }
-  }
-  return profiles.sort()
 }
 
 async function listFiles(directory) {
@@ -150,12 +113,4 @@ async function parseToml(filePath) {
     filePath,
   ])
   return JSON.parse(stdout)
-}
-
-function assertProfile(profile, expectedName, model, effort, sandbox) {
-  assert.equal(profile.name, expectedName)
-  if (model) assert.equal(profile.model, model)
-  assert.equal(profile.model_reasoning_effort, effort)
-  assert.equal(profile.sandbox_mode, sandbox)
-  assert.equal(typeof profile.developer_instructions, 'string')
 }
