@@ -46,4 +46,4 @@ Before handoff, reconcile the final diff against active decisions and validation
 
 ## Agents
 
-Use Codex's built-in `default` agent for ordinary fallback work. The project profiles `.codex/agents/worker.toml`, `.codex/agents/explorer.toml`, and `.codex/agents/reviewer.toml` shadow the built-in worker/explorer roles with bounded behavior and explicit model routing. Codex owns spawning, scheduling, waiting, and lifecycle.
+Use Codex's built-in `default` agent for ordinary fallback work. The managed global profiles `worker.toml`, `explorer.toml`, and `reviewer.toml` shadow the built-in worker/explorer roles with bounded behavior and explicit model routing. Codex owns spawning, scheduling, waiting, and lifecycle.

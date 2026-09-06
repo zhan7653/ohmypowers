@@ -20,7 +20,7 @@ The repository does not preserve retired Ledger or agent-profile compatibility o
 - `$power-check`: independently verify a completed implementation when required.
 - `$power-curator`: explicitly reconcile Decision Issues and delivery lifecycle state.
 
-Use the Codex built-in `default` agent for fallback work. Project profiles shadow the built-in roles: [worker.toml](/home/alan/workspace/ohmypowers/.codex/agents/worker.toml), [explorer.toml](/home/alan/workspace/ohmypowers/.codex/agents/explorer.toml), and the read-only [reviewer.toml](/home/alan/workspace/ohmypowers/.codex/agents/reviewer.toml). Codex owns spawning and lifecycle; the project profiles define bounded behavior and model routing.
+Use the Codex built-in `default` agent for fallback work. The installer places managed profiles in `${CODEX_HOME:-$HOME/.codex}/agents`: `worker.toml`, `explorer.toml`, and the read-only `reviewer.toml`. They shadow the built-in worker/explorer roles and define bounded behavior and model routing. Codex owns spawning and lifecycle.
 
 ## Installation
 
@@ -30,7 +30,7 @@ Run:
 ./scripts/install.sh
 ```
 
-The installer copies the three skills into `${CODEX_HOME:-$HOME/.codex}/skills` and removes retired global ohmypowers skills and profiles. It does not copy project agents into the global profile directory. Start Codex from this repository so it can load the project-scoped reviewer.
+The installer copies the three skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the three managed profiles into `${CODEX_HOME:-$HOME/.codex}/agents`, and removes retired ohmypowers skills and profiles. Managed global profiles are templates from this repository; edit the installed files directly when you want a local global-agent override, and rerunning the installer restores the repository templates.
 
 ## Testing
 

@@ -41,6 +41,8 @@ done
 retired_agent_profiles=(
   power-critic.toml
   reviewer.toml
+  worker.toml
+  explorer.toml
   power-worker.toml
   power-scout.toml
   power-explorer.toml
@@ -61,7 +63,16 @@ for profile in "${retired_agent_profiles[@]}"; do
   rm -f "${agents_dir}/${profile}"
 done
 
+agent_sources=(
+  agents/worker.toml
+  agents/explorer.toml
+  agents/reviewer.toml
+)
+
+for source in "${agent_sources[@]}"; do
+  rsync -a "${repo_root}/${source}" "${agents_dir}/$(basename "${source}")"
+done
+
 echo "Installed ohmypowers skills into ${skills_dir}"
-echo "Removed retired ohmypowers global agent profiles from ${agents_dir}"
-echo "The project-scoped reviewer is ${repo_root}/.codex/agents/reviewer.toml"
-echo "Restart Codex to load the updated skills and project agent."
+echo "Installed managed global agents into ${agents_dir}"
+echo "Restart Codex to load the updated skills and global agents."
