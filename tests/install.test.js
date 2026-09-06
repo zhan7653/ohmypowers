@@ -14,6 +14,7 @@ const managedSkills = ['power-gan', 'power-check', 'power-curator']
 const retiredSkills = ['power-critic', 'power-think', 'power-grill', 'power-loop', 'power-verifier', 'power-work-report']
 const managedProfiles = [
   'power-critic.toml',
+  'reviewer.toml',
   'power-worker.toml',
   'power-scout.toml',
   'power-explorer.toml',

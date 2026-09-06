@@ -40,6 +40,7 @@ done
 
 retired_agent_profiles=(
   power-critic.toml
+  reviewer.toml
   power-worker.toml
   power-scout.toml
   power-explorer.toml
