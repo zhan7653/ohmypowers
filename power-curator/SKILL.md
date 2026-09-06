@@ -15,7 +15,7 @@ Use this skill only when the user invokes `$power-curator` or explicitly asks fo
 - Do not add or reinterpret material decisions. Send those changes back through `$power-gan`.
 - Do not approve, merge, retarget, or mutate branches.
 - Never write hosted state until the user confirms the exact numbered mutation.
-- Read the complete Issue persistence reference before the first hosted write.
+- Read the complete [Issue persistence reference](../power-gan/references/issue-persistence.md) before the first hosted write.
 
 ## Workflow
 

@@ -20,7 +20,7 @@ Every source-writing delivery starts with a grill. Discuss the outcome, scope, c
 
 - Infer whether the user wants discussion or delivery. A direct implementation request establishes intent, not permission to skip the grill or material launch authorization.
 - Resolve the highest-leverage unresolved material boundary first. Ask one question when later questions depend on it; batch two or three only when independent.
-- After each answer, reread and update the Ledger, then run `node <skill-dir>/scripts/validate-decision-state.mjs <ledger> --phase alignment`.
+- For a material task with an active v5 Ledger, after each answer reread and update the Ledger, then run `node <skill-dir>/scripts/validate-decision-state.mjs <ledger> --phase alignment`. A low-risk grill does not create a Ledger or run the Ledger validator.
 - Render only the current confirmed, pending, delegated, and visible working defaults. Do not invent alternatives or precompute a private blueprint.
 - Stop when the user ends the grill or when the agreed outcome, scope, constraints, validation direction, and recommended approach are clear. Before writing, resolve or explicitly record every remaining material boundary; keep reversible private mechanics autonomous.
 
@@ -44,7 +44,7 @@ When a durable project standard changes, identify the relevant Decision Issue an
 
 Before any hosted Issue, PR, or MR mutation, read [references/issue-persistence.md](references/issue-persistence.md) in full and follow its host-specific read-back and failure rules.
 
-Before handoff, reconcile the final diff against active decisions and validation evidence. Set `Handoff status`, validate with `--phase handoff`, and use `manage-decision-note.mjs handoff` only after the carrier has been verified. Do not delete historical hosted records or local runtime artifacts.
+For a material delivery using a v5 Ledger, reconcile the final diff against active decisions and validation evidence. Set `Handoff status`, validate with `--phase handoff`, and use `manage-decision-note.mjs handoff` only after the carrier has been verified. A low-risk delivery only reports its validation result; it does not create or clean up a Ledger. Do not delete historical hosted records or local runtime artifacts.
 
 ## Agents
 
