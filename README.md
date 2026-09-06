@@ -30,7 +30,7 @@ Run:
 ./scripts/install.sh
 ```
 
-The installer copies the three skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the three managed profiles into `${CODEX_HOME:-$HOME/.codex}/agents`, and removes retired ohmypowers skills and profiles. Managed global profiles are templates from this repository; edit the installed files directly when you want a local global-agent override, and rerunning the installer restores the repository templates.
+The installer copies the three skills into `${CODEX_HOME:-$HOME/.codex}/skills`, installs the three managed profiles into `${CODEX_HOME:-$HOME/.codex}/agents`, sets the global default subagent reasoning effort to `medium`, and removes retired ohmypowers skills and profiles. Existing config and unrelated profiles are preserved. Managed global profiles are templates from this repository; edit the installed files directly when you want a local global-agent override, and rerunning the installer restores the repository templates.
 
 ## Testing
 

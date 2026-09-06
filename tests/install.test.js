@@ -33,10 +33,13 @@ test('installer installs active skills and global agents, removes retired profil
   const skillsDir = path.join(tmp, 'skills')
   const personalAgent = path.join(agentsDir, 'personal-agent.toml')
   const personalAgentContents = 'name = "personal_agent"\ncustom = true\n'
+  const configPath = path.join(tmp, 'config.toml')
+  const configContents = '[agents]\nmax_concurrent_threads_per_session = 4\n\n[projects."/tmp/example"]\ntrust_level = "trusted"\n'
 
   await fs.mkdir(agentsDir, { recursive: true })
   await fs.mkdir(skillsDir, { recursive: true })
   await fs.writeFile(personalAgent, personalAgentContents, 'utf8')
+  await fs.writeFile(configPath, configContents, 'utf8')
   for (const retired of [...managedProfiles, ...retiredProfiles]) await fs.writeFile(path.join(agentsDir, retired), 'stale = true\n', 'utf8')
   for (const retired of retiredSkills) {
     await fs.mkdir(path.join(skillsDir, retired), { recursive: true })
@@ -50,6 +53,10 @@ test('installer installs active skills and global agents, removes retired profil
 
   assert.deepEqual(secondInstall, firstInstall)
   assert.equal(await fs.readFile(personalAgent, 'utf8'), personalAgentContents)
+  const installedConfig = await parseToml(configPath)
+  assert.equal(installedConfig.agents.default_subagent_reasoning_effort, 'medium')
+  assert.equal(installedConfig.agents.max_concurrent_threads_per_session, 4)
+  assert.equal(installedConfig.projects['/tmp/example'].trust_level, 'trusted')
   for (const retired of retiredProfiles) assert.equal(await exists(path.join(agentsDir, retired)), false)
   for (const retired of retiredSkills) assert.equal(await exists(path.join(skillsDir, retired)), false)
   assert.deepEqual([...managedSkills].sort(), await declaredSkills())

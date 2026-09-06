@@ -14,6 +14,50 @@ fi
 
 mkdir -p "${skills_dir}" "${agents_dir}"
 
+python3 - "${codex_home}/config.toml" <<'PY'
+from pathlib import Path
+import re
+import sys
+import tomllib
+
+config_path = Path(sys.argv[1])
+text = config_path.read_text(encoding='utf-8') if config_path.exists() else ''
+if text.strip():
+    tomllib.loads(text)
+
+lines = text.splitlines(keepends=True)
+section_start = None
+section_end = len(lines)
+for index, line in enumerate(lines):
+    if re.match(r'^\[agents\]\s*(?:#.*)?$', line.rstrip('\r\n')):
+        section_start = index
+        break
+if section_start is None:
+    if text and not text.endswith(('\n', '\r')):
+        lines.append('\n')
+    if lines and lines[-1].strip():
+        lines.append('\n')
+    lines.extend(['[agents]\n', 'default_subagent_reasoning_effort = "medium"\n'])
+else:
+    for index in range(section_start + 1, len(lines)):
+        if re.match(r'^\s*\[\[?[^]]+\]\]?\s*(?:#.*)?$', lines[index].rstrip('\r\n')):
+            section_end = index
+            break
+    setting = re.compile(r'^(\s*default_subagent_reasoning_effort\s*=\s*).*$')
+    for index in range(section_start + 1, section_end):
+        match = setting.match(lines[index].rstrip('\r\n'))
+        if match:
+            newline = '\r\n' if lines[index].endswith('\r\n') else '\n'
+            lines[index] = f'{match.group(1)}"medium"{newline}'
+            break
+    else:
+        lines.insert(section_start + 1, 'default_subagent_reasoning_effort = "medium"\n')
+
+updated = ''.join(lines)
+tomllib.loads(updated)
+config_path.write_text(updated, encoding='utf-8')
+PY
+
 skills=(
   power-gan
   power-check
