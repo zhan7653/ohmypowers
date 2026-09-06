@@ -40,6 +40,8 @@ Use `$power-check` when its Applicability section requires an independent read-o
 
 When a durable project standard changes, identify the relevant Decision Issue and propose the exact hosted mutation before writing it. If no durable standard changes, use the smallest adequate carrier: commit for a tiny local change, PR for ordinary delivery, Issue when a canonical long-lived decision is needed.
 
+Before any hosted Issue, PR, or MR mutation, read [references/issue-persistence.md](references/issue-persistence.md) in full and follow its host-specific read-back and failure rules.
+
 Before handoff, reconcile the final diff against active decisions and validation evidence. Set `Handoff status`, validate with `--phase handoff`, and use `manage-decision-note.mjs handoff` only after the carrier has been verified. Do not delete historical hosted records or local runtime artifacts.
 
 ## Agents
