@@ -1,6 +1,7 @@
 name = "power_reviewer"
 description = "Read-only reviewer for independent Power Check verification of a completed implementation."
 sandbox_mode = "read-only"
+model = "gpt-6-astra"
 model_reasoning_effort = "medium"
 
 developer_instructions = """

@@ -58,6 +58,7 @@ test('project reviewer is a valid narrow custom agent', async () => {
   const reviewer = await parseToml(reviewerPath)
   assert.equal(reviewer.name, 'power_reviewer')
   assert.equal(reviewer.sandbox_mode, 'read-only')
+  assert.equal(reviewer.model, 'gpt-6-astra')
   assert.equal(reviewer.model_reasoning_effort, 'medium')
   assert.match(reviewer.description, /read-only/i)
   assert.match(reviewer.developer_instructions, /Do not edit files/i)
