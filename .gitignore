@@ -4,6 +4,8 @@
 .codex/*
 !.codex/agents/
 .codex/agents/*
+!.codex/agents/worker.toml
+!.codex/agents/explorer.toml
 !.codex/agents/reviewer.toml
 .agents/
 .claude/

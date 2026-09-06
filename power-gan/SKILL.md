@@ -46,4 +46,4 @@ Before handoff, reconcile the final diff against active decisions and validation
 
 ## Agents
 
-Use Codex's built-in `default`, `worker`, and `explorer` agents for ordinary delegation. The project keeps one custom profile at `.codex/agents/reviewer.toml` for independent read-only review. Custom profiles are narrow role descriptions; Codex owns spawning, scheduling, waiting, and lifecycle.
+Use Codex's built-in `default` agent for ordinary fallback work. The project profiles `.codex/agents/worker.toml`, `.codex/agents/explorer.toml`, and `.codex/agents/reviewer.toml` shadow the built-in worker/explorer roles with bounded behavior and explicit model routing. Codex owns spawning, scheduling, waiting, and lifecycle.

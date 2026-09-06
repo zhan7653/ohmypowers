@@ -20,7 +20,7 @@ The repository does not preserve retired Ledger or agent-profile compatibility o
 - `$power-check`: independently verify a completed implementation when required.
 - `$power-curator`: explicitly reconcile Decision Issues and delivery lifecycle state.
 
-Use the Codex built-in `default`, `worker`, and `explorer` agents for ordinary delegation. The only project custom agent is the read-only reviewer at [.codex/agents/reviewer.toml](/home/alan/workspace/ohmypowers/.codex/agents/reviewer.toml). Codex owns spawning and lifecycle; the project profile only defines the review boundary.
+Use the Codex built-in `default` agent for fallback work. Project profiles shadow the built-in roles: [worker.toml](/home/alan/workspace/ohmypowers/.codex/agents/worker.toml), [explorer.toml](/home/alan/workspace/ohmypowers/.codex/agents/explorer.toml), and the read-only [reviewer.toml](/home/alan/workspace/ohmypowers/.codex/agents/reviewer.toml). Codex owns spawning and lifecycle; the project profiles define bounded behavior and model routing.
 
 ## Installation
 

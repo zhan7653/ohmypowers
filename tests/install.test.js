@@ -20,6 +20,11 @@ const managedProfiles = [
   'power-explorer.toml',
   'power-planner.toml',
 ]
+const projectAgents = [
+  ['reviewer.toml', 'power_reviewer', 'gpt-6-astra', 'medium', 'read-only'],
+  ['worker.toml', 'worker', 'gpt-6-astra', 'low', undefined],
+  ['explorer.toml', 'explorer', 'gpt-5.6-terra', 'medium', 'read-only'],
+]
 
 test('installer installs only active skills, removes retired global profiles, and is idempotent', async t => {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'ohmypowers-install-'))
@@ -54,15 +59,17 @@ test('installer installs only active skills, removes retired global profiles, an
   }
 })
 
-test('project reviewer is a valid narrow custom agent', async () => {
-  const reviewerPath = path.join(root, '.codex', 'agents', 'reviewer.toml')
-  const reviewer = await parseToml(reviewerPath)
-  assert.equal(reviewer.name, 'power_reviewer')
-  assert.equal(reviewer.sandbox_mode, 'read-only')
-  assert.equal(reviewer.model, 'gpt-6-astra')
-  assert.equal(reviewer.model_reasoning_effort, 'medium')
-  assert.match(reviewer.description, /read-only/i)
-  assert.match(reviewer.developer_instructions, /Do not edit files/i)
+test('project agents shadow built-ins with narrow model routing', async () => {
+  for (const [file, name, model, effort, sandbox] of projectAgents) {
+    const agent = await parseToml(path.join(root, '.codex', 'agents', file))
+    assert.equal(agent.name, name)
+    assert.equal(agent.model, model)
+    assert.equal(agent.model_reasoning_effort, effort)
+    if (sandbox) assert.equal(agent.sandbox_mode, sandbox)
+    assert.match(agent.description, /\w+/)
+    assert.match(agent.developer_instructions, /\w+/)
+  }
+  assert.match((await parseToml(path.join(root, '.codex', 'agents', 'reviewer.toml'))).developer_instructions, /Do not edit files/i)
 })
 
 async function install(codexHome) {
