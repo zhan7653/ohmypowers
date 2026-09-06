@@ -2,7 +2,7 @@
 
 Small Codex skills for decision alignment, independent checks, and optional Decision Issue lifecycle curation.
 
-`$power-gan` is the main entry point. Every source-writing task starts with a user grill covering the outcome, scope, constraints, validation direction, and smallest recommended approach. It keeps private reversible mechanics autonomous and uses a current v5 Decision Ledger only for material deliveries.
+`$power-gan` is the main entry point. Every source-writing task starts with a user grill covering the outcome, scope, constraints, validation direction, and smallest recommended approach. The user can end the grill early and delegate remaining ordinary choices; unresolved authorization, irreversible, safety, or external-write boundaries still block implementation. It keeps private reversible mechanics autonomous and uses a current v5 Decision Ledger only for material deliveries.
 
 The package keeps the safeguards that require explicit state or authorization:
 

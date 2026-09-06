@@ -14,7 +14,7 @@ Default to Simplified Chinese and match the user's language. Keep the process pr
 3. A material delivery uses one current v5 Decision Ledger at `${CODEX_HOME:-$HOME/.codex}/power-gan/records/<repository-key>/<delivery-id>/decision-snapshot.md`. Low-risk work does not create a Ledger only to obtain confirmation. This branch supports v5 only; historical Ledger versions are outside the contract.
 4. Never write source or hosted state beyond the confirmed boundary. Hosted mutations require separate explicit authorization and an exact read-back.
 
-Every source-writing delivery starts with a grill. Discuss the outcome, scope, constraints, validation direction, and the smallest recommended implementation approach with the user before writing code. A low-risk task uses one concise grill turn; a material or uncertain task continues with focused questions until its material boundaries are resolved. The grill does not ask the user to choose reversible private mechanics such as helper names, file layout, algorithm details inside a stable contract, or test technique.
+Every source-writing delivery starts with a grill. Discuss the outcome, scope, constraints, validation direction, and the smallest recommended implementation approach with the user before writing code. The user controls the depth and may end the grill early with a clear instruction such as “剩下你定” or “先按这个做”; record the delegated boundaries and continue within them. A low-risk task usually needs one concise turn; a material or uncertain task may need more focused questions, but never a fixed number of rounds or ritual follow-ups. An early end does not authorize unresolved safety, legal, irreversible, external-write, spend, or missing-permission boundaries. The grill does not ask the user to choose reversible private mechanics such as helper names, file layout, algorithm details inside a stable contract, or test technique.
 
 ## Alignment
 
@@ -22,7 +22,7 @@ Every source-writing delivery starts with a grill. Discuss the outcome, scope, c
 - Resolve the highest-leverage unresolved material boundary first. Ask one question when later questions depend on it; batch two or three only when independent.
 - After each answer, reread and update the Ledger, then run `node <skill-dir>/scripts/validate-decision-state.mjs <ledger> --phase alignment`.
 - Render only the current confirmed, pending, delegated, and visible working defaults. Do not invent alternatives or precompute a private blueprint.
-- Stop when the agreed outcome, scope, constraints, validation direction, and recommended approach are clear and no material decision is pending. Keep reversible private mechanics autonomous.
+- Stop when the user ends the grill or when the agreed outcome, scope, constraints, validation direction, and recommended approach are clear. Before writing, resolve or explicitly record every remaining material boundary; keep reversible private mechanics autonomous.
 
 ## Delivery
 
