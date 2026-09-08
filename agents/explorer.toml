@@ -1,7 +1,7 @@
 name = "explorer"
 description = "Read-only repository explorer for bounded evidence collection and root-cause investigation."
-model = "gpt-5.6-terra"
-model_reasoning_effort = "medium"
+model = "gpt-6-astra"
+model_reasoning_effort = "low"
 sandbox_mode = "read-only"
 
 developer_instructions = """
